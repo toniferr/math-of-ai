@@ -1,0 +1,112 @@
+<!--meta
+{
+  "slug": "probabilidad",
+  "title": "Probabilidad",
+  "chain": "Probabilidad",
+  "headline": "Aprender de los datos",
+  "dek": "La probabilidad pone números a la incertidumbre. Dos resultados del siglo XVIII, la ley de los grandes números y el teorema de Bayes, explican por qué más datos nos acercan a la verdad y cómo actualizar lo que creemos al ver cada uno.",
+  "era": "1654 – 1922",
+  "people": ["Blaise Pascal", "Pierre de Fermat", "Jakob Bernoulli", "Thomas Bayes", "Pierre-Simon Laplace", "Ronald Fisher"],
+  "theorems": ["Ley de los grandes números", "Teorema de Bayes", "Máxima verosimilitud", "Regla de la cadena"]
+}
+-->
+
+<p>En 1654 el caballero de Méré le planteó a Blaise Pascal un problema de apuestas: si una partida a varias rondas se interrumpe antes de acabar, ¿cómo se reparte el bote de forma justa? Pascal se lo contó por carta a Pierre de Fermat, y en esa correspondencia nació el cálculo de probabilidades. Tres siglos después, la misma matemática que repartía apuestas decide qué palabra escribe ChatGPT.</p>
+
+<p>Un modelo de lenguaje no «sabe» qué palabra viene después: asigna una <strong>probabilidad</strong> a cada palabra posible. Todo lo que hace se apoya en este lenguaje.</p>
+
+<h2>Variables aleatorias y distribuciones</h2>
+
+<p>Una <strong>variable aleatoria</strong> $X$ es una cantidad cuyo valor depende del azar: el resultado de una moneda, la altura de una persona elegida al azar o la próxima palabra de un texto. Su <strong>distribución</strong> $p(x) = P(X = x)$ asigna a cada resultado un número entre 0 y 1, y la suma de todos es 1:</p>
+
+$$p(x) \ge 0, \qquad \sum_{x} p(x) = 1.$$
+
+<p>El <strong>valor esperado</strong> es la media ponderada por las probabilidades, $\mathbb{E}[X] = \sum_x x\, p(x)$, y la <strong>varianza</strong> mide cuánto se dispersa la variable alrededor de esa media, $\operatorname{Var}(X) = \mathbb{E}\big[(X - \mathbb{E}[X])^2\big]$.</p>
+
+<aside class="note">En un LLM la variable aleatoria es el siguiente <em>token</em> (una palabra o un trozo de palabra), que puede tomar unos cien mil valores distintos. El modelo calcula una distribución sobre todos ellos en cada paso.</aside>
+
+<h2>La ley de los grandes números</h2>
+
+<p>Si una moneda sale cara con una probabilidad $p$ que desconocemos, la intuición dice que, tras muchos lanzamientos, la proporción de caras se acercará a $p$. Jakob Bernoulli dedicó veinte años a demostrarlo, y el resultado se publicó en 1713, ocho años después de su muerte, en <em>Ars Conjectandi</em>. Lo llamó su «teorema áureo».</p>
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(ley débil de los grandes números)</span></span>
+  <p>Sean $X_1, X_2, \dots$ variables independientes con la misma distribución, media $\mu$ y varianza finita $\sigma^2$, y sea $\bar X_n = \tfrac{1}{n}\sum_{i=1}^n X_i$ su media muestral. Para todo $\varepsilon > 0$,</p>
+  $$\lim_{n \to \infty} P\left(\left|\bar X_n - \mu\right| > \varepsilon\right) = 0.$$
+</div>
+
+<details class="proof">
+  <summary>Demostración (con la desigualdad de Chebyshev)</summary>
+  <div>
+    <p>Por independencia, $\operatorname{Var}(\bar X_n) = \sigma^2 / n$. La desigualdad de Chebyshev dice que una variable se aleja de su media más de $\varepsilon$ con probabilidad como mucho $\operatorname{Var}/\varepsilon^2$, así que</p>
+    $$P\left(\left|\bar X_n - \mu\right| > \varepsilon\right) \le \frac{\sigma^2}{n\,\varepsilon^2} \longrightarrow 0 \quad \text{cuando } n \to \infty.$$
+  </div>
+</details>
+
+<p>La demostración da algo más que el límite: el error típico de la media decrece como $\sigma/\sqrt{n}$. Para tener el doble de precisión hacen falta <em>cuatro veces</em> más datos. Esta ley de rendimientos decrecientes reaparece, con otros exponentes, en las <a href="@ch:llms#escalado">leyes de escalado</a> de los LLM.</p>
+
+<figure class="demo wide" data-demo="probability/coin">
+  <figcaption>Una moneda trucada con una probabilidad de cara $p$ oculta. <strong>Izquierda:</strong> la frecuencia de caras se acerca a $p$ a medida que crece $n$ (ley de los grandes números; el eje horizontal es logarítmico). <strong>Derecha:</strong> lo que creemos sobre $p$ después de cada lanzamiento, según el teorema de Bayes. Prueba a empezar con la creencia de que la moneda es justa y observa cuánto cuesta convencerte de lo contrario.</figcaption>
+</figure>
+
+<h2>El teorema de Bayes</h2>
+
+<p>La ley de los grandes números habla de lo que pasa <em>a la larga</em>, pero casi nunca tenemos infinitos datos. ¿Qué podemos decir de $p$ después de ver solo diez lanzamientos? El reverendo Thomas Bayes trató ese problema inverso en un ensayo que su amigo Richard Price publicó en 1763, después de su muerte. Laplace lo redescubrió y lo generalizó en 1774.</p>
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(Bayes)</span></span>
+  <p>Para una hipótesis $H$ y unos datos $D$ con $P(D) > 0$,</p>
+  $$\underbrace{P(H \mid D)}_{\text{posterior}} = \frac{\overbrace{P(D \mid H)}^{\text{verosimilitud}}\;\overbrace{P(H)}^{\text{prior}}}{P(D)}.$$
+</div>
+
+<details class="proof">
+  <summary>Demostración</summary>
+  <div>
+    <p>Por la definición de probabilidad condicionada, $P(H \cap D) = P(H \mid D)\,P(D) = P(D \mid H)\,P(H)$. Basta con despejar $P(H \mid D)$.</p>
+  </div>
+</details>
+
+<p>El teorema cabe en una línea, pero su lectura es profunda: el <strong>prior</strong> resume lo que creíamos antes de ver los datos, la <strong>verosimilitud</strong> mide lo bien que cada hipótesis explica lo observado y el <strong>posterior</strong> es la creencia actualizada. Cada dato nuevo convierte el posterior de hoy en el prior de mañana.</p>
+
+<p>En la moneda, si el prior sobre $p$ es una distribución $\mathrm{Beta}(a, b)$ y observamos $k$ caras en $n$ lanzamientos, el posterior vuelve a ser una Beta:</p>
+
+$$p \mid \text{datos} \;\sim\; \mathrm{Beta}(a + k,\; b + n - k).$$
+
+<p>Con el prior uniforme ($a = b = 1$), la probabilidad de que el próximo lanzamiento salga cara es $\frac{k+1}{n+2}$. Es la <strong>regla de sucesión</strong> de Laplace, con la que en 1814 calculó la probabilidad de que el sol salga mañana sabiendo que ha salido todos los días de la historia registrada. Fue el primer «suavizado» de una estimación, y los modelos de lenguaje estadísticos lo usarían doscientos años después para no asignar probabilidad cero a las palabras que no habían visto nunca.</p>
+
+<h2 id="verosimilitud">Máxima verosimilitud: la función de pérdida de la IA</h2>
+
+<p>Ronald Fisher propuso entre 1912 y 1922 un criterio más directo: de entre todos los valores posibles del parámetro, quedarse con el que hace <em>más probables</em> los datos observados. Si los datos son independientes, la verosimilitud es un producto, y como multiplicar muchos números pequeños da problemas numéricos se maximiza su logaritmo:</p>
+
+$$\hat\theta = \operatorname*{argmax}_{\theta} \prod_{i=1}^{n} p(x_i \mid \theta) = \operatorname*{argmin}_{\theta} \underbrace{\left(-\sum_{i=1}^{n} \log p(x_i \mid \theta)\right)}_{\text{log-verosimilitud negativa}}.$$
+
+<p>Con la moneda sale lo esperado, $\hat p = k/n$. Pero la expresión de la derecha merece una segunda mirada: es <strong>exactamente</strong> la función que se minimiza al entrenar cualquier modelo de lenguaje. En el <a href="@ch:information">siguiente capítulo</a> veremos que también tiene nombre en teoría de la información: entropía cruzada.</p>
+
+<div class="idea">
+  <span class="th-title">La idea clave</span>
+  <p>Entrenar un modelo es elegir los parámetros que hacen más probables los datos de entrenamiento. Todo lo demás (redes, gradientes, atención) son maneras de expresar y optimizar esa probabilidad.</p>
+</div>
+
+<h2>La regla de la cadena de la probabilidad</h2>
+
+<p>Queda una pieza. ¿Cómo se asigna probabilidad a una <em>frase</em> entera, si el número de frases posibles es astronómico? Con una identidad elemental que se sigue de aplicar una y otra vez la definición de probabilidad condicionada:</p>
+
+<div class="theorem">
+  <span class="th-title">Regla de la cadena</span>
+  $$P(w_1, w_2, \dots, w_T) = \prod_{t=1}^{T} P\left(w_t \mid w_1, \dots, w_{t-1}\right).$$
+</div>
+
+<p>La probabilidad de un texto es el producto de las probabilidades de cada palabra <em>condicionada a todas las anteriores</em>. Esta identidad convierte el problema imposible de modelar textos completos en otro manejable: predecir la palabra siguiente. Un LLM es un aproximador gigantesco de $P(w_t \mid w_{&lt;t})$, y genera texto muestreando de esa distribución, una palabra cada vez.</p>
+
+<p>Ya sabemos qué queremos estimar. Falta saber cuánta incertidumbre contiene una distribución y cómo medir lo lejos que está un modelo de la realidad. Esas preguntas las respondió Claude Shannon en 1948.</p>
+
+<section class="references">
+  <h2>Referencias</h2>
+  <ol>
+    <li>J. Bernoulli (1713). <em>Ars Conjectandi</em>. Basilea.</li>
+    <li>T. Bayes (1763). «An Essay towards Solving a Problem in the Doctrine of Chances». <em>Philosophical Transactions of the Royal Society</em>, 53.</li>
+    <li>P.-S. Laplace (1814). <em>Essai philosophique sur les probabilités</em>. París.</li>
+    <li>R. A. Fisher (1922). «On the Mathematical Foundations of Theoretical Statistics». <em>Philosophical Transactions of the Royal Society A</em>, 222.</li>
+    <li>E. T. Jaynes (2003). <em>Probability Theory: The Logic of Science</em>. Cambridge University Press.</li>
+  </ol>
+</section>

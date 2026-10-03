@@ -1,0 +1,101 @@
+<!--meta
+{
+  "slug": "calculo",
+  "title": "Cálculo",
+  "chain": "Derivadas",
+  "headline": "¿Hacia dónde se mueve el error?",
+  "dek": "Una red neuronal tiene miles de millones de perillas. Para saber cuál girar y en qué sentido hay que saber cómo cambia el error al mover cada una: su derivada. La regla de la cadena, que Leibniz escribió en 1676, permite calcularlas todas a la vez. Ese algoritmo se llama backpropagation.",
+  "era": "1676 – 1986",
+  "people": ["Gottfried W. Leibniz", "Isaac Newton", "Seppo Linnainmaa", "Paul Werbos", "David Rumelhart", "Geoffrey Hinton", "Ronald Williams"],
+  "theorems": ["Regla de la cadena", "Dirección de máximo ascenso", "Principio del gradiente barato"]
+}
+-->
+
+<p>Newton y Leibniz inventaron el cálculo, cada uno por su lado, en la segunda mitad del siglo XVII, para describir el movimiento de los planetas y la forma de las curvas. Tres siglos después, su herramienta central, la derivada, es la que permite a una red neuronal aprender. La idea es simple: si sabes cómo cambia el error cuando mueves un poco cada parámetro, sabes cómo moverlos para equivocarte menos.</p>
+
+<h2>La derivada: sensibilidad instantánea</h2>
+
+<p>La derivada de $f$ en un punto $x$ mide cuánto cambia $f(x)$ al mover $x$ una cantidad muy pequeña:</p>
+
+$$f'(x) = \lim_{h \to 0} \frac{f(x + h) - f(x)}{h}.$$
+
+<p>Geométricamente es la pendiente de la recta tangente. El cociente con un $h$ finito es la pendiente de una recta <em>secante</em>, que corta la curva en dos puntos. Al reducir $h$, la secante gira hasta coincidir con la tangente.</p>
+
+<figure class="demo" data-demo="calculus/derivative">
+  <figcaption>La secante (discontinua) pasa por $x$ y $x + h$. Al reducir $h$, su pendiente se acerca a la derivada, que es la pendiente de la tangente. Fíjate en el punto donde la tangente queda horizontal ($f'(x) = 0$): ahí la función tiene un mínimo o un máximo local.</figcaption>
+</figure>
+
+<h2>El gradiente: la derivada con muchas variables</h2>
+
+<p>Una función de pérdida no depende de un número, sino de millones: $\mathcal{L}(\theta_1, \dots, \theta_n)$. Cada <strong>derivada parcial</strong> $\partial \mathcal{L}/\partial \theta_i$ mide la sensibilidad respecto a un parámetro con los demás fijos, y el vector que las reúne todas es el <strong>gradiente</strong>:</p>
+
+$$\nabla \mathcal{L}(\theta) = \left(\frac{\partial \mathcal{L}}{\partial \theta_1}, \dots, \frac{\partial \mathcal{L}}{\partial \theta_n}\right).$$
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(dirección de máximo ascenso)</span></span>
+  <p>Si $\mathcal{L}$ es diferenciable en $\theta$ y $\nabla \mathcal{L}(\theta) \neq \mathbf{0}$, entre todas las direcciones unitarias $\mathbf{u}$ la derivada direccional $D_{\mathbf{u}}\mathcal{L} = \nabla \mathcal{L} \cdot \mathbf{u}$ es máxima cuando $\mathbf{u}$ apunta como $\nabla \mathcal{L}$ y mínima cuando apunta en sentido contrario.</p>
+</div>
+
+<details class="proof">
+  <summary>Demostración</summary>
+  <div>
+    <p>Por <a href="@ch:linear-algebra">Cauchy-Schwarz</a>, $-\|\nabla \mathcal{L}\| \le \nabla \mathcal{L} \cdot \mathbf{u} \le \|\nabla \mathcal{L}\|$ para $\|\mathbf{u}\| = 1$, y los extremos se alcanzan con $\mathbf{u} = \pm \nabla\mathcal{L}/\|\nabla\mathcal{L}\|$.</p>
+  </div>
+</details>
+
+<p>De aquí sale la receta para aprender: <strong>muévete en la dirección de $-\nabla \mathcal{L}$</strong>, la de mayor descenso del error. Lo que hace falta es una forma eficiente de calcular el gradiente de una función con miles de millones de variables.</p>
+
+<h2>La regla de la cadena</h2>
+
+<p>Una red neuronal es una composición de muchas funciones sencillas, como una cadena de montaje. La regla de la cadena dice cómo se propaga la sensibilidad a lo largo de esa cadena. Leibniz la usó en unas notas de 1676, y su notación hace que parezca una simple simplificación de fracciones:</p>
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(regla de la cadena)</span></span>
+  <p>Si $y = g(x)$ y $z = f(y)$ son diferenciables, entonces</p>
+  $$\frac{dz}{dx} = \frac{dz}{dy} \cdot \frac{dy}{dx}, \qquad \text{es decir,} \qquad (f \circ g)'(x) = f'\big(g(x)\big)\, g'(x).$$
+  <p>Con varias variables las derivadas se convierten en matrices jacobianas y el producto pasa a ser un producto de matrices: $J_{f \circ g} = J_f \, J_g$.</p>
+</div>
+
+<p>Para una cadena larga, $\mathcal{L} = f_L(f_{L-1}(\cdots f_1(x)))$, la derivada es un producto de muchos factores. El orden en que se multiplican no cambia el resultado, pero sí cambia muchísimo el <em>coste</em> del cálculo.</p>
+
+<h2 id="backprop">Grafos computacionales y retropropagación</h2>
+
+<p>Cualquier cálculo se puede dibujar como un <strong>grafo dirigido acíclico</strong>: los nodos son operaciones elementales y las aristas llevan los resultados intermedios. Aquí la teoría de grafos entra en la IA. Para una neurona que predice $\hat y = \sigma(wx + b)$ y se equivoca $\mathcal{L} = (\hat y - y)^2$, el grafo es el de la figura.</p>
+
+<figure class="demo wide" data-demo="calculus/backprop">
+  <figcaption>Retropropagación paso a paso. La pasada <strong>hacia delante</strong> calcula los valores (debajo de cada nodo). La pasada <strong>hacia atrás</strong> parte de $\partial \mathcal{L}/\partial \mathcal{L} = 1$ y multiplica por la derivada local de cada nodo en orden topológico inverso, dejando el gradiente encima de cada uno. Con «Aprender» se da un paso de descenso de gradiente sobre $w$ y $b$: repítelo y verás cómo baja la pérdida.</figcaption>
+</figure>
+
+<p>Este algoritmo, la <strong>diferenciación automática en modo inverso</strong>, lo describió Seppo Linnainmaa en su tesis de máster de 1970. Paul Werbos propuso aplicarlo a redes neuronales en su tesis de 1974. El artículo de David Rumelhart, Geoffrey Hinton y Ronald Williams en <em>Nature</em> (1986) mostró que las redes entrenadas así aprenden representaciones internas útiles, y fue el que lo popularizó con el nombre de <em>backpropagation</em>.</p>
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(principio del gradiente barato; Baur-Strassen, 1983)</span></span>
+  <p>Si una función $f : \mathbb{R}^n \to \mathbb{R}$ se calcula con $T$ operaciones elementales, su gradiente completo, con sus $n$ derivadas parciales, se calcula en modo inverso con $c \cdot T$ operaciones, donde $c$ es una constante pequeña (del orden de 3 a 5) que <strong>no depende de $n$</strong>.</p>
+</div>
+
+<p>Este es el resultado que hace posible el aprendizaje profundo. Calcular cada derivada por separado, moviendo un parámetro y midiendo el cambio, costaría $n$ evaluaciones de la red: con $10^{11}$ parámetros, imposible. La retropropagación entrega todas las derivadas por el precio aproximado de <em>dos o tres</em> evaluaciones. Todas las bibliotecas actuales de IA (PyTorch, JAX, TensorFlow) son, en el fondo, motores de diferenciación automática.</p>
+
+<aside class="note">El modo «hacia delante» (multiplicar los jacobianos de entrada a salida) es más barato cuando hay pocas entradas y muchas salidas. En una red neuronal pasa lo contrario, millones de parámetros y una sola pérdida, y por eso se usa el modo inverso.</aside>
+
+<h2>Cuando el gradiente se desvanece</h2>
+
+<p>La regla de la cadena tiene una cara oscura. La sigmoide $\sigma(z) = 1/(1 + e^{-z})$, la función de activación clásica, tiene derivada $\sigma'(z) = \sigma(z)\,(1 - \sigma(z)) \le \tfrac14$. En una red con $L$ capas sigmoides, el gradiente que llega a las primeras capas contiene un producto de $L$ factores como esos:</p>
+
+$$\left|\frac{\partial \mathcal{L}}{\partial h_1}\right| \;\lesssim\; \prod_{\ell=1}^{L} \left|\sigma'(z_\ell)\right|\,\|W_\ell\| \;\le\; \left(\tfrac14 \max_\ell \|W_\ell\|\right)^{L}.$$
+
+<p>Si los pesos son moderados, el gradiente se encoge exponencialmente con la profundidad y las primeras capas no aprenden. Sepp Hochreiter analizó este problema del <strong>gradiente que se desvanece</strong> en su tesis de 1991. Las soluciones llegaron en varias oleadas: las LSTM (1997), la activación ReLU, $\max(0, z)$, cuya derivada vale 1 en la parte positiva, y las <strong>conexiones residuales</strong> (2015), $h_{\ell+1} = h_\ell + F(h_\ell)$, que abren una autopista por la que el gradiente circula sin atenuarse. Los Transformers usan las dos últimas.</p>
+
+<p>Ya sabemos calcular hacia dónde baja el error. Falta decidir cuánto avanzar en esa dirección y qué garantías hay de llegar a alguna parte. Eso es la <a href="@ch:optimization">optimización</a>.</p>
+
+<section class="references">
+  <h2>Referencias</h2>
+  <ol>
+    <li>S. Linnainmaa (1970). <em>The representation of the cumulative rounding error of an algorithm as a Taylor expansion of the local rounding errors</em>. Tesis de máster, Universidad de Helsinki.</li>
+    <li>P. J. Werbos (1974). <em>Beyond Regression: New Tools for Prediction and Analysis in the Behavioral Sciences</em>. Tesis doctoral, Harvard.</li>
+    <li>W. Baur y V. Strassen (1983). «The complexity of partial derivatives». <em>Theoretical Computer Science</em>, 22(3).</li>
+    <li>D. E. Rumelhart, G. E. Hinton y R. J. Williams (1986). «Learning representations by back-propagating errors». <em>Nature</em>, 323.</li>
+    <li>S. Hochreiter (1991). <em>Untersuchungen zu dynamischen neuronalen Netzen</em>. Tesis de diploma, TU Múnich.</li>
+    <li>A. Griewank y A. Walther (2008). <em>Evaluating Derivatives</em>, 2.ª ed. SIAM.</li>
+    <li>K. He, X. Zhang, S. Ren y J. Sun (2016). «Deep Residual Learning for Image Recognition». <em>CVPR</em>.</li>
+  </ol>
+</section>

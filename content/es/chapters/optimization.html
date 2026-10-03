@@ -1,0 +1,111 @@
+<!--meta
+{
+  "slug": "optimizacion",
+  "title": "Optimización",
+  "chain": "Optimizar",
+  "headline": "Bajar la montaña a ciegas",
+  "dek": "Entrenar un modelo es buscar el punto más bajo de un paisaje con miles de millones de dimensiones, en plena niebla y sintiendo solo la pendiente bajo los pies. El descenso de gradiente, que Cauchy inventó en 1847 para calcular órbitas, sigue siendo el algoritmo que entrena todos los LLM.",
+  "era": "1847 – 2014",
+  "people": ["Augustin-Louis Cauchy", "Herbert Robbins", "Sutton Monro", "Boris Polyak", "Yurii Nesterov", "Diederik Kingma", "Jimmy Ba"],
+  "theorems": ["Convergencia del descenso de gradiente", "Mínimos de funciones convexas", "Condiciones de Robbins-Monro", "Cota de Nesterov"]
+}
+-->
+
+<p>En 1847 Augustin-Louis Cauchy presentó ante la Academia de Ciencias de París una nota de tres páginas titulada «Método general para la resolución de sistemas de ecuaciones simultáneas». Le interesaban los cálculos astronómicos: determinar la órbita de un cuerpo celeste a partir de observaciones lleva a sistemas de ecuaciones que no se pueden resolver de forma exacta. Su propuesta fue convertir el problema en minimizar una función que mide el error y bajar por ella paso a paso, siempre en la dirección de mayor pendiente. Había inventado el <strong>descenso de gradiente</strong>.</p>
+
+<h2>El algoritmo</h2>
+
+<p>Partimos de unos parámetros $\theta_0$ cualesquiera y repetimos:</p>
+
+$$\theta_{t+1} = \theta_t - \eta\, \nabla \mathcal{L}(\theta_t).$$
+
+<p>El gradiente, que la <a href="@ch:calculus#backprop">retropropagación</a> calcula de forma barata, indica la dirección de máxima subida, así que avanzamos en sentido contrario. El número $\eta > 0$ es la <strong>tasa de aprendizaje</strong> (<em>learning rate</em>): el tamaño del paso. Es el hiperparámetro más importante de cualquier entrenamiento.</p>
+
+<figure class="demo wide" data-demo="optimization/descent">
+  <figcaption>Haz clic en el mapa para elegir el punto de partida. Las bandas de color son curvas de nivel: cuanto más intenso el color, más alta la pérdida. En el <strong>cuenco alargado</strong>, prueba $\eta = 0{,}05$ (avance lento), $0{,}18$ (zigzag) y $0{,}21$ (divergencia): el límite es exactamente $2/\lambda_{\max} = 0{,}2$. En el paisaje con <strong>varios mínimos</strong>, el valle al que se llega depende del punto de partida. El <strong>momento</strong> $\beta$ añade inercia: atraviesa más rápido los valles estrechos.</figcaption>
+</figure>
+
+<h2>¿Cuándo funciona? Convexidad y suavidad</h2>
+
+<p>Para garantizar que el algoritmo funciona hacen falta dos condiciones sobre el paisaje. Una función es <strong>convexa</strong> si el segmento entre dos puntos cualesquiera de su gráfica queda por encima de ella, es decir, si tiene forma de cuenco. Es <strong>$\beta$-suave</strong> si su gradiente no cambia más deprisa que $\beta$: $\|\nabla f(x) - \nabla f(y)\| \le \beta \|x - y\|$.</p>
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(mínimos de funciones convexas)</span></span>
+  <p>Si $f$ es convexa, todo mínimo local es un mínimo global. Si además es diferenciable, $\nabla f(x^*) = 0$ basta para que $x^*$ sea un mínimo global.</p>
+</div>
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(convergencia del descenso de gradiente)</span></span>
+  <p>Si $f$ es convexa y $\beta$-suave y se usa $\eta = 1/\beta$, entonces tras $k$ pasos</p>
+  $$f(\theta_k) - f(\theta^*) \le \frac{\beta\,\|\theta_0 - \theta^*\|^2}{2k}.$$
+  <p>Si además es $\mu$-fuertemente convexa, la convergencia es geométrica: el error se multiplica en cada paso por, como mucho, $1 - \mu/\beta$.</p>
+</div>
+
+<details class="proof">
+  <summary>El caso cuadrático, donde todo se ve</summary>
+  <div>
+    <p>Tomemos $f(\theta) = \tfrac12 \theta^\top A \theta$ con $A$ simétrica y valores propios $0 < \lambda_{\min} \le \dots \le \lambda_{\max}$. Como $\nabla f = A\theta$, el algoritmo hace $\theta_{t+1} = (I - \eta A)\,\theta_t$. En la base de vectores propios, cada coordenada evoluciona por separado:</p>
+    $$\theta^{(i)}_{t} = (1 - \eta\lambda_i)^t\, \theta^{(i)}_0.$$
+    <p>Converge si y solo si $|1 - \eta\lambda_i| < 1$ para todo $i$, es decir, si $0 < \eta < 2/\lambda_{\max}$. Si $\eta\lambda_i > 1$, esa coordenada cambia de signo en cada paso (el zigzag). La dirección más lenta es la de $\lambda_{\min}$, y con el mejor $\eta$ el error se reduce por paso en un factor $\frac{\kappa - 1}{\kappa + 1}$, donde $\kappa = \lambda_{\max}/\lambda_{\min}$ es el <strong>número de condición</strong>. Los valles estrechos y alargados ($\kappa$ grande) son lentos.</p>
+  </div>
+</details>
+
+<p>Las redes neuronales <strong>no son convexas</strong>: su paisaje de pérdida está lleno de mínimos locales, mesetas y puntos de silla. Ningún teorema clásico garantiza que el descenso de gradiente encuentre allí un buen mínimo, y aun así lo encuentra una y otra vez. Algunas explicaciones parciales: en dimensión alta casi todos los puntos críticos son puntos de silla y no mínimos (Dauphin et al., 2014), y en redes muy sobreparametrizadas la mayoría de los mínimos locales son casi tan buenos como el global. Es una de las grandes preguntas abiertas del campo.</p>
+
+<h2>Inercia: momento y aceleración</h2>
+
+<p>En un valle alargado, el gradiente apunta casi siempre hacia las paredes y no hacia el fondo. Boris Polyak propuso en 1964 el <strong>método de la bola pesada</strong>: acumular una velocidad que promedia los gradientes anteriores,</p>
+
+$$v_{t+1} = \beta\, v_t - \eta\, \nabla\mathcal{L}(\theta_t), \qquad \theta_{t+1} = \theta_t + v_{t+1}.$$
+
+<p>Las oscilaciones se cancelan y el avance en la dirección buena se acumula. En 1983 Yurii Nesterov encontró una variante que alcanza error $O(1/k^2)$ en lugar de $O(1/k)$ para funciones convexas suaves, y demostró que es lo mejor posible:</p>
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(cota inferior de Nesterov)</span></span>
+  <p>Ningún método que solo use gradientes puede garantizar, para todas las funciones convexas y $\beta$-suaves (en dimensión suficientemente alta), un error menor que $\dfrac{3\beta\,\|\theta_0 - \theta^*\|^2}{32\,(k+1)^2}$ tras $k$ pasos. El método acelerado de Nesterov alcanza ese orden.</p>
+</div>
+
+<h2 id="sgd">Descenso de gradiente estocástico</h2>
+
+<p>La pérdida de un LLM es una media sobre billones de palabras de entrenamiento: $\mathcal{L}(\theta) = \frac{1}{N}\sum_{i=1}^N \ell_i(\theta)$. Calcular el gradiente exacto en cada paso exigiría recorrer todos los datos. La alternativa es estimarlo con un <strong>minilote</strong> aleatorio $B$ de unos pocos ejemplos:</p>
+
+$$g_t = \frac{1}{|B|}\sum_{i \in B} \nabla \ell_i(\theta_t), \qquad \mathbb{E}[g_t] = \nabla \mathcal{L}(\theta_t).$$
+
+<p>La estimación es ruidosa pero <strong>insesgada</strong>: en media apunta bien. Herbert Robbins y Sutton Monro demostraron en 1951 que este tipo de procedimiento converge si la tasa de aprendizaje decrece al ritmo adecuado.</p>
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(condiciones de Robbins-Monro, 1951)</span></span>
+  <p>En condiciones de regularidad, la aproximación estocástica converge si las tasas $\eta_t$ cumplen</p>
+  $$\sum_{t=1}^{\infty} \eta_t = \infty \qquad \text{y} \qquad \sum_{t=1}^{\infty} \eta_t^2 < \infty,$$
+  <p>por ejemplo con $\eta_t = c/t$. La primera condición asegura que se puede llegar a cualquier sitio y la segunda, que el ruido acaba apagándose.</p>
+</div>
+
+<figure class="demo wide" data-demo="optimization/sgd">
+  <figcaption>Ajuste de una recta $\hat y = wx + b$ con descenso de gradiente estocástico. <strong>Izquierda:</strong> los datos y la recta actual. <strong>Derecha:</strong> el recorrido de los parámetros $(w, b)$ sobre las curvas de nivel de la pérdida. Con el lote completo el camino es suave; con lotes de 1 ejemplo es errático, pero cada paso cuesta 40 veces menos.</figcaption>
+</figure>
+
+<p>Por eso en la práctica se usan siempre lotes pequeños: muchos pasos baratos y ruidosos ganan a pocos pasos caros y exactos. Además, el ruido parece ayudar a escapar de mínimos «afilados» y a encontrar otros más «planos», que suelen <a href="@ch:learning-theory">generalizar</a> mejor.</p>
+
+<h2>Adam: una tasa de aprendizaje para cada parámetro</h2>
+
+<p>Los parámetros de una red no se parecen entre sí: algunos reciben gradientes enormes y otros diminutos. En 2014 Diederik Kingma y Jimmy Ba propusieron <strong>Adam</strong>, que combina el momento con una normalización por la magnitud reciente de cada gradiente:</p>
+
+$$m_t = \beta_1 m_{t-1} + (1-\beta_1)\,g_t, \qquad v_t = \beta_2 v_{t-1} + (1-\beta_2)\,g_t^2, \qquad \theta_{t+1} = \theta_t - \eta\,\frac{\hat m_t}{\sqrt{\hat v_t} + \epsilon}.$$
+
+<p>Aquí $\hat m_t$ y $\hat v_t$ son las medias corregidas por el sesgo inicial. Su variante con decaimiento de pesos desacoplado, <strong>AdamW</strong> (2017), es el optimizador con el que se entrenan prácticamente todos los LLM actuales, casi siempre con una tasa que sube durante un calentamiento inicial y después decae, en la línea de lo que pedían Robbins y Monro.</p>
+
+<p>Ya tenemos un procedimiento general para ajustar parámetros. La pregunta siguiente es <em>qué</em> familia de funciones parametrizar, y ahí aparece la idea más antigua de la IA: imitar a las neuronas.</p>
+
+<section class="references">
+  <h2>Referencias</h2>
+  <ol>
+    <li>A.-L. Cauchy (1847). «Méthode générale pour la résolution des systèmes d'équations simultanées». <em>Comptes Rendus de l'Académie des Sciences</em>, 25.</li>
+    <li>H. Robbins y S. Monro (1951). «A Stochastic Approximation Method». <em>Annals of Mathematical Statistics</em>, 22(3).</li>
+    <li>B. T. Polyak (1964). «Some methods of speeding up the convergence of iteration methods». <em>USSR Computational Mathematics and Mathematical Physics</em>, 4(5).</li>
+    <li>Y. Nesterov (1983). «A method for solving the convex programming problem with convergence rate O(1/k²)». <em>Doklady Akademii Nauk SSSR</em>, 269.</li>
+    <li>Y. Dauphin et al. (2014). «Identifying and attacking the saddle point problem in high-dimensional non-convex optimization». <em>NeurIPS</em>.</li>
+    <li>D. P. Kingma y J. Ba (2015). «Adam: A Method for Stochastic Optimization». <em>ICLR</em>.</li>
+    <li>I. Loshchilov y F. Hutter (2019). «Decoupled Weight Decay Regularization». <em>ICLR</em>.</li>
+    <li>S. Bubeck (2015). «Convex Optimization: Algorithms and Complexity». <em>Foundations and Trends in Machine Learning</em>, 8(3–4).</li>
+  </ol>
+</section>

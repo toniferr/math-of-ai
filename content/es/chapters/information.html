@@ -1,0 +1,128 @@
+<!--meta
+{
+  "slug": "informacion",
+  "title": "Información",
+  "chain": "Información",
+  "headline": "Medir la sorpresa",
+  "dek": "En 1948 Claude Shannon convirtió la información en una cantidad medible. Con una sola fórmula, la entropía, explicó cuánto se puede comprimir un mensaje y cómo medir lo lejos que está un modelo de la realidad. Esa medida es, literalmente, la función que minimiza cualquier LLM al entrenarse.",
+  "era": "1948 – 1952",
+  "people": ["Claude Shannon", "David Huffman", "Solomon Kullback", "Richard Leibler"],
+  "theorems": ["Entropía de Shannon", "Teorema de codificación de fuente", "Desigualdad de Gibbs", "Entropía cruzada"]
+}
+-->
+
+<p>En julio de 1948 un ingeniero de los Laboratorios Bell, Claude Shannon, publicó «A Mathematical Theory of Communication». En la segunda página apartaba el significado de un plumazo: «los aspectos semánticos de la comunicación son irrelevantes para el problema de ingeniería». Lo que le interesaba era cuánta información hay en un mensaje y cómo transmitirla con eficiencia. Su respuesta fundó una disciplina entera y, setenta años después, da la mejor descripción de lo que hace un modelo de lenguaje.</p>
+
+<h2>La información es sorpresa</h2>
+
+<p>Si alguien te dice que mañana saldrá el sol, no aprendes nada: ya lo sabías. Si te dice que mañana nevará en Sevilla, aprendes mucho. Shannon formalizó esta intuición: la información que aporta un suceso depende solo de lo <em>improbable</em> que era.</p>
+
+<div class="definition">
+  <span class="th-title">Definición <span class="th-name">(información o sorpresa)</span></span>
+  <p>La información de un resultado $x$ con probabilidad $p(x)$ es</p>
+  $$I(x) = -\log_2 p(x) \quad \text{bits}.$$
+</div>
+
+<p>Un suceso seguro ($p = 1$) aporta 0 bits. Una moneda justa aporta $-\log_2 \tfrac12 = 1$ bit. Un suceso con probabilidad $\tfrac{1}{1024}$ aporta 10 bits. El logaritmo tiene un motivo: queremos que la información de dos sucesos independientes se <em>sume</em>, y la probabilidad conjunta se <em>multiplica</em>: $-\log(p\,q) = -\log p - \log q$.</p>
+
+<h2>Entropía: la sorpresa media</h2>
+
+<p>Antes de conocer el resultado no sabemos cuánta sorpresa nos espera, pero sí podemos calcular su valor medio. Esa media es la entropía, la cantidad central de toda la teoría.</p>
+
+<div class="definition">
+  <span class="th-title">Definición <span class="th-name">(entropía, Shannon 1948)</span></span>
+  $$H(X) = \mathbb{E}\big[I(X)\big] = -\sum_{x} p(x) \log_2 p(x).$$
+  <p>Cumple $0 \le H(X) \le \log_2 n$ si $X$ toma $n$ valores. Vale 0 solo cuando un resultado es seguro y alcanza el máximo solo cuando todos son equiprobables.</p>
+</div>
+
+<p>Shannon no escogió la fórmula por estética: demostró que es la <em>única</em> medida razonable de incertidumbre.</p>
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(unicidad, Shannon 1948)</span></span>
+  <p>Sea $H(p_1, \dots, p_n)$ una función que (1) es continua en las $p_i$, (2) crece con $n$ cuando los resultados son equiprobables y (3) es consistente al descomponer una elección en elecciones sucesivas. Entonces</p>
+  $$H = -K \sum_{i=1}^n p_i \log p_i$$
+  <p>para alguna constante $K > 0$, que solo fija la unidad (bits si el logaritmo es en base 2).</p>
+</div>
+
+<p>Vuelve al ejemplo de la portada. Para «El gato está sentado en el…», una distribución muy repartida entre <em>sofá</em>, <em>suelo</em> y <em>jardín</em> tiene una entropía alta: hay mucha incertidumbre sobre la palabra siguiente. Después de «Érase una…», casi toda la probabilidad cae en <em>vez</em> y la entropía es casi cero. Arrastra las barras de la figura para ver cómo cambia.</p>
+
+<figure class="demo wide" data-demo="information/entropy">
+  <figcaption>Arrastra las barras para cambiar la distribución. La entropía $H$ es el número medio de preguntas de sí o no que necesitas para adivinar el resultado. La tabla muestra el <strong>código de Huffman</strong> óptimo para esa distribución: los símbolos frecuentes reciben códigos cortos y su longitud media $L$ siempre queda entre $H$ y $H + 1$.</figcaption>
+</figure>
+
+<h2 id="compresion">Comprimir es predecir</h2>
+
+<p>La entropía tiene un significado operativo muy concreto: es el límite de la compresión sin pérdidas.</p>
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(codificación de fuente, Shannon 1948)</span></span>
+  <p>Para cualquier código binario sin prefijos de los símbolos de una fuente con entropía $H(X)$, la longitud media $L = \sum_x p(x)\,\ell(x)$ cumple $L \ge H(X)$. Además, existe un código con</p>
+  $$H(X) \;\le\; L \;<\; H(X) + 1.$$
+</div>
+
+<details class="proof">
+  <summary>Idea de la demostración</summary>
+  <div>
+    <p>Las longitudes $\ell(x)$ de un código sin prefijos cumplen la <strong>desigualdad de Kraft</strong>, $\sum_x 2^{-\ell(x)} \le 1$, así que $q(x) = 2^{-\ell(x)}$ se comporta como una distribución. Entonces $L - H = \sum_x p(x) \log_2 \frac{p(x)}{q(x)} \ge 0$ por la desigualdad de Gibbs (más abajo). Para la cota superior basta con elegir $\ell(x) = \lceil -\log_2 p(x) \rceil$, que cumple Kraft y da $L < H + 1$.</p>
+  </div>
+</details>
+
+<p>En 1952 David Huffman, entonces estudiante de doctorado en el MIT, encontró un algoritmo sencillo que construye el código óptimo: une una y otra vez los dos símbolos menos probables. La consecuencia es la clave de todo lo que viene: <strong>para comprimir bien hay que predecir bien</strong>. Quien conoce la distribución puede asignar códigos cortos a lo probable. El cálculo inverso también funciona: un buen compresor contiene un buen modelo de los datos.</p>
+
+<aside class="note">Con <strong>codificación aritmética</strong> (Rissanen, 1976) se puede comprimir cualquier secuencia usando prácticamente $-\log_2 q(x)$ bits por símbolo, sin redondeos. En 2023, un equipo de DeepMind mostró que un LLM usado así comprime imágenes y audio mejor que PNG y FLAC, aunque solo se entrenó con texto.</aside>
+
+<h2 id="entropia-cruzada">Entropía cruzada: el precio de equivocarse</h2>
+
+<p>Supón que los datos siguen la distribución real $p$ y que tu modelo cree que siguen $q$. Si diseñas el código con $q$, cada símbolo $x$ te cuesta $-\log_2 q(x)$ bits, y en media pagas la <strong>entropía cruzada</strong>:</p>
+
+$$H(p, q) = -\sum_x p(x) \log_2 q(x) = \underbrace{H(p)}_{\text{inevitable}} + \underbrace{D_{\mathrm{KL}}(p \,\|\, q)}_{\text{culpa del modelo}}.$$
+
+<p>El primer término es la incertidumbre propia de los datos, que ningún modelo puede eliminar. El segundo, la <strong>divergencia de Kullback-Leibler</strong> (1951), mide los bits que se desperdician por usar $q$ en lugar de $p$:</p>
+
+$$D_{\mathrm{KL}}(p \,\|\, q) = \sum_x p(x) \log_2 \frac{p(x)}{q(x)}.$$
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(desigualdad de Gibbs)</span></span>
+  <p>Para cualesquiera distribuciones $p$ y $q$, $D_{\mathrm{KL}}(p \,\|\, q) \ge 0$, con igualdad si y solo si $p = q$. Por tanto $H(p, q) \ge H(p)$.</p>
+</div>
+
+<details class="proof">
+  <summary>Demostración</summary>
+  <div>
+    <p>Usamos $\ln y \le y - 1$, con igualdad solo en $y = 1$. Sumando sobre los $x$ con $p(x) > 0$:</p>
+    $$-D_{\mathrm{KL}}(p\,\|\,q) = \sum_x p(x) \ln \frac{q(x)}{p(x)} \le \sum_x p(x)\left(\frac{q(x)}{p(x)} - 1\right) = \sum_x q(x) - 1 \le 0.$$
+    <p>(El cambio de base del logaritmo solo multiplica por una constante positiva).</p>
+  </div>
+</details>
+
+<figure class="demo wide" data-demo="information/cross-entropy">
+  <figcaption>Las barras huecas son la distribución real $p$ de la palabra siguiente. Las rellenas son tu modelo $q$: arrástralas. La entropía cruzada $H(p, q)$ nunca baja de $H(p)$, y la diferencia es exactamente la divergencia KL. Entrenar un modelo de lenguaje consiste en ajustar $q$ para cerrar esa brecha.</figcaption>
+</figure>
+
+<p>Este es el punto de la web donde todo encaja. Si $p$ es la distribución empírica de los datos de entrenamiento, minimizar $H(p, q_\theta)$ respecto a los parámetros $\theta$ es lo mismo que minimizar la <a href="@ch:probability#verosimilitud">log-verosimilitud negativa</a> del capítulo anterior. <strong>Máxima verosimilitud, mínima entropía cruzada y máxima compresión son el mismo objetivo</strong>, y ese objetivo es la <em>función de pérdida</em> con la que se entrena cada LLM:</p>
+
+$$\mathcal{L}(\theta) = -\frac{1}{T}\sum_{t=1}^{T} \log q_\theta\left(w_t \mid w_{&lt;t}\right).$$
+
+<p>Su exponencial se llama <strong>perplejidad</strong>, $\mathrm{PPL} = 2^{\mathcal{L}}$ (con $\mathcal{L}$ en bits): es como si el modelo dudara, en cada paso, entre $\mathrm{PPL}$ palabras equiprobables.</p>
+
+<h2 id="ngramas">Las aproximaciones de Shannon al inglés</h2>
+
+<p>En el mismo artículo de 1948 Shannon hizo un experimento que hoy parece profético. Generó texto al azar con modelos cada vez más informados: letras equiprobables, letras con su frecuencia real, letras que dependen de la anterior (<em>dígrafos</em>), de las dos anteriores… y luego lo mismo con palabras. Con cada nivel, el texto se parecía más al inglés. Era el primer modelo de lenguaje estadístico, construido a mano con tablas de frecuencias de libros.</p>
+
+<figure class="demo wide" data-demo="information/ngrams">
+  <figcaption>Un modelo de $n$-gramas entrenado con el primer capítulo de <em>Don Quijote</em> (dominio público). El orden $n$ indica cuántos símbolos se miran para predecir el siguiente. A órdenes altos el texto suena a Cervantes, pero porque el modelo <em>copia</em> fragmentos del original: con tan pocos datos, memorizar es la forma más barata de reducir la entropía. Este problema de <a href="@ch:learning-theory">generalización</a> es el que resuelven las redes neuronales.</figcaption>
+</figure>
+
+<p>En 1951 Shannon estimó la entropía del inglés pidiendo a personas que adivinaran textos letra a letra, y obtuvo entre 0,6 y 1,3 bits por letra, muy por debajo de los $\log_2 27 \approx 4{,}75$ bits de las letras equiprobables. Esa redundancia es la que explota un modelo de lenguaje. Un modelo de $n$-gramas no puede ir mucho más allá: el número de contextos crece exponencialmente con $n$ y casi todos aparecen una vez o ninguna. Para generalizar a contextos nunca vistos hay que representar las palabras de forma que «gato» y «felino» queden <em>cerca</em>. Para eso necesitamos vectores y el <a href="@ch:linear-algebra">álgebra lineal</a>.</p>
+
+<section class="references">
+  <h2>Referencias</h2>
+  <ol>
+    <li>C. E. Shannon (1948). «A Mathematical Theory of Communication». <em>Bell System Technical Journal</em>, 27(3–4).</li>
+    <li>S. Kullback y R. A. Leibler (1951). «On Information and Sufficiency». <em>Annals of Mathematical Statistics</em>, 22(1).</li>
+    <li>C. E. Shannon (1951). «Prediction and Entropy of Printed English». <em>Bell System Technical Journal</em>, 30(1).</li>
+    <li>D. A. Huffman (1952). «A Method for the Construction of Minimum-Redundancy Codes». <em>Proceedings of the IRE</em>, 40(9).</li>
+    <li>T. M. Cover y J. A. Thomas (2006). <em>Elements of Information Theory</em>, 2.ª ed. Wiley.</li>
+    <li>G. Delétang et al. (2024). «Language Modeling Is Compression». <em>ICLR 2024</em>.</li>
+  </ol>
+</section>

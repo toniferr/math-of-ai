@@ -1,0 +1,118 @@
+<!--meta
+{
+  "slug": "aprendizaje",
+  "title": "Teoría del aprendizaje",
+  "chain": "Generalizar",
+  "headline": "¿Por qué funciona con datos que nunca ha visto?",
+  "dek": "Memorizar los ejemplos es fácil; acertar con los que no has visto, no. La teoría del aprendizaje estudia cuándo y por qué un modelo entrenado con unos datos generaliza a otros. Sus teoremas clásicos son elegantes… y las redes profundas los desafían.",
+  "era": "1971 – 2019",
+  "people": ["Vladimir Vapnik", "Alexey Chervonenkis", "Leslie Valiant", "David Wolpert", "Mikhail Belkin"],
+  "theorems": ["Cota de generalización (clase finita)", "Dimensión VC", "Teorema fundamental del aprendizaje PAC", "No free lunch"]
+}
+-->
+
+<p>Un estudiante que se aprende de memoria las respuestas del examen del año pasado saca un diez en ese examen y suspende el de este año. Con las máquinas ocurre lo mismo: lo que importa no es el error en los datos de entrenamiento, sino en los datos <em>nuevos</em>. A esa capacidad se le llama <strong>generalización</strong>, y es la propiedad que distingue aprender de memorizar.</p>
+
+<h2>Riesgo empírico y riesgo verdadero</h2>
+
+<p>Supongamos que los ejemplos $(x, y)$ salen de una distribución desconocida $\mathcal{D}$. Para un modelo (o <em>hipótesis</em>) $h$ elegido de una clase $\mathcal{H}$ y una función de pérdida $\ell$, hay dos errores:</p>
+
+$$R(h) = \mathbb{E}_{(x,y)\sim\mathcal{D}}\big[\ell(h(x), y)\big] \qquad \text{y} \qquad \hat R_n(h) = \frac{1}{n}\sum_{i=1}^{n} \ell(h(x_i), y_i).$$
+
+<p>El <strong>riesgo verdadero</strong> $R$ es lo que nos importa, pero no lo podemos calcular. El <strong>riesgo empírico</strong> $\hat R_n$ es lo que medimos con los datos. Entrenar es, casi siempre, <strong>minimizar el riesgo empírico</strong>, un principio que Vladimir Vapnik puso en el centro de la teoría. La pregunta es cuándo un $\hat R_n$ pequeño garantiza un $R$ pequeño.</p>
+
+<figure class="demo wide" data-demo="learning-theory/overfitting">
+  <figcaption>Ajuste de un polinomio de grado $d$ a $n$ puntos con ruido (la curva discontinua es la función real). <strong>Derecha:</strong> el error en los datos de entrenamiento siempre baja al subir el grado, pero el error en datos nuevos dibuja una U. Con grado bajo el modelo es demasiado rígido (<em>subajuste</em>); con grado alto persigue el ruido (<em>sobreajuste</em>). Pulsa «Nuevos datos» para ver cuánto cambia el ajuste de grado alto con otra muestra: eso es la varianza.</figcaption>
+</figure>
+
+<p>La figura ilustra la <strong>descomposición sesgo-varianza</strong> (Geman, Bienenstock y Doursat, 1992). Para la pérdida cuadrática, el error esperado en un punto nuevo se separa en tres términos:</p>
+
+$$\mathbb{E}\big[(y - \hat h(x))^2\big] = \underbrace{\big(\mathbb{E}[\hat h(x)] - f(x)\big)^2}_{\text{sesgo}^2} + \underbrace{\operatorname{Var}\big(\hat h(x)\big)}_{\text{varianza}} + \underbrace{\sigma^2}_{\text{ruido}}.$$
+
+<p>Los modelos simples tienen sesgo alto y varianza baja; los complejos, al revés. La sabiduría clásica dice que hay que buscar el punto intermedio.</p>
+
+<h2>Aprendizaje PAC</h2>
+
+<p>En 1984 Leslie Valiant dio una definición formal de «aprender» con una expresión deliberadamente modesta: <strong>probablemente aproximadamente correcto</strong> (PAC). No exigimos acertar siempre; basta con que, <em>con probabilidad alta</em> sobre la muestra, el modelo tenga <em>error pequeño</em>.</p>
+
+<div class="definition">
+  <span class="th-title">Definición <span class="th-name">(aprendizaje PAC, Valiant 1984)</span></span>
+  <p>Una clase $\mathcal{H}$ es aprendible si existe un algoritmo y una función $n(\varepsilon, \delta)$ tales que, para toda distribución $\mathcal{D}$ y todos $\varepsilon, \delta \in (0,1)$, con $n \ge n(\varepsilon,\delta)$ ejemplos el algoritmo devuelve $h$ con</p>
+  $$P\Big(R(h) \le \min_{h' \in \mathcal{H}} R(h') + \varepsilon\Big) \ge 1 - \delta.$$
+</div>
+
+<p>Para una clase finita, la respuesta sale de combinar dos herramientas clásicas.</p>
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(cota de generalización para clases finitas)</span></span>
+  <p>Si $\mathcal{H}$ es finita y la pérdida toma valores en $[0,1]$, entonces con probabilidad al menos $1-\delta$ sobre la muestra, para <strong>toda</strong> $h \in \mathcal{H}$ a la vez,</p>
+  $$R(h) \;\le\; \hat R_n(h) + \sqrt{\frac{\ln|\mathcal{H}| + \ln(2/\delta)}{2n}}.$$
+</div>
+
+<details class="proof">
+  <summary>Demostración</summary>
+  <div>
+    <p>Para una $h$ fija, $\hat R_n(h)$ es una media de $n$ variables independientes en $[0,1]$ con esperanza $R(h)$. La <strong>desigualdad de Hoeffding</strong> (1963) dice que $P(|\hat R_n(h) - R(h)| > \varepsilon) \le 2e^{-2n\varepsilon^2}$: la <a href="@ch:probability">ley de los grandes números</a> con velocidad exponencial. Con la <strong>cota de la unión</strong>, la probabilidad de que <em>alguna</em> de las $|\mathcal{H}|$ hipótesis se desvíe es como mucho $2|\mathcal{H}|e^{-2n\varepsilon^2}$. Igualando a $\delta$ y despejando $\varepsilon$ sale la cota.</p>
+  </div>
+</details>
+
+<p>La cota recoge la intuición de la navaja de Occam: el precio por elegir entre muchas hipótesis crece con $\ln|\mathcal{H}|$, que es aproximadamente el número de bits necesarios para describir la hipótesis elegida. Más datos lo compensan como $1/\sqrt{n}$.</p>
+
+<h2 id="vc">La dimensión VC</h2>
+
+<p>Las clases interesantes son infinitas: hay infinitas rectas en el plano. Vladimir Vapnik y Alexey Chervonenkis encontraron en 1971 la medida adecuada de su capacidad. Se dice que una clase <strong>pulveriza</strong> un conjunto de puntos si consigue <em>todas</em> las formas posibles de etiquetarlos.</p>
+
+<div class="definition">
+  <span class="th-title">Definición <span class="th-name">(dimensión de Vapnik-Chervonenkis)</span></span>
+  <p>La dimensión VC de $\mathcal{H}$ es el mayor $d$ tal que algún conjunto de $d$ puntos es pulverizado por $\mathcal{H}$. Si existen conjuntos pulverizados de cualquier tamaño, es infinita.</p>
+</div>
+
+<figure class="demo wide" data-demo="learning-theory/shatter">
+  <figcaption>¿Pueden las rectas pulverizar estos puntos? Cada miniatura es uno de los $2^n$ etiquetados posibles, con la recta que lo separa (si existe). Arrastra los puntos. Con 3 puntos en posición general salen los 8, pero con 4 nunca salen los 16: hay siempre un etiquetado tipo XOR imposible. La dimensión VC de las rectas del plano es 3 (y la de los hiperplanos de $\mathbb{R}^k$, $k+1$).</figcaption>
+</figure>
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(teorema fundamental del aprendizaje PAC)</span></span>
+  <p>Para clasificación binaria, $\mathcal{H}$ es PAC-aprendible si y solo si su dimensión VC $d$ es finita. En ese caso el número de ejemplos necesario es</p>
+  $$n(\varepsilon, \delta) = \Theta\!\left(\frac{d + \ln(1/\delta)}{\varepsilon^2}\right),$$
+  <p>y minimizar el riesgo empírico es un algoritmo que lo consigue.</p>
+</div>
+
+<p>Este resultado, construido por Vapnik y Chervonenkis (1971) y Blumer, Ehrenfeucht, Haussler y Warmuth (1989), es una de las cumbres de la teoría: reduce la pregunta «¿se puede aprender?» a un número combinatorio. En los años noventa inspiró las <strong>máquinas de vectores soporte</strong> (Boser, Guyon y Vapnik, 1992; Cortes y Vapnik, 1995), que maximizan el margen para controlar la capacidad y fueron el método estrella antes del aprendizaje profundo.</p>
+
+<h2>No hay almuerzo gratis</h2>
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(no free lunch; Wolpert, 1996)</span></span>
+  <p>Promediando sobre todas las funciones objetivo posibles, todos los algoritmos de aprendizaje tienen el mismo error medio fuera de la muestra de entrenamiento. Ningún método es mejor que otro en todos los problemas.</p>
+</div>
+
+<p>Generalizar exige suponer algo sobre el mundo, un <strong>sesgo inductivo</strong>. Las convoluciones suponen que lo que importa en una imagen no depende de su posición. La <a href="@ch:transformers">atención</a> supone que cualquier palabra puede depender de cualquier otra, con un peso que se calcula según el contenido. Elegir la arquitectura es, en buena parte, elegir las suposiciones correctas.</p>
+
+<h2 id="misterio">El misterio de las redes profundas</h2>
+
+<p>En 2017, Chiyuan Zhang y sus colaboradores hicieron un experimento demoledor: entrenaron redes de visión estándar con las etiquetas de las imágenes <em>barajadas al azar</em>. Las redes las memorizaron a la perfección. Su capacidad, por tanto, da para ajustar cualquier cosa, así que las cotas basadas en VC son inútiles para ellas: predicen errores mayores que el 100 %. Y sin embargo, con las etiquetas verdaderas, esas mismas redes generalizan de maravilla.</p>
+
+<p>Belkin y sus colaboradores (2019) documentaron además el <strong>doble descenso</strong>: si se aumenta el tamaño del modelo más allá del punto en que ajusta perfectamente los datos, el error de prueba, que había empeorado según la curva en U clásica, <em>vuelve a bajar</em>. Los LLM viven muy a la derecha de esa curva.</p>
+
+<div class="idea">
+  <span class="th-title">Pregunta abierta</span>
+  <p>No hay todavía una teoría completa de por qué generalizan las redes sobreparametrizadas. Las explicaciones candidatas son la regularización implícita del descenso de gradiente estocástico (que tiende a soluciones «simples» o de norma pequeña), la preferencia por mínimos planos, las cotas PAC-Bayes (que sí dan garantías no triviales en algunos casos) y la estructura de los propios datos del mundo real.</p>
+</div>
+
+<p>Con los datos, la arquitectura y el algoritmo de optimización adecuados, la generalización llega. Para el lenguaje, la arquitectura que lo cambió todo apareció en 2017.</p>
+
+<section class="references">
+  <h2>Referencias</h2>
+  <ol>
+    <li>V. N. Vapnik y A. Y. Chervonenkis (1971). «On the Uniform Convergence of Relative Frequencies of Events to Their Probabilities». <em>Theory of Probability and Its Applications</em>, 16(2).</li>
+    <li>W. Hoeffding (1963). «Probability Inequalities for Sums of Bounded Random Variables». <em>JASA</em>, 58(301).</li>
+    <li>L. G. Valiant (1984). «A Theory of the Learnable». <em>Communications of the ACM</em>, 27(11).</li>
+    <li>A. Blumer, A. Ehrenfeucht, D. Haussler y M. K. Warmuth (1989). «Learnability and the Vapnik-Chervonenkis Dimension». <em>Journal of the ACM</em>, 36(4).</li>
+    <li>S. Geman, E. Bienenstock y R. Doursat (1992). «Neural Networks and the Bias/Variance Dilemma». <em>Neural Computation</em>, 4(1).</li>
+    <li>D. H. Wolpert (1996). «The Lack of A Priori Distinctions Between Learning Algorithms». <em>Neural Computation</em>, 8(7).</li>
+    <li>C. Zhang, S. Bengio, M. Hardt, B. Recht y O. Vinyals (2017). «Understanding Deep Learning Requires Rethinking Generalization». <em>ICLR</em>.</li>
+    <li>M. Belkin, D. Hsu, S. Ma y S. Mandal (2019). «Reconciling modern machine-learning practice and the classical bias-variance trade-off». <em>PNAS</em>, 116(32).</li>
+    <li>S. Shalev-Shwartz y S. Ben-David (2014). <em>Understanding Machine Learning: From Theory to Algorithms</em>. Cambridge University Press.</li>
+  </ol>
+</section>

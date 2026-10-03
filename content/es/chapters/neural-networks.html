@@ -1,0 +1,114 @@
+<!--meta
+{
+  "slug": "redes-neuronales",
+  "title": "Redes neuronales",
+  "chain": "Neuronas",
+  "headline": "Del perceptrón a la aproximación universal",
+  "dek": "En 1958 una máquina de la Marina de EE. UU. aprendió a distinguir tarjetas marcadas a izquierda y derecha, y la prensa anunció que pronto andaría, hablaría y sería consciente de su existencia. Once años después, un libro demostró que no podía calcular algo tan simple como el «o exclusivo». Esta es la historia de cómo una sola capa oculta lo arregló todo.",
+  "era": "1943 – 2012",
+  "people": ["Warren McCulloch", "Walter Pitts", "Frank Rosenblatt", "Marvin Minsky", "Seymour Papert", "George Cybenko", "Yann LeCun"],
+  "theorems": ["Convergencia del perceptrón", "XOR no es linealmente separable", "Aproximación universal"]
+}
+-->
+
+<p>En 1943 el neurofisiólogo Warren McCulloch y el joven lógico Walter Pitts publicaron «A Logical Calculus of the Ideas Immanent in Nervous Activity». Modelaron la neurona como un interruptor que se activa si la suma de sus entradas supera un umbral, y demostraron que las redes de estas neuronas pueden calcular cualquier función lógica. Era la primera vez que alguien conectaba el cerebro con la <a href="@ch:computation">computación</a> de Turing. Faltaba la pieza fundamental: cómo <em>aprenden</em> esas conexiones.</p>
+
+<h2>El perceptrón</h2>
+
+<p>En 1949 el psicólogo Donald Hebb propuso que las conexiones entre neuronas que se activan juntas se refuerzan. Frank Rosenblatt, psicólogo del Laboratorio Aeronáutico de Cornell, convirtió esa intuición en un algoritmo en 1957: el <strong>perceptrón</strong>. Calcula una suma ponderada de sus entradas y responde con su signo:</p>
+
+$$\hat y = \operatorname{sgn}\left(\mathbf{w} \cdot \mathbf{x} + b\right) \in \{-1, +1\}.$$
+
+<p>Geométricamente, la ecuación $\mathbf{w} \cdot \mathbf{x} + b = 0$ es una recta (un hiperplano en dimensión alta) que parte el espacio en dos, una mitad para cada clase. Lo nuevo era la regla de aprendizaje: cada vez que el perceptrón se equivoca con un ejemplo $(\mathbf{x}, y)$, corrige</p>
+
+$$\mathbf{w} \leftarrow \mathbf{w} + \eta\, y\, \mathbf{x}, \qquad b \leftarrow b + \eta\, y.$$
+
+<p>Si clasifica bien, no toca nada. Rosenblatt construyó una versión física, el <em>Mark I Perceptron</em>, con 400 fotocélulas y potenciómetros movidos por motores eléctricos como pesos ajustables. En julio de 1958, tras una demostración pública, el <em>New York Times</em> escribió que la Marina esperaba que fuera el embrión de un ordenador capaz de «andar, hablar, ver, escribir, reproducirse y ser consciente de su existencia».</p>
+
+<figure class="demo wide" data-demo="neural-networks/playground">
+  <figcaption>Un laboratorio de clasificación. Haz clic para añadir puntos de la clase elegida. Con datos <strong>separables</strong> el perceptrón encuentra una recta en pocas pasadas, como garantiza el teorema de Novikoff. Con el <strong>XOR</strong> no lo consigue nunca: cambia a la red con capa oculta y observa cómo dobla la frontera. El fondo muestra la confianza del modelo en cada región.</figcaption>
+</figure>
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(convergencia del perceptrón; Novikoff, 1962)</span></span>
+  <p>Supongamos que $\|\mathbf{x}_i\| \le R$ para todos los ejemplos y que existe un vector unitario $\mathbf{w}^*$ que separa las clases con margen $\gamma > 0$: $\;y_i\,(\mathbf{w}^* \cdot \mathbf{x}_i) \ge \gamma$. Entonces el perceptrón (con $b$ incorporado en $\mathbf{w}$ y empezando en $\mathbf{w} = \mathbf{0}$) comete como mucho</p>
+  $$\left(\frac{R}{\gamma}\right)^2$$
+  <p>errores, sin importar el orden de los ejemplos ni cuántos haya.</p>
+</div>
+
+<details class="proof">
+  <summary>Demostración</summary>
+  <div>
+    <p>Sea $\mathbf{w}_k$ el vector tras el $k$-ésimo error, cometido con $(\mathbf{x}, y)$. Tomamos $\eta = 1$ porque su valor no afecta al resultado. Dos cotas:</p>
+    <p><strong>Crece en la dirección buena:</strong> $\mathbf{w}_{k} \cdot \mathbf{w}^* = \mathbf{w}_{k-1}\cdot \mathbf{w}^* + y\,\mathbf{x}\cdot\mathbf{w}^* \ge \mathbf{w}_{k-1}\cdot \mathbf{w}^* + \gamma$, luego $\mathbf{w}_k \cdot \mathbf{w}^* \ge k\gamma$.</p>
+    <p><strong>No crece demasiado:</strong> $\|\mathbf{w}_k\|^2 = \|\mathbf{w}_{k-1}\|^2 + 2y\,\mathbf{w}_{k-1}\cdot\mathbf{x} + \|\mathbf{x}\|^2 \le \|\mathbf{w}_{k-1}\|^2 + R^2$, porque hubo error ($y\,\mathbf{w}_{k-1}\cdot\mathbf{x} \le 0$). Luego $\|\mathbf{w}_k\|^2 \le kR^2$.</p>
+    <p>Por Cauchy-Schwarz, $k\gamma \le \mathbf{w}_k\cdot\mathbf{w}^* \le \|\mathbf{w}_k\| \le \sqrt{k}\,R$, de donde $k \le (R/\gamma)^2$.</p>
+  </div>
+</details>
+
+<h2 id="xor">El problema del XOR y el primer invierno</h2>
+
+<p>En 1969 Marvin Minsky y Seymour Papert publicaron <em>Perceptrons</em>, un análisis matemático riguroso de lo que un perceptrón de una capa puede y no puede hacer. El ejemplo más famoso es el «o exclusivo» (XOR): devolver 1 si exactamente una de dos entradas binarias vale 1.</p>
+
+<div class="theorem">
+  <span class="th-title">Proposición <span class="th-name">(XOR no es linealmente separable)</span></span>
+  <p>No existen $w_1, w_2, b$ tales que $\operatorname{sgn}(w_1 x_1 + w_2 x_2 + b)$ valga $+1$ en $(0,1)$ y $(1,0)$, y $-1$ en $(0,0)$ y $(1,1)$.</p>
+</div>
+
+<details class="proof">
+  <summary>Demostración</summary>
+  <div>
+    <p>Necesitaríamos $b < 0$, $\;w_2 + b > 0$, $\;w_1 + b > 0$ y $w_1 + w_2 + b < 0$. Sumando la segunda y la tercera, $w_1 + w_2 + 2b > 0$, es decir, $w_1 + w_2 + b > -b > 0$, lo que contradice la cuarta.</p>
+  </div>
+</details>
+
+<p>El libro reconocía que las redes con varias capas no tienen esa limitación, pero no se sabía cómo entrenarlas. Junto con el informe Lighthill (1973) en el Reino Unido, el escepticismo cortó la financiación y llevó al primer <a href="@timeline">invierno de la IA</a>. Rosenblatt murió en 1971 en un accidente de barco, sin ver la reivindicación de sus ideas.</p>
+
+<h2>La capa oculta</h2>
+
+<p>La solución es componer. Una <strong>red neuronal multicapa</strong> aplica una transformación lineal, una no linealidad, otra transformación lineal…</p>
+
+$$f(\mathbf{x}) = W_2\, \sigma\left(W_1 \mathbf{x} + \mathbf{b}_1\right) + \mathbf{b}_2.$$
+
+<p>Las neuronas de la capa oculta calculan rasgos nuevos (para el XOR, por ejemplo, «al menos una entrada encendida» y «las dos encendidas»), y en ese nuevo espacio el problema sí es separable. Como vimos en el <a href="@ch:linear-algebra">capítulo de álgebra lineal</a>, sin la no linealidad $\sigma$ todo se colapsaría en una sola matriz. Desde 1986 sabemos entrenar estas redes con <a href="@ch:calculus#backprop">retropropagación</a> y <a href="@ch:optimization">descenso de gradiente</a>. ¿Hasta dónde llega su poder expresivo?</p>
+
+<h2 id="aproximacion">El teorema de aproximación universal</h2>
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(aproximación universal; Cybenko 1989, Hornik 1991, Leshno et al. 1993)</span></span>
+  <p>Sea $\sigma$ una función continua sigmoidal (o, más en general, cualquier función continua que no sea un polinomio). Para toda función continua $f : [0,1]^d \to \mathbb{R}$ y todo $\varepsilon > 0$ existen $N$ y parámetros $\alpha_i, b_i \in \mathbb{R}$, $\mathbf{w}_i \in \mathbb{R}^d$ tales que</p>
+  $$\left|\, f(\mathbf{x}) - \sum_{i=1}^{N} \alpha_i\, \sigma\left(\mathbf{w}_i \cdot \mathbf{x} + b_i\right) \right| < \varepsilon \qquad \text{para todo } \mathbf{x} \in [0,1]^d.$$
+</div>
+
+<p>Con una sola capa oculta suficientemente ancha se puede aproximar <em>cualquier</em> función continua tanto como se quiera. En una dimensión la idea se ve con claridad: una sigmoide muy empinada es casi un escalón, y una suma de escalones puede imitar cualquier curva.</p>
+
+<figure class="demo wide" data-demo="neural-networks/universal">
+  <figcaption>Una red con una capa oculta de $N$ neuronas sigmoides aproxima la curva objetivo (gris). Cada neurona aporta un escalón suave en una posición; sus alturas se ajustan para seguir la función. Al subir $N$ y la pendiente $k$, el error máximo baja tanto como quieras. Es una demostración constructiva del teorema en una dimensión.</figcaption>
+</figure>
+
+<p>Hay que leer el teorema con cuidado. Garantiza que la aproximación <em>existe</em>, pero no dice cuántas neuronas hacen falta (pueden ser exponencialmente muchas), ni que el descenso de gradiente vaya a encontrarla, ni que la red funcione bien con datos que no ha visto. La profundidad importa: hay funciones que una red profunda representa con pocas neuronas y que una red de una sola capa necesitaría exponencialmente más neuronas para aproximar (Telgarsky, 2016). Por eso el aprendizaje es <em>profundo</em>.</p>
+
+<aside class="note">El teorema de Kolmogorov-Arnold (1957) es un primo lejano: toda función continua de varias variables se escribe <em>exactamente</em> como sumas y composiciones de funciones continuas de una variable.</aside>
+
+<h2>El regreso: aprendizaje profundo</h2>
+
+<p>En 1989 Yann LeCun entrenó con retropropagación una <strong>red convolucional</strong> que leía los códigos postales escritos a mano del servicio postal de EE. UU. Las convoluciones reutilizan los mismos pesos en todas las posiciones de la imagen, una forma de incorporar a la arquitectura el conocimiento de que un borde es un borde esté donde esté. Aun así, durante los años noventa y dos mil otras técnicas, como las máquinas de vectores soporte, dominaron el aprendizaje automático.</p>
+
+<p>El cambio llegó con tres ingredientes que por fin coincidieron: datos masivos (ImageNet, 2009, con más de un millón de imágenes etiquetadas para la competición), cálculo masivo (GPU) y algunos trucos técnicos (ReLU, <em>dropout</em>, buena inicialización). En 2012, la red <em>AlexNet</em> de Alex Krizhevsky, Ilya Sutskever y Geoffrey Hinton ganó la competición de ImageNet con un error top-5 del 15,3 %, frente al 26,2 % del segundo clasificado. En pocos años las redes profundas pasaron a dominar la visión, el habla y, después, el lenguaje.</p>
+
+<p>Queda un misterio. Las redes modernas tienen muchos más parámetros que ejemplos de entrenamiento: podrían memorizarlo todo, y aun así aciertan con datos nuevos. ¿Por qué? Esa es la pregunta de la <a href="@ch:learning-theory">teoría del aprendizaje</a>.</p>
+
+<section class="references">
+  <h2>Referencias</h2>
+  <ol>
+    <li>W. S. McCulloch y W. Pitts (1943). «A Logical Calculus of the Ideas Immanent in Nervous Activity». <em>Bulletin of Mathematical Biophysics</em>, 5.</li>
+    <li>F. Rosenblatt (1958). «The Perceptron: A Probabilistic Model for Information Storage and Organization in the Brain». <em>Psychological Review</em>, 65(6).</li>
+    <li>A. B. J. Novikoff (1962). «On Convergence Proofs on Perceptrons». <em>Symposium on the Mathematical Theory of Automata</em>, 12.</li>
+    <li>M. Minsky y S. Papert (1969). <em>Perceptrons</em>. MIT Press.</li>
+    <li>G. Cybenko (1989). «Approximation by Superpositions of a Sigmoidal Function». <em>Mathematics of Control, Signals and Systems</em>, 2(4).</li>
+    <li>K. Hornik (1991). «Approximation Capabilities of Multilayer Feedforward Networks». <em>Neural Networks</em>, 4(2).</li>
+    <li>Y. LeCun et al. (1989). «Backpropagation Applied to Handwritten Zip Code Recognition». <em>Neural Computation</em>, 1(4).</li>
+    <li>A. Krizhevsky, I. Sutskever y G. E. Hinton (2012). «ImageNet Classification with Deep Convolutional Neural Networks». <em>NeurIPS</em>.</li>
+    <li>M. Telgarsky (2016). «Benefits of depth in neural networks». <em>COLT</em>.</li>
+  </ol>
+</section>

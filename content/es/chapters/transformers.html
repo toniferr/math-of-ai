@@ -1,0 +1,108 @@
+<!--meta
+{
+  "slug": "transformers",
+  "title": "Transformers",
+  "chain": "Atención",
+  "headline": "Atención: cada palabra mira a todas las demás",
+  "dek": "En 2017 ocho investigadores de Google publicaron un artículo con un título provocador: «Attention Is All You Need». Su arquitectura, el Transformer, sustituyó la lectura palabra a palabra por una operación en la que cada palabra decide, con un producto escalar y un softmax, en qué otras debe fijarse.",
+  "era": "1990 – 2017",
+  "people": ["Sepp Hochreiter", "Jürgen Schmidhuber", "Dzmitry Bahdanau", "Kyunghyun Cho", "Yoshua Bengio", "Ashish Vaswani", "Noam Shazeer"],
+  "theorems": ["Atención como búsqueda suave", "Varianza del producto escalar ($\\sqrt{d_k}$)", "Aproximación universal de secuencias"]
+}
+-->
+
+<p>Lee esta frase: «La gata que perseguía al ratón estaba muy <em>cansada</em>». Para saber que la última palabra va en femenino hay que recordar «gata», siete palabras atrás, y no confundirla con «ratón», que está más cerca. Un modelo de <a href="@ch:information#ngramas">$n$-gramas</a> que solo mira las dos o tres palabras anteriores no puede hacerlo. Capturar dependencias lejanas fue durante décadas el gran problema del modelado del lenguaje.</p>
+
+<h2>Antes de la atención: leer de izquierda a derecha</h2>
+
+<p>Las <strong>redes recurrentes</strong> (Elman, 1990) leen el texto palabra a palabra y van actualizando un vector de estado, una especie de memoria resumida: $h_t = \sigma(W h_{t-1} + U x_t)$. En la práctica olvidaban rápido, por el <a href="@ch:calculus">gradiente que se desvanece</a> a lo largo de la cadena. Las <strong>LSTM</strong> de Sepp Hochreiter y Jürgen Schmidhuber (1997) añadieron puertas que deciden qué guardar y qué olvidar, y dominaron la traducción automática y el reconocimiento de voz durante veinte años.</p>
+
+<p>Pero seguían siendo secuenciales. Para traducir, un codificador comprimía toda la frase de entrada en <em>un único vector</em>, y el decodificador generaba la traducción a partir de él (Sutskever, Vinyals y Le, 2014). Una frase larga no cabe bien en un vector. En 2014, Dzmitry Bahdanau, Kyunghyun Cho y Yoshua Bengio propusieron dejar que el decodificador, en cada paso, <strong>mirara</strong> todas las palabras de la entrada y eligiera en cuáles fijarse. Lo llamaron atención.</p>
+
+<h2>Atención: una búsqueda suave en un diccionario</h2>
+
+<p>Piensa en un diccionario de Python: buscas una <em>clave</em> y obtienes su <em>valor</em>. La atención es una versión «suave» y diferenciable de esa búsqueda. Cada palabra (cada <em>token</em>) produce tres vectores mediante tres matrices aprendidas, a partir de su embedding $\mathbf{x}$:</p>
+
+<ul>
+  <li>una <span class="k1">consulta</span> $\mathbf{q} = W_Q \mathbf{x}$: «¿qué estoy buscando?»;</li>
+  <li>una <span class="k2">clave</span> $\mathbf{k} = W_K \mathbf{x}$: «¿qué ofrezco?»;</li>
+  <li>un <span class="k3">valor</span> $\mathbf{v} = W_V \mathbf{x}$: «esta es mi información si me eliges».</li>
+</ul>
+
+<p>El parecido entre la consulta de la palabra $i$ y la clave de la palabra $j$ es un <a href="@ch:linear-algebra">producto escalar</a>. Un softmax convierte esas puntuaciones en pesos que suman 1, y la salida es la media de los valores ponderada por esos pesos. Con todas las palabras a la vez, en forma matricial:</p>
+
+$$\operatorname{Atención}(Q, K, V) = \operatorname{softmax}\!\left(\frac{\class{k1}{Q}\class{k2}{K^\top}}{\sqrt{d_k}}\right)\class{k3}{V}, \qquad \operatorname{softmax}(\mathbf{s})_j = \frac{e^{s_j}}{\sum_{l} e^{s_l}}.$$
+
+<figure class="demo wide" data-demo="transformers/attention">
+  <figcaption>Tres «cabezas» de atención sobre la misma frase. Haz clic en una palabra para ver a qué palabras atiende; la matriz muestra todas las filas a la vez. Las matrices $W_Q$ y $W_K$ están diseñadas a mano sobre rasgos simples (sustantivo, género, posición, función de sujeto) para que se entienda qué hace cada cabeza; en un modelo real se aprenden y los rasgos los construyen las capas anteriores. Activa la <strong>máscara causal</strong> para ver la atención de un modelo generativo, que no puede mirar el futuro.</figcaption>
+</figure>
+
+<p>Fíjate en la cabeza de concordancia: «cansada» atiende a «gata» y no a «ratón», aunque «ratón» esté más cerca. La distancia no importa. Cualquier palabra puede consultar directamente a cualquier otra, en un solo paso.</p>
+
+<h2>¿Por qué dividir entre $\sqrt{d_k}$?</h2>
+
+<p>El factor de la fórmula no es decorativo. Sale de un cálculo de varianza.</p>
+
+<div class="theorem">
+  <span class="th-title">Proposición <span class="th-name">(escala del producto escalar)</span></span>
+  <p>Si las componentes de $\mathbf{q}, \mathbf{k} \in \mathbb{R}^{d_k}$ son independientes, con media 0 y varianza 1, entonces</p>
+  $$\mathbb{E}[\mathbf{q}\cdot\mathbf{k}] = 0, \qquad \operatorname{Var}(\mathbf{q}\cdot\mathbf{k}) = d_k.$$
+</div>
+
+<details class="proof">
+  <summary>Demostración</summary>
+  <div>
+    <p>$\mathbf{q}\cdot\mathbf{k} = \sum_{i=1}^{d_k} q_i k_i$. Cada término tiene media $\mathbb{E}[q_i]\mathbb{E}[k_i] = 0$ y varianza $\mathbb{E}[q_i^2]\mathbb{E}[k_i^2] = 1$, y los términos son independientes, así que las varianzas se suman.</p>
+  </div>
+</details>
+
+<p>Con $d_k = 128$, las puntuaciones tendrían una desviación típica de más de 11. El softmax de números tan dispares es prácticamente un «uno y todo ceros», y en esa zona su gradiente es casi nulo: la red dejaría de aprender. Dividir entre $\sqrt{d_k}$ devuelve la varianza a 1. Puedes comprobarlo en la figura desactivando la división.</p>
+
+<h2>El bloque Transformer</h2>
+
+<p>Un Transformer apila decenas de bloques iguales. Cada uno tiene dos partes:</p>
+
+<ol>
+  <li><strong>Atención multicabeza.</strong> Varias atenciones en paralelo, cada una con sus propias $W_Q, W_K, W_V$, que pueden especializarse en relaciones distintas (sintaxis, posición, correferencia…). Sus salidas se concatenan y se mezclan con otra matriz.</li>
+  <li><strong>Una red neuronal</strong> de dos capas aplicada a cada posición por separado. Se cree que en ella se almacena buena parte del «conocimiento» factual del modelo.</li>
+</ol>
+
+<p>Alrededor de cada parte hay una <strong>conexión residual</strong>, $\mathbf{x} \leftarrow \mathbf{x} + \operatorname{Capa}(\mathbf{x})$, y una normalización. La atención por sí sola no distingue el orden de las palabras: «el perro muerde al hombre» y «el hombre muerde al perro» darían lo mismo. Por eso se suma a cada embedding una <strong>codificación de posición</strong>. El artículo original usaba senos y cosenos de distintas frecuencias,</p>
+
+$$\mathrm{PE}_{(p,\,2i)} = \sin\!\left(\frac{p}{10000^{2i/d}}\right), \qquad \mathrm{PE}_{(p,\,2i+1)} = \cos\!\left(\frac{p}{10000^{2i/d}}\right),$$
+
+<p>elegidos porque desplazar la posición equivale a una <em>rotación</em>, una transformación lineal. La cabeza de «palabra anterior» de la figura aprovecha justamente esa propiedad.</p>
+
+<aside class="note">Muchos LLM actuales usan <strong>RoPE</strong> (Su et al., 2021), que gira directamente las consultas y las claves según su posición, de modo que $\mathbf{q}_i\cdot\mathbf{k}_j$ depende solo de la distancia $i - j$.</aside>
+
+<h2>Generar texto: la máscara causal</h2>
+
+<p>Un modelo como GPT es un Transformer «solo decodificador»: en cada posición predice el <a href="@ch:probability">token siguiente</a>. Para que no haga trampa durante el entrenamiento, se impide que cada posición mire a las posteriores poniendo $-\infty$ en esas puntuaciones antes del softmax. Gracias a esta <strong>máscara causal</strong>, una sola pasada sobre un texto de $T$ tokens da $T$ predicciones de entrenamiento a la vez.</p>
+
+<p>Aquí está la razón práctica del éxito del Transformer: a diferencia de las redes recurrentes, procesa todas las posiciones <strong>en paralelo</strong>, con multiplicaciones de matrices que las GPU ejecutan muy deprisa. Tiene un precio: la matriz de atención tiene $T \times T$ entradas, así que el coste crece con el cuadrado de la longitud del contexto. Buena parte de la investigación actual (FlashAttention, atención dispersa, modelos de espacio de estados) intenta abaratar ese término.</p>
+
+<h2>Lo que sabemos en teoría</h2>
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(aproximación universal de secuencias; Yun et al., 2020)</span></span>
+  <p>Los Transformers con codificación de posición pueden aproximar con precisión arbitraria cualquier función continua de secuencias de longitud fija en secuencias, sobre un dominio compacto.</p>
+</div>
+
+<p>Es la versión, para secuencias, del <a href="@ch:neural-networks#aproximacion">teorema de aproximación universal</a>. Pérez, Barceló y Marinković (2021) demostraron además que, con precisión aritmética ilimitada, los Transformers son <a href="@ch:computation">Turing-completos</a>: se cierra el círculo con el primer capítulo. Más intrigante aún es el <strong>aprendizaje en contexto</strong>: se ha demostrado que la atención puede implementar, dentro de una sola pasada, algoritmos como un paso de descenso de gradiente sobre ejemplos dados en el propio texto (von Oswald et al., 2023). Es una pista de cómo un LLM «aprende» de los ejemplos de una pregunta sin cambiar sus pesos.</p>
+
+<p>Ya tenemos todas las piezas. En el último capítulo las juntamos a escala: billones de tokens, cientos de miles de millones de parámetros y un objetivo tan simple como predecir la palabra siguiente.</p>
+
+<section class="references">
+  <h2>Referencias</h2>
+  <ol>
+    <li>J. L. Elman (1990). «Finding Structure in Time». <em>Cognitive Science</em>, 14(2).</li>
+    <li>S. Hochreiter y J. Schmidhuber (1997). «Long Short-Term Memory». <em>Neural Computation</em>, 9(8).</li>
+    <li>I. Sutskever, O. Vinyals y Q. V. Le (2014). «Sequence to Sequence Learning with Neural Networks». <em>NeurIPS</em>.</li>
+    <li>D. Bahdanau, K. Cho y Y. Bengio (2015). «Neural Machine Translation by Jointly Learning to Align and Translate». <em>ICLR</em> (arXiv 2014).</li>
+    <li>A. Vaswani et al. (2017). «Attention Is All You Need». <em>NeurIPS</em>.</li>
+    <li>C. Yun, S. Bhojanapalli, A. S. Rawat, S. J. Reddi y S. Kumar (2020). «Are Transformers universal approximators of sequence-to-sequence functions?». <em>ICLR</em>.</li>
+    <li>J. Pérez, P. Barceló y J. Marinković (2021). «Attention is Turing Complete». <em>JMLR</em>, 22.</li>
+    <li>J. Su et al. (2021). «RoFormer: Enhanced Transformer with Rotary Position Embedding». arXiv:2104.09864.</li>
+    <li>J. von Oswald et al. (2023). «Transformers Learn In-Context by Gradient Descent». <em>ICML</em>.</li>
+  </ol>
+</section>

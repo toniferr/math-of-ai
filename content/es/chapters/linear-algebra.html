@@ -1,0 +1,114 @@
+<!--meta
+{
+  "slug": "algebra-lineal",
+  "title": "Álgebra lineal",
+  "chain": "Vectores",
+  "headline": "Palabras convertidas en flechas",
+  "dek": "Un ordenador no sabe qué es un gato, pero sabe multiplicar matrices a una velocidad enorme. El álgebra lineal permite representar palabras, imágenes y conceptos como vectores, y medir su parecido con un simple producto escalar.",
+  "era": "1844 – 2013",
+  "people": ["Hermann Grassmann", "Arthur Cayley", "Zellig Harris", "John R. Firth", "Tomas Mikolov"],
+  "theorems": ["Desigualdad de Cauchy-Schwarz", "Lema de Johnson-Lindenstrauss", "Descomposición en valores singulares"]
+}
+-->
+
+<p>Si se abre por dentro un modelo de lenguaje, lo que aparece son números organizados en matrices: cientos de miles de millones de ellos. Responder una pregunta consiste, casi por entero, en multiplicar vectores por matrices. Por eso las GPU, chips diseñados para multiplicar matrices al dibujar videojuegos, se convirtieron en el motor de la IA.</p>
+
+<p>El álgebra lineal es el idioma en el que los modelos representan el mundo. Hermann Grassmann formuló en 1844 la idea de un espacio de dimensión arbitraria y Arthur Cayley definió en 1858 el producto de matrices. Ninguno podía imaginar que estaban escribiendo el lenguaje de la IA.</p>
+
+<h2>Vectores y producto escalar</h2>
+
+<p>Un vector $\mathbf{u} = (u_1, \dots, u_d) \in \mathbb{R}^d$ es una lista de $d$ números que se puede ver como un punto o como una flecha desde el origen. La operación clave es el <strong>producto escalar</strong>:</p>
+
+$$\mathbf{u} \cdot \mathbf{v} = \sum_{i=1}^{d} u_i v_i = \|\mathbf{u}\|\,\|\mathbf{v}\| \cos\theta.$$
+
+<p>Mide cuánto «apuntan en la misma dirección» dos vectores. Si se divide por las longitudes queda la <strong>similitud coseno</strong>, $\cos\theta$, que vale 1 para vectores paralelos, 0 para perpendiculares y −1 para opuestos. Que nunca se salga de ese rango lo garantiza un clásico:</p>
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(desigualdad de Cauchy-Schwarz)</span></span>
+  <p>Para todo $\mathbf{u}, \mathbf{v} \in \mathbb{R}^d$, $\;|\mathbf{u} \cdot \mathbf{v}| \le \|\mathbf{u}\|\,\|\mathbf{v}\|$, con igualdad si y solo si son proporcionales.</p>
+</div>
+
+<details class="proof">
+  <summary>Demostración</summary>
+  <div>
+    <p>Si $\mathbf{v} = \mathbf{0}$ es trivial. Si no, para todo $\lambda \in \mathbb{R}$, $0 \le \|\mathbf{u} - \lambda \mathbf{v}\|^2 = \|\mathbf{u}\|^2 - 2\lambda\, \mathbf{u}\cdot\mathbf{v} + \lambda^2 \|\mathbf{v}\|^2$. Un polinomio de grado 2 en $\lambda$ que nunca es negativo tiene discriminante $\le 0$: $4(\mathbf{u}\cdot\mathbf{v})^2 - 4\|\mathbf{u}\|^2\|\mathbf{v}\|^2 \le 0$.</p>
+  </div>
+</details>
+
+<p>Esta operación tan sencilla, multiplicar y sumar, es la que usa el <a href="@ch:transformers">mecanismo de atención</a> para decidir qué palabras de una frase deben fijarse en cuáles.</p>
+
+<h2 id="embeddings">Embeddings: el significado como geometría</h2>
+
+<p>¿Cómo se convierte una palabra en un vector? La respuesta viene de la lingüística. En 1954 Zellig Harris formuló la <strong>hipótesis distribucional</strong>: las palabras que aparecen en contextos parecidos tienen significados parecidos. John R. Firth lo resumió en 1957: «conocerás una palabra por la compañía que tiene».</p>
+
+<p>Un <strong>embedding</strong> asigna a cada palabra un vector de forma que las palabras con contextos parecidos quedan cerca. En 2003 Yoshua Bengio y sus colaboradores entrenaron por primera vez estos vectores junto con una red neuronal que predecía la palabra siguiente. En 2013 Tomas Mikolov y su equipo en Google publicaron <em>word2vec</em>, que entrenaba embeddings con miles de millones de palabras en pocas horas, y descubrieron algo inesperado: las relaciones entre conceptos se convierten en <em>direcciones</em>.</p>
+
+$$\mathbf{v}_{\text{rey}} - \mathbf{v}_{\text{hombre}} + \mathbf{v}_{\text{mujer}} \approx \mathbf{v}_{\text{reina}}.$$
+
+<figure class="demo wide" data-demo="linear-algebra/embeddings">
+  <figcaption>Un espacio de embeddings de juguete en dos dimensiones. Los reales tienen entre cientos y miles, y se aprenden de los datos en lugar de colocarse a mano. Elige tres palabras: la flecha discontinua es $B \to A$ trasladada a $C$, y el resultado se compara con todas las palabras para encontrar la más cercana. Si la diferencia «rey − hombre» codifica algo parecido a «realeza», sumarla a «mujer» debería llevar a «reina».</figcaption>
+</figure>
+
+<aside class="note">Las analogías de word2vec son más frágiles de lo que sugieren los titulares: la búsqueda suele excluir las palabras de partida y muchas analogías fallan. Aun así, la idea de fondo (los conceptos como direcciones en un espacio) ha resultado ser muy fértil para entender qué representan los modelos por dentro.</aside>
+
+<h2>Matrices: funciones que transforman el espacio</h2>
+
+<p>Una matriz $W$ de tamaño $m \times d$ define una <strong>transformación lineal</strong> $\mathbf{x} \mapsto W\mathbf{x}$ de $\mathbb{R}^d$ en $\mathbb{R}^m$. Se entiende de un vistazo mirando sus columnas: la columna $j$ es el destino del vector unitario $\mathbf{e}_j$. Como la transformación respeta sumas y escalados, conocer el destino de la base basta para conocerlo todo:</p>
+
+$$W\mathbf{x} = x_1 \,(\text{columna } 1) + x_2\,(\text{columna } 2) + \dots + x_d\,(\text{columna } d).$$
+
+<figure class="demo wide" data-demo="linear-algebra/transform">
+  <figcaption>La matriz $\begin{pmatrix} a & b \\ c & d \end{pmatrix}$ transforma la cuadrícula. Las flechas de colores son las columnas de la matriz, es decir, los destinos de $\mathbf{e}_1$ y $\mathbf{e}_2$. El determinante $ad - bc$ es el factor por el que se multiplican las áreas. Si es negativo el plano se refleja, y si es cero se aplasta sobre una recta y la información perdida ya no se puede recuperar.</figcaption>
+</figure>
+
+<p>Multiplicar matrices equivale a componer transformaciones: $W_2(W_1\mathbf{x}) = (W_2 W_1)\mathbf{x}$. De esta propiedad tan inocente sale una consecuencia decisiva para las redes neuronales:</p>
+
+<div class="theorem">
+  <span class="th-title">Observación <span class="th-name">(las capas lineales se colapsan)</span></span>
+  <p>Una composición de transformaciones lineales es lineal: $W_L \cdots W_2 W_1 = W$. Apilar cien capas lineales no da más poder expresivo que una sola.</p>
+</div>
+
+<p>Por eso cada capa de una red neuronal aplica, después de la matriz, una función no lineal $\sigma$:</p>
+
+$$\mathbf{h} = \sigma\left(W\mathbf{x} + \mathbf{b}\right).$$
+
+<p>Deformar, doblar, deformar, doblar… Con esa receta se puede aproximar cualquier función continua, como veremos con el <a href="@ch:neural-networks#aproximacion">teorema de aproximación universal</a>.</p>
+
+<h2>La sorprendente amplitud de las dimensiones altas</h2>
+
+<p>Los embeddings de un LLM moderno tienen entre unas mil y unas veinte mil dimensiones. ¿Es eso mucho o poco para representar todos los conceptos que maneja un modelo? La intuición tridimensional engaña: en dimensión alta hay muchísimo espacio.</p>
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(lema de Johnson-Lindenstrauss, 1984)</span></span>
+  <p>Para todo $0 < \varepsilon < 1$ y todo conjunto de $n$ puntos de $\mathbb{R}^D$ existe una aplicación lineal $f : \mathbb{R}^D \to \mathbb{R}^k$ con $k = O\!\left(\varepsilon^{-2} \log n\right)$ tal que, para cada par de puntos,</p>
+  $$(1 - \varepsilon)\,\|\mathbf{u} - \mathbf{v}\|^2 \le \|f(\mathbf{u}) - f(\mathbf{v})\|^2 \le (1 + \varepsilon)\,\|\mathbf{u} - \mathbf{v}\|^2.$$
+  <p>Además, una proyección aleatoria sirve con alta probabilidad.</p>
+</div>
+
+<p>La dimensión necesaria crece solo con el <em>logaritmo</em> del número de puntos. La otra cara de la misma geometría: en $\mathbb{R}^k$ caben exponencialmente muchas direcciones <em>casi</em> perpendiculares entre sí. La hipótesis de la <strong>superposición</strong>, que investigan los equipos de interpretabilidad, sostiene que los modelos aprovechan esto para codificar muchos más conceptos que dimensiones tienen, cada uno en una dirección casi ortogonal a las demás.</p>
+
+<h2>Rango bajo: la esencia de una matriz</h2>
+
+<p>Toda matriz real, por grande que sea, se descompone en tres transformaciones sencillas: un giro, un estiramiento a lo largo de los ejes y otro giro.</p>
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(descomposición en valores singulares)</span></span>
+  <p>Toda $W \in \mathbb{R}^{m \times d}$ se escribe como $W = U \Sigma V^\top$, con $U, V$ ortogonales y $\Sigma$ diagonal, cuyos elementos $\sigma_1 \ge \sigma_2 \ge \dots \ge 0$ son los <em>valores singulares</em>. Según el teorema de Eckart-Young (1936), quedarse con los $r$ mayores da la mejor aproximación de rango $r$ de $W$.</p>
+</div>
+
+<p>Muchas matrices reales tienen casi toda su «información» concentrada en unos pocos valores singulares. Esta idea sostiene técnicas actuales como <strong>LoRA</strong> (2021), que adapta un LLM enorme a una tarea nueva entrenando solo una corrección de rango bajo, $W + BA$, con $B$ y $A$ diminutas, en lugar de reentrenar los miles de millones de parámetros de $W$.</p>
+
+<p>Ya tenemos dónde guardar el conocimiento: en los números de las matrices. Falta el procedimiento para <em>elegir</em> esos números, y para eso hay que saber cómo cambia el error cuando se mueve cada uno. Eso es el <a href="@ch:calculus">cálculo</a>.</p>
+
+<section class="references">
+  <h2>Referencias</h2>
+  <ol>
+    <li>A. Cayley (1858). «A Memoir on the Theory of Matrices». <em>Philosophical Transactions of the Royal Society</em>, 148.</li>
+    <li>Z. Harris (1954). «Distributional Structure». <em>Word</em>, 10(2–3).</li>
+    <li>W. B. Johnson y J. Lindenstrauss (1984). «Extensions of Lipschitz mappings into a Hilbert space». <em>Contemporary Mathematics</em>, 26.</li>
+    <li>Y. Bengio, R. Ducharme, P. Vincent y C. Jauvin (2003). «A Neural Probabilistic Language Model». <em>JMLR</em>, 3.</li>
+    <li>T. Mikolov, K. Chen, G. Corrado y J. Dean (2013). «Efficient Estimation of Word Representations in Vector Space». arXiv:1301.3781.</li>
+    <li>E. J. Hu et al. (2021). «LoRA: Low-Rank Adaptation of Large Language Models». arXiv:2106.09685.</li>
+    <li>N. Elhage et al. (2022). «Toy Models of Superposition». <em>Transformer Circuits Thread</em>.</li>
+  </ol>
+</section>

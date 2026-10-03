@@ -1,0 +1,42 @@
+<p class="kicker">Matemáticas e historia de la inteligencia artificial</p>
+<h1 class="hero-title">¿Por qué funciona la IA?</h1>
+<p class="lead">ChatGPT no tiene detrás una única teoría, sino la convergencia de muchas: probabilidad, información, álgebra lineal, cálculo, optimización… Esta web las recorre en orden, de Turing a los Transformers, con los teoremas que importan, la historia de quienes los descubrieron y una figura interactiva en cada paso.</p>
+
+<p class="cta-row"><a class="cta primary" href="@ch:computation">Empezar por el principio →</a><a class="cta" href="@timeline">Ver la línea temporal</a></p>
+
+<figure class="demo" data-demo="home/next-token">
+  <figcaption>Así «escribe» un modelo de lenguaje: en cada paso calcula una distribución de probabilidad sobre la palabra siguiente y elige una. Elige palabras o deja que el azar lo haga, y fíjate en tres números: la <strong>entropía</strong> (cuánta incertidumbre hay antes de elegir), la <strong>sorpresa</strong> de lo elegido y la <strong>probabilidad de la frase</strong>, que es el producto de las probabilidades de cada paso. Toda la web explica de dónde salen esos números y por qué funcionan.</figcaption>
+</figure>
+
+<h2>Una idea en una frase</h2>
+
+<p>Un modelo de lenguaje aprende a <strong>predecir qué información es más probable que aparezca después</strong>. No necesita una definición explícita de lo que es un gato para completar «El gato está sentado en el…». Le basta con haber estimado, a partir de cantidades enormes de texto, una distribución de probabilidad extraordinariamente detallada. Que algo tan simple de enunciar dé resultados tan asombrosos tiene explicaciones matemáticas precisas (y algunas preguntas todavía abiertas). Este es el recorrido:</p>
+
+<!--chain-->
+
+<h2>Diez teorías, una cadena</h2>
+
+<p>Cada capítulo responde a una pregunta y deja planteada la siguiente. Varias ramas de las matemáticas y la informática aparecen por el camino:</p>
+
+<table class="theory-table">
+  <thead><tr><th>Teoría</th><th>Qué aporta a la IA moderna</th><th>Dónde</th></tr></thead>
+  <tbody>
+    <tr><td>Teoría de la computación</td><td>Qué puede calcular una máquina y con qué coste</td><td><a href="@ch:computation">00</a></td></tr>
+    <tr><td>Probabilidad y estadística</td><td>Predicción, incertidumbre y aprendizaje a partir de datos</td><td><a href="@ch:probability">01</a></td></tr>
+    <tr><td>Teoría de la información</td><td>Entropía, compresión y la función de pérdida de los LLM</td><td><a href="@ch:information">02</a></td></tr>
+    <tr><td>Álgebra lineal</td><td>Vectores, matrices y embeddings: el espacio donde vive el significado</td><td><a href="@ch:linear-algebra">03</a></td></tr>
+    <tr><td>Cálculo</td><td>Derivadas, regla de la cadena y retropropagación</td><td><a href="@ch:calculus">04</a></td></tr>
+    <tr><td>Teoría de grafos</td><td>Grafos computacionales sobre los que fluye el gradiente</td><td><a href="@ch:calculus#backprop">04</a></td></tr>
+    <tr><td>Optimización</td><td>Entrenamiento mediante descenso de gradiente</td><td><a href="@ch:optimization">05</a></td></tr>
+    <tr><td>Redes neuronales</td><td>Funciones capaces de aproximar casi cualquier cosa</td><td><a href="@ch:neural-networks">06</a></td></tr>
+    <tr><td>Teoría del aprendizaje</td><td>Por qué y cuándo una máquina generaliza</td><td><a href="@ch:learning-theory">07</a></td></tr>
+    <tr><td>Información y atención</td><td>El mecanismo central del Transformer</td><td><a href="@ch:transformers">08</a></td></tr>
+    <tr><td>Juegos y aprendizaje por refuerzo</td><td>Agentes que aprenden de recompensas: RLHF</td><td><a href="@ch:llms#rlhf">09</a></td></tr>
+  </tbody>
+</table>
+
+<h2>Cómo leer esta web</h2>
+
+<p>Puedes leerla en orden, como un libro corto, o saltar al capítulo que te interese: cada uno se sostiene por sí mismo y enlaza con los anteriores cuando hace falta. Las <strong>demostraciones</strong> están plegadas para no interrumpir la lectura; ábrelas si quieres ver por qué algo es cierto. Las figuras son interactivas y se ejecutan en tu navegador, sin servidores ni rastreadores. Basta con bachillerato de ciencias para seguir el hilo, y el que quiera más detalle encontrará en cada capítulo las referencias originales.</p>
+
+<p class="cta-row"><a class="cta primary" href="@ch:computation">Capítulo 00: ¿Qué puede calcular una máquina? →</a></p>

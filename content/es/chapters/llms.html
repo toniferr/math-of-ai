@@ -1,0 +1,144 @@
+<!--meta
+{
+  "slug": "llm",
+  "title": "Modelos de lenguaje",
+  "chain": "LLM",
+  "headline": "Predecir la siguiente palabra, a escala planetaria",
+  "dek": "Un LLM es un Transformer entrenado para minimizar la entropía cruzada de Shannon sobre billones de palabras. Este capítulo junta todas las piezas: cómo genera texto, por qué mejora de forma predecible al crecer, cómo se convierte en un asistente como ChatGPT y por qué a veces se inventa cosas.",
+  "era": "2018 – hoy",
+  "people": ["Alec Radford", "Ilya Sutskever", "Jared Kaplan", "Jordan Hoffmann", "Paul Christiano", "Long Ouyang"],
+  "theorems": ["Softmax como máxima entropía", "Leyes de escalado", "Política óptima con KL", "Calibración y alucinaciones"]
+}
+-->
+
+<p>El 30 de noviembre de 2022 OpenAI abrió al público un chat experimental. En cinco días tenía un millón de usuarios y, según algunas estimaciones, se convirtió en la aplicación de consumo de crecimiento más rápido de la historia hasta ese momento. Por dentro, ChatGPT era un modelo de la familia GPT, es decir, un <a href="@ch:transformers">Transformer</a> entrenado para hacer una sola cosa: predecir el token siguiente. Todo lo que hemos visto en los capítulos anteriores ocurre a la vez en él.</p>
+
+<h2>La receta</h2>
+
+<ol>
+  <li><strong>Tokenizar.</strong> El texto se trocea en unidades frecuentes con <em>Byte Pair Encoding</em>, un algoritmo de <a href="@ch:information#compresion">compresión</a> de 1994 (Gage) que Sennrich y colaboradores adaptaron al lenguaje en 2016. Las palabras comunes son un token; las raras se parten en trozos.</li>
+  <li><strong>Representar.</strong> Cada token se convierte en un <a href="@ch:linear-algebra#embeddings">embedding</a>, y decenas de bloques de atención lo transforman en un vector que resume todo el contexto anterior.</li>
+  <li><strong>Predecir.</strong> Una última matriz convierte ese vector en una puntuación (<em>logit</em>) $z_i$ por cada uno de los ~100 000 tokens del vocabulario, y un softmax la convierte en una distribución.</li>
+  <li><strong>Entrenar.</strong> Se minimiza la entropía cruzada (la <a href="@ch:probability#verosimilitud">log-verosimilitud negativa</a>) sobre billones de tokens, con <a href="@ch:calculus#backprop">retropropagación</a> y <a href="@ch:optimization">AdamW</a>, durante semanas y en miles de GPU.</li>
+</ol>
+
+$$\mathcal{L}(\theta) = -\frac{1}{T}\sum_{t=1}^{T} \log p_\theta\left(w_t \mid w_1, \dots, w_{t-1}\right).$$
+
+<p>Nada en esta fórmula habla de gramática, de hechos o de razonamiento. Pero para predecir bien el texto que escriben las personas hace falta, en alguna medida, todo eso. Ilya Sutskever lo resumió así: comprimir bien los datos obliga a aprender lo que los generó.</p>
+
+<h2 id="muestreo">Generar: temperatura y muestreo</h2>
+
+<p>Para escribir, el modelo calcula la distribución del siguiente token, <strong>elige uno</strong>, lo añade al texto y repite. La forma de elegir importa mucho. El parámetro más conocido es la <strong>temperatura</strong> $T$:</p>
+
+$$p_i = \frac{e^{z_i / T}}{\sum_j e^{z_j / T}}.$$
+
+<p>Con $T \to 0$ siempre sale el token más probable (decodificación voraz, repetitiva). Con $T = 1$ se muestrea la distribución aprendida. Con $T$ grande todo tiende a ser equiprobable (creativo… y luego incoherente). El nombre no es casual: es la distribución de Boltzmann de la física estadística, y tiene una caracterización que conecta con <a href="@ch:information">Shannon</a>.</p>
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(softmax como máxima entropía; Jaynes, 1957)</span></span>
+  <p>Entre todas las distribuciones $p$ sobre los tokens con un valor medio de logit fijado, $\sum_i p_i z_i = c$, la que tiene <strong>máxima entropía</strong> es $p_i \propto e^{z_i/T}$ para la temperatura $T$ que hace cumplir la restricción.</p>
+</div>
+
+<details class="proof">
+  <summary>Demostración</summary>
+  <div>
+    <p>Sea $q_i = e^{z_i/T}/Z$. Para cualquier $p$ que cumpla la restricción, por la desigualdad de Gibbs,</p>
+    $$0 \le D_{\mathrm{KL}}(p\,\|\,q) = -H(p) - \sum_i p_i \log q_i = -H(p) - \frac{c}{T} + \log Z.$$
+    <p>Luego $H(p) \le \log Z - c/T = H(q)$, con igualdad solo si $p = q$ (todo en nats).</p>
+  </div>
+</details>
+
+<p>En la práctica se combina con recortes: <strong>top-$k$</strong> se queda con los $k$ tokens más probables y <strong>top-$p$</strong> (<em>nucleus sampling</em>, Holtzman et al., 2020) con el menor conjunto cuya probabilidad acumulada supera $p$. Así se evitan las rarezas de la cola de la distribución sin perder variedad.</p>
+
+<figure class="demo wide" data-demo="llms/sampling">
+  <figcaption>La distribución del siguiente token para «El gato está sentado en el». Baja la temperatura para que casi siempre gane «sofá»; súbela para dar opciones a «teclado». Los tokens recortados por top-$k$ o top-$p$ aparecen apagados y su probabilidad se reparte entre los demás. Con «Muestrear 100» puedes comparar las frecuencias obtenidas con las probabilidades.</figcaption>
+</figure>
+
+<h2 id="escalado">Las leyes de escalado</h2>
+
+<p>En enero de 2020 Jared Kaplan y sus colaboradores de OpenAI descubrieron una regularidad asombrosa: la pérdida de un modelo de lenguaje baja como una <strong>ley de potencias</strong> del número de parámetros $N$, del número de tokens de entrenamiento $D$ y del cálculo empleado, a lo largo de siete órdenes de magnitud. En 2022 el equipo de DeepMind de Jordan Hoffmann ajustó una forma explícita, al entrenar más de 400 modelos:</p>
+
+$$L(N, D) = \underbrace{E}_{\text{irreducible}} + \frac{A}{N^{\alpha}} + \frac{B}{D^{\beta}}, \qquad C \approx 6\,N D \ \text{operaciones}.$$
+
+<p>El término $E$ es la pérdida que ningún modelo puede eliminar: la <a href="@ch:information#entropia-cruzada">entropía</a> propia del texto, la incertidumbre que queda incluso conociendo perfectamente el idioma. Los otros dos son el precio de un modelo finito y de unos datos finitos. Con un presupuesto de cálculo $C$ fijo, minimizar $L$ es un problema de <a href="@ch:optimization">optimización</a> con una solución sencilla.</p>
+
+<div class="theorem">
+  <span class="th-title">Resultado <span class="th-name">(asignación óptima del cálculo; Hoffmann et al., 2022)</span></span>
+  <p>Minimizando $L(N, D)$ con la restricción $6ND = C$ se obtiene $N^* \propto C^{a}$ y $D^* \propto C^{b}$, con $a = \frac{\beta}{\alpha + \beta}$ y $b = \frac{\alpha}{\alpha+\beta}$. Empíricamente $a \approx b \approx 0{,}5$: <strong>los parámetros y los datos deben crecer al mismo ritmo</strong>, con unos 20 tokens por parámetro.</p>
+</div>
+
+<figure class="demo wide" data-demo="llms/scaling">
+  <figcaption>Curvas de iso-cálculo: para un presupuesto $C$ fijo, cada punto es un reparto distinto entre tamaño del modelo y datos ($D = C/6N$). Un modelo demasiado pequeño no aprovecha los datos; uno demasiado grande no ve suficientes. GPT-3 (175 000 millones de parámetros, 300 000 millones de tokens) estaba sobredimensionado: Chinchilla, con 70 000 millones de parámetros y 1,4 billones de tokens y un cálculo parecido, lo superó. Parámetros de la réplica de Besiroglu et al. (2024); pérdida en nats por token.</figcaption>
+</figure>
+
+<p>Las leyes de escalado convirtieron la IA en una disciplina de ingeniería con presupuestos predecibles. Explican la carrera por los centros de datos y también sus límites: la mejora es lenta (doblar el cálculo reduce la parte reducible de la pérdida solo un pequeño porcentaje) y los datos de texto de calidad no son infinitos.</p>
+
+<aside class="note">Algunas capacidades parecen aparecer de golpe al crecer el modelo (<em>emergencia</em>). Schaeffer, Miranda y Koyejo (2023) mostraron que muchos de esos saltos dependen de la métrica elegida: con métricas continuas, la mejora suele ser gradual.</aside>
+
+<h2 id="rlhf">De predictor a asistente</h2>
+
+<p>Un modelo preentrenado continúa textos, pero no sigue instrucciones: si le preguntas algo, quizá responda con otra pregunta, porque así siguen muchos textos de internet. Para convertirlo en un asistente se le ajusta con ejemplos de conversaciones y, sobre todo, con <strong>aprendizaje por refuerzo a partir de preferencias humanas</strong> (RLHF; Christiano et al., 2017; Ouyang et al., 2022). Aquí entra la última rama de la tabla: la teoría de juegos y el aprendizaje por refuerzo, que desde la ecuación de Bellman (1957) hasta AlphaGo (2016) estudian agentes que aprenden de recompensas.</p>
+
+<p><strong>Paso 1: un modelo de recompensa.</strong> Unas personas comparan pares de respuestas. Se ajusta una función $r(x, y)$ con el modelo de <strong>Bradley-Terry</strong> (1952), pensado originalmente para clasificar jugadores a partir de partidas:</p>
+
+$$P(y_A \succ y_B \mid x) = \sigma\big(r(x, y_A) - r(x, y_B)\big).$$
+
+<p><strong>Paso 2: optimizar la política sin alejarse demasiado.</strong> Se busca un modelo $\pi$ que obtenga mucha recompensa pero siga hablando como el modelo original $\pi_{\text{ref}}$, penalizando la <a href="@ch:information#entropia-cruzada">divergencia KL</a>:</p>
+
+$$\max_{\pi}\; \mathbb{E}_{y \sim \pi(\cdot\mid x)}\big[r(x, y)\big] - \beta\, D_{\mathrm{KL}}\big(\pi(\cdot \mid x)\,\|\,\pi_{\text{ref}}(\cdot\mid x)\big).$$
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(política óptima con regularización KL)</span></span>
+  <p>El máximo se alcanza en</p>
+  $$\pi^*(y \mid x) = \frac{1}{Z(x)}\, \pi_{\text{ref}}(y \mid x)\, \exp\!\left(\frac{r(x, y)}{\beta}\right).$$
+</div>
+
+<details class="proof">
+  <summary>Demostración</summary>
+  <div>
+    <p>Dividiendo el objetivo entre $-\beta$ y reordenando, maximizarlo equivale a minimizar</p>
+    $$\sum_y \pi(y)\log\frac{\pi(y)}{\pi_{\text{ref}}(y)\,e^{r(y)/\beta}} = D_{\mathrm{KL}}\big(\pi\,\|\,\pi^*\big) - \log Z,$$
+    <p>que por la desigualdad de Gibbs es mínimo exactamente cuando $\pi = \pi^*$.</p>
+  </div>
+</details>
+
+<p>Es otra vez un softmax: el modelo final repondera las probabilidades del original con la exponencial de la recompensa, y $\beta$ hace el papel de la temperatura. Este resultado es la base de <strong>DPO</strong> (Rafailov et al., 2023), que despeja $r$ de la fórmula y entrena directamente con las preferencias, sin aprendizaje por refuerzo explícito. Desde 2024, los <strong>modelos de razonamiento</strong> llevan esta idea más lejos: se entrenan con refuerzo sobre problemas con respuesta verificable (matemáticas, código) y aprenden a «pensar» con cadenas largas de pasos antes de contestar, cambiando cálculo en el momento de responder por precisión.</p>
+
+<h2 id="alucinaciones">¿Por qué alucinan?</h2>
+
+<p>Un LLM a veces afirma con aplomo cosas falsas. Parte del problema tiene una explicación estadística. Un modelo entrenado por máxima verosimilitud tiende a estar <strong>calibrado</strong>: cuando asigna un 70 % a algo, acierta aproximadamente el 70 % de las veces. Kalai y Vempala (2024) demostraron que eso tiene un coste.</p>
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(los modelos calibrados alucinan; Kalai y Vempala, 2024, informal)</span></span>
+  <p>Para hechos arbitrarios que no siguen ningún patrón (como la fecha de cumpleaños de una persona poco conocida), un modelo de lenguaje calibrado debe generar hechos falsos con una tasa aproximadamente igual, como mínimo, a la fracción de esos hechos que aparecen <strong>una sola vez</strong> en los datos de entrenamiento. Esa fracción es la estimación de Good-Turing de la «masa no vista».</p>
+</div>
+
+<p>Lo que solo se ha visto una vez no se puede distinguir bien de lo que nunca se ha visto. Para reducir las alucinaciones hace falta algo más que predecir bien: enseñar al modelo a abstenerse, consultar fuentes externas o verificar. Ningún escalado de los datos de entrenamiento elimina por sí solo esta tensión.</p>
+
+<h2>Entonces, ¿por qué funciona la IA?</h2>
+
+<p>Recorramos la cadena una última vez. Turing mostró que una máquina universal puede ejecutar cualquier procedimiento, también uno <a href="@ch:computation">aprendido</a>. La probabilidad dio el lenguaje para aprender de datos inciertos y la regla de la cadena convirtió el texto en una sucesión de predicciones. Shannon convirtió «predecir bien» en un número, la entropía cruzada, que es a la vez verosimilitud y compresión. El álgebra lineal dio un espacio donde el significado es geometría; el cálculo y la retropropagación, el gradiente de miles de millones de parámetros por el precio de unas pocas evaluaciones; y la optimización estocástica, una forma barata de bajar por él. Las redes neuronales aportaron funciones capaces de aproximarlo casi todo, y la atención, el sesgo inductivo adecuado para el lenguaje y para el hardware. A escala, la pérdida baja según leyes de potencias, y el refuerzo con regularización KL convierte al predictor en un asistente.</p>
+
+<p>Y quedan preguntas abiertas, muy de matemáticas: por qué generalizan redes que podrían memorizarlo todo, qué representan exactamente por dentro y cómo garantizar que hacen lo que queremos. Que estas preguntas sigan abiertas es, quizá, la mejor razón para estudiar las matemáticas de la IA.</p>
+
+<p class="cta-row"><a class="cta primary" href="@timeline">Repasar la historia completa →</a><a class="cta" href="@home">Volver al índice</a></p>
+
+<section class="references">
+  <h2>Referencias</h2>
+  <ol>
+    <li>E. T. Jaynes (1957). «Information Theory and Statistical Mechanics». <em>Physical Review</em>, 106(4).</li>
+    <li>R. A. Bradley y M. E. Terry (1952). «Rank Analysis of Incomplete Block Designs». <em>Biometrika</em>, 39(3/4).</li>
+    <li>R. Sennrich, B. Haddow y A. Birch (2016). «Neural Machine Translation of Rare Words with Subword Units». <em>ACL</em>.</li>
+    <li>P. Christiano et al. (2017). «Deep Reinforcement Learning from Human Preferences». <em>NeurIPS</em>.</li>
+    <li>A. Radford et al. (2019). «Language Models are Unsupervised Multitask Learners». OpenAI.</li>
+    <li>J. Kaplan et al. (2020). «Scaling Laws for Neural Language Models». arXiv:2001.08361.</li>
+    <li>T. Brown et al. (2020). «Language Models are Few-Shot Learners». <em>NeurIPS</em>.</li>
+    <li>A. Holtzman et al. (2020). «The Curious Case of Neural Text Degeneration». <em>ICLR</em>.</li>
+    <li>J. Hoffmann et al. (2022). «Training Compute-Optimal Large Language Models». <em>NeurIPS</em>.</li>
+    <li>L. Ouyang et al. (2022). «Training language models to follow instructions with human feedback». <em>NeurIPS</em>.</li>
+    <li>R. Rafailov et al. (2023). «Direct Preference Optimization: Your Language Model is Secretly a Reward Model». <em>NeurIPS</em>.</li>
+    <li>R. Schaeffer, B. Miranda y S. Koyejo (2023). «Are Emergent Abilities of Large Language Models a Mirage?». <em>NeurIPS</em>.</li>
+    <li>A. T. Kalai y S. S. Vempala (2024). «Calibrated Language Models Must Hallucinate». <em>STOC</em>.</li>
+    <li>T. Besiroglu, E. Erdil, M. Barnett y J. You (2024). «Chinchilla Scaling: A replication attempt». arXiv:2404.10102.</li>
+  </ol>
+</section>

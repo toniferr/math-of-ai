@@ -1,0 +1,327 @@
+{
+  "site_title": "¿Por qué funciona la IA?",
+  "site_short": "Math of AI",
+  "site_description": "Una web didáctica e interactiva sobre las matemáticas y la historia de la inteligencia artificial: de Turing y Shannon a los Transformers y ChatGPT, teorema a teorema.",
+  "nav": {
+    "main": "Navegación principal",
+    "chapters": "Capítulos",
+    "timeline": "Historia",
+    "theme": "Cambiar entre tema claro y oscuro",
+    "skip": "Saltar al contenido",
+    "lang": "Idioma"
+  },
+  "chapter": {
+    "label": "Capítulo",
+    "era": "Época",
+    "people": "Protagonistas",
+    "theorems": "Resultados clave",
+    "toc": "En este capítulo",
+    "prev": "Anterior",
+    "next": "Siguiente",
+    "prevnext": "Capítulo anterior y siguiente"
+  },
+  "timeline": {
+    "slug": "historia",
+    "kicker": "Línea temporal",
+    "all": "Todo",
+    "filter": "Filtrar por capítulo",
+    "read": "Capítulo"
+  },
+  "footer": {
+    "text": "Texto, figuras y código hechos a mano (con ayuda de Claude Code), sin frameworks, sin rastreadores y con las fórmulas en MathML nativo.",
+    "source": "Código fuente en GitHub"
+  },
+  "demos": {
+    "core": {
+      "error": "Esta figura no ha podido cargarse."
+    },
+    "tm": {
+      "program": "Máquina",
+      "programs": {
+        "increment": "Sumar 1 en binario",
+        "beaver": "Castor afanoso (2 estados)",
+        "loop": "Una que nunca para"
+      },
+      "input": "Número",
+      "step": "Paso",
+      "run": "Ejecutar",
+      "pause": "Pausa",
+      "reset": "Reiniciar",
+      "status": "Estado «{state}» · paso {steps}",
+      "halted": "Parada tras {steps} pasos · {ones} unos en la cinta",
+      "never": "¿parará algún día?",
+      "cols": {
+        "state": "Estado",
+        "read": "Lee",
+        "write": "Escribe",
+        "move": "Mueve",
+        "next": "Pasa a"
+      }
+    },
+    "coin": {
+      "freqTitle": "Frecuencia de caras",
+      "postTitle": "Creencia sobre p (posterior)",
+      "flips": "Lanzamientos",
+      "heads": "Caras",
+      "freq": "Frecuencia k/n",
+      "bayes": "Media posterior",
+      "interval": "Intervalo 95 %",
+      "truth": "p real",
+      "reveal": "Revelar p",
+      "hide": "Ocultar p",
+      "prior": "Creencia inicial",
+      "priors": {
+        "uniform": "Sin preferencia (uniforme)",
+        "fair": "Creo que es justa",
+        "heads": "Creo que sale cara"
+      },
+      "flip1": "Lanzar",
+      "newCoin": "Moneda nueva",
+      "xLabel": "n (lanzamientos, escala logarítmica)",
+      "pLabel": "p",
+      "empty": "Lanza la moneda",
+      "head": "cara",
+      "tail": "cruz"
+    },
+    "entropy": {
+      "H": "Entropía H",
+      "max": "Máximo log₂ n",
+      "L": "Huffman L",
+      "eff": "Eficiencia H/L",
+      "presets": "Distribución",
+      "preset": {
+        "skewed": "Sesgada",
+        "uniform": "Uniforme",
+        "two": "Moneda",
+        "certain": "Segura"
+      },
+      "dist": "Distribución p(x)",
+      "hint": "Arrastra las barras arriba o abajo.",
+      "code": "Código de Huffman",
+      "gauge": "Comparación de la entropía, la longitud media del código y el máximo",
+      "sym": "Símbolo",
+      "surprise": "−log₂ p",
+      "codeword": "Código"
+    },
+    "xent": {
+      "words": "sofá|suelo|jardín|tejado|sillón|coche",
+      "Hp": "Entropía H(p)",
+      "Hpq": "Entropía cruzada H(p, q)",
+      "KL": "Divergencia KL",
+      "prompt": "El gato está sentado en el…",
+      "uniform": "q uniforme",
+      "perfect": "q = p (modelo perfecto)",
+      "overconfident": "Modelo demasiado seguro",
+      "stack": "Descomposición de la entropía cruzada",
+      "stackLabel": "H(p, q) = H(p) + KL = {v} bits"
+    },
+    "ngram": {
+      "bits": "Entropía condicional",
+      "contexts": "Contextos distintos",
+      "copied": "Mayor copia literal",
+      "order": "Orden",
+      "unit": "Unidad",
+      "chars": "Letras",
+      "words": "Palabras",
+      "again": "Generar otra vez",
+      "perSymbol": "bits/símbolo",
+      "chars_n": "{n} caracteres",
+      "levels": {
+        "zero": "Orden 0: símbolos equiprobables. Pura entropía máxima.",
+        "one": "Orden 1: cada símbolo con su frecuencia real, sin mirar el contexto.",
+        "low": "Orden bajo: aparecen sílabas y palabras plausibles, pero sin sentido.",
+        "high": "Orden alto: el texto suena a Cervantes… porque copia trozos enteros del original."
+      }
+    },
+    "emb": {
+      "title": "Espacio de embeddings de juguete",
+      "ex1": "rey − hombre + mujer",
+      "ex2": "gatito − gato + perro",
+      "ex3": "niña − mujer + hombre",
+      "result": "{a} − {b} + {c} ≈ {best}  (distancia {d})"
+    },
+    "tr": {
+      "title": "Transformación lineal del plano",
+      "det": "Determinante",
+      "kind": "Efecto",
+      "preset": "Ejemplo",
+      "presets": {
+        "identity": "Identidad",
+        "rotate": "Rotación de 30°",
+        "scale": "Escalado",
+        "shear": "Cizalla",
+        "reflect": "Reflexión",
+        "singular": "Singular (det = 0)"
+      },
+      "collapse": "aplasta el plano",
+      "flip": "refleja el plano",
+      "keep": "conserva la orientación"
+    },
+    "deriv": {
+      "title": "Secante y tangente",
+      "secant": "Pendiente secante",
+      "tangent": "Derivada f′(x)",
+      "error": "Diferencia",
+      "fn": "Función"
+    },
+    "bp": {
+      "title": "Grafo computacional de una neurona",
+      "loss": "Pérdida 𝓛",
+      "numeric": "∂𝓛/∂w numérica",
+      "forward": "1 · Hacia delante",
+      "back": "2 · Un paso atrás",
+      "all": "Todo",
+      "learn": "Aprender: w, b ← w, b − η∇𝓛",
+      "start": "Pulsa «Hacia delante» para calcular los valores.",
+      "fwdDone": "Pasada hacia delante completa: 𝓛 = {L}. Ahora, hacia atrás."
+    },
+    "gd": {
+      "title": "Descenso de gradiente sobre un paisaje de pérdida",
+      "iter": "Iteración",
+      "status": "Estado",
+      "states": {
+        "running": "en marcha",
+        "converged": "convergido",
+        "diverged": "¡diverge!",
+        "stopped": "límite de pasos"
+      },
+      "momentum": "Momento",
+      "landscape": "Paisaje",
+      "lands": {
+        "bowl": "Cuenco alargado",
+        "banana": "Rosenbrock (plátano)",
+        "wells": "Varios mínimos"
+      },
+      "run": "Ejecutar",
+      "pause": "Pausa",
+      "step": "Paso",
+      "reset": "Reiniciar",
+      "hint": "Haz clic en el mapa para empezar desde otro punto."
+    },
+    "sgd": {
+      "steps": "Pasos",
+      "loss": "Pérdida (todos los datos)",
+      "lossVal": "{v} (mín. {min})",
+      "batch": "Tamaño del lote",
+      "full": "Completo (40)",
+      "data": "Datos y recta actual",
+      "params": "Recorrido en el espacio (w, b)"
+    },
+    "nn": {
+      "title": "Clasificador sobre el plano",
+      "epoch": "Época",
+      "acc": "Precisión",
+      "loss": "Pérdida / errores",
+      "state": "Estado",
+      "data": "Datos",
+      "datasets": {
+        "separable": "Separables",
+        "xor": "XOR",
+        "circle": "Círculo",
+        "empty": "Vacío (dibújalos tú)"
+      },
+      "model": "Modelo",
+      "perceptron": "Perceptrón",
+      "mlp": "Red con capa oculta",
+      "hidden": "Neuronas ocultas",
+      "add": "Un clic añade",
+      "blue": "azul",
+      "orange": "naranja",
+      "reinit": "Reiniciar pesos",
+      "clear": "Borrar puntos",
+      "mistakes": "{n} errores en la pasada",
+      "converged": "convergió en {n} pasadas",
+      "noConverge": "no converge",
+      "training": "entrenando…"
+    },
+    "ua": {
+      "title": "Aproximación con una capa oculta de sigmoides",
+      "neurons": "Neuronas",
+      "maxErr": "Error máximo",
+      "params": "Parámetros",
+      "target": "Función objetivo",
+      "targets": {
+        "wave": "Onda",
+        "bump": "Joroba",
+        "zigzag": "Zigzag"
+      },
+      "steep": "Pendiente"
+    },
+    "ov": {
+      "fit": "Datos y polinomio ajustado",
+      "errors": "Error cuadrático medio según el grado",
+      "train": "Entrenamiento",
+      "test": "Datos nuevos",
+      "params": "Parámetros",
+      "degree": "Grado",
+      "points": "Puntos",
+      "resample": "Nuevos datos",
+      "interp": "d = n − 1"
+    },
+    "vc": {
+      "title": "Puntos que hay que separar",
+      "points": "Puntos",
+      "hint": "Arrastra los puntos numerados.",
+      "yes": "separable con una recta",
+      "no": "no separable con una recta",
+      "shattered": "Las rectas pulverizan estos {n} puntos: {ok} de {total} etiquetados son separables.",
+      "notShattered": "No hay pulverización: solo {ok} de {total} etiquetados son separables con una recta."
+    },
+    "attn": {
+      "tokens": "Palabras de la frase",
+      "matrix": "Matriz de atención: filas = consultas, columnas = claves",
+      "head": "Cabeza",
+      "heads": {
+        "agreement": "Concordancia",
+        "previous": "Palabra anterior",
+        "subject": "Sujeto del verbo"
+      },
+      "causal": "Máscara causal",
+      "scale": "Dividir entre √dₖ",
+      "sharp": "Nitidez",
+      "hint": "Haz clic en una palabra (o en una fila de la matriz) para ver a qué atiende.",
+      "detail": "«{q}» atiende sobre todo a «{k}» ({p})",
+      "scoresFor": "Puntuaciones de «{q}» (dₖ = {d})",
+      "key": "Clave",
+      "weight": "Peso"
+    },
+    "samp": {
+      "prompt": "El gato está sentado en el",
+      "temp": "Temperatura",
+      "entropy": "Entropía",
+      "kept": "Tokens posibles",
+      "samples": "Muestras",
+      "one": "Muestrear 1",
+      "hundred": "Muestrear 100",
+      "clear": "Borrar recuento"
+    },
+    "scale": {
+      "title": "Pérdida frente a tamaño del modelo para presupuestos de cálculo fijos",
+      "compute": "Cálculo",
+      "nOpt": "Parámetros óptimos",
+      "dOpt": "Datos óptimos",
+      "ratio": "Tokens por parámetro",
+      "lOpt": "Pérdida mínima",
+      "xLabel": "Parámetros N",
+      "yLabel": "Pérdida (nats/token)",
+      "irreducible": "E = {e}: entropía irreducible del texto",
+      "tokens": "tokens",
+      "units": {
+        "T": "billones",
+        "B": "mil millones",
+        "M": "millones"
+      }
+    },
+    "home": {
+      "prompt": "El gato está sentado en el",
+      "hint": "Elige la siguiente palabra (o pulsa «Muestrear»).",
+      "entropy": "Incertidumbre H",
+      "surprise": "Sorpresa de la última",
+      "prob": "Probabilidad de la frase",
+      "bits": "Sorpresa acumulada",
+      "sample": "Muestrear",
+      "restart": "Empezar de nuevo",
+      "done": "Fin de la frase. Su probabilidad es el producto de las de cada paso (regla de la cadena), y su sorpresa total, la suma."
+    }
+  }
+}

@@ -1,0 +1,114 @@
+<!--meta
+{
+  "slug": "computacion",
+  "title": "Computación",
+  "chain": "Computar",
+  "headline": "¿Qué puede calcular una máquina?",
+  "dek": "Antes de preguntarse si una máquina puede pensar hubo que definir qué significa calcular. Alan Turing lo hizo con una cinta, un cabezal y una tabla de reglas, y de paso descubrió que hay preguntas que ningún ordenador podrá responder nunca.",
+  "era": "1928 – 1950",
+  "people": ["Alan Turing", "Alonzo Church", "Kurt Gödel", "John von Neumann"],
+  "theorems": ["Máquina universal", "Indecidibilidad de la parada", "Tesis de Church-Turing"]
+}
+-->
+
+<p>En 1928 David Hilbert planteó el <em>Entscheidungsproblem</em>, el «problema de la decisión»: ¿existe un procedimiento mecánico que, dado cualquier enunciado matemático, decida si es demostrable? Para contestar «no» había que precisar primero qué es un <em>procedimiento mecánico</em>, una idea que hasta entonces nadie había definido con rigor. En 1936, con veinticuatro años, Alan Turing publicó <em>On Computable Numbers</em> y dio la definición que aún usamos.</p>
+
+<p>Toda la inteligencia artificial descansa sobre esta base. Un modelo de lenguaje es, al final, un programa que ejecuta un ordenador, y lo que puede o no puede hacer un programa se decidió en ese artículo, antes de que existiera ningún ordenador.</p>
+
+<h2>La máquina de Turing</h2>
+
+<p>Turing imaginó a una persona calculando con lápiz y papel y le quitó todo lo accesorio. Le quedaron cuatro cosas:</p>
+
+<ul>
+  <li>una <strong>cinta</strong> infinita dividida en celdas, cada una con un símbolo (o en blanco);</li>
+  <li>un <strong>cabezal</strong> que lee y escribe una celda cada vez y se mueve una posición a izquierda o derecha;</li>
+  <li>un <strong>estado</strong> interno, elegido de una lista finita: la «memoria de trabajo» de quien calcula;</li>
+  <li>una <strong>tabla de reglas</strong> que, para cada par (estado, símbolo leído), indica qué escribir, hacia dónde moverse y a qué estado pasar.</li>
+</ul>
+
+<div class="definition">
+  <span class="th-title">Definición <span class="th-name">(máquina de Turing)</span></span>
+  <p>Una máquina de Turing es una tupla $M = (Q, \Gamma, \delta, q_0, q_{\text{fin}})$ con un conjunto finito de estados $Q$, un alfabeto finito de cinta $\Gamma$ que incluye el blanco, un estado inicial $q_0$, un estado de parada $q_{\text{fin}}$ y una función de transición</p>
+  $$\delta : Q \times \Gamma \to Q \times \Gamma \times \{\mathrm{L}, \mathrm{R}\}.$$
+</div>
+
+<p>Parece demasiado pobre para hacer nada interesante. Pruébala con la figura: la primera máquina suma uno a un número binario con solo dos estados y cinco reglas.</p>
+
+<figure class="demo wide" data-demo="computation/turing-machine">
+  <figcaption>Una máquina de Turing paso a paso. La fila resaltada de la tabla es la regla que se va a aplicar. El <em>castor afanoso</em> de dos estados escribe todos los unos que puede (cuatro) antes de parar, y la tercera máquina no para nunca.</figcaption>
+</figure>
+
+<aside class="note"><strong>El castor afanoso</strong> (<em>busy beaver</em>, Radó 1962) es la máquina de $n$ estados que más unos escribe antes de parar. Su valor crece más rápido que cualquier función computable: se conoce para $n \le 5$ y el caso $n = 5$ no se demostró hasta 2024.</aside>
+
+<p>Turing sostuvo que <em>cualquier</em> cálculo que una persona pueda hacer siguiendo reglas explícitas puede hacerlo una de estas máquinas. Ese mismo año Alonzo Church llegó a la misma frontera por otro camino, el cálculo lambda, y se demostró que las dos definiciones son equivalentes.</p>
+
+<div class="idea">
+  <span class="th-title">Tesis de Church-Turing</span>
+  <p>Todo lo que es «efectivamente calculable» lo calcula una máquina de Turing.</p>
+</div>
+
+<p>No es un teorema, porque «efectivamente calculable» es una noción intuitiva y no una definición formal. Es una tesis que ningún contraejemplo ha refutado en noventa años. Lambda, las funciones recursivas, los autómatas celulares, cualquier lenguaje de programación y las redes neuronales con precisión ilimitada calculan exactamente la misma clase de funciones.</p>
+
+<h2>Una máquina para simularlas a todas</h2>
+
+<p>La segunda idea del artículo pesó todavía más. La tabla de reglas de una máquina es un texto finito, y por tanto se puede escribir en la cinta de <em>otra</em> máquina.</p>
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(máquina universal, Turing 1936)</span></span>
+  <p>Existe una máquina $U$ tal que, para toda máquina $M$ y toda entrada $w$,</p>
+  $$U(\langle M \rangle, w) = M(w),$$
+  <p>donde $\langle M \rangle$ es la descripción de $M$ codificada como símbolos de cinta.</p>
+</div>
+
+<p>Aquí nace el ordenador de programa almacenado: una sola máquina física cuyo comportamiento lo decide un dato, el programa. John von Neumann describió en 1945 la arquitectura del EDVAC sobre esta idea y casi todos los ordenadores posteriores la siguen. Que el programa sea un dato tiene otra consecuencia: también puede <em>producirlo</em> otro programa a partir de ejemplos. El resto de esta web trata de eso.</p>
+
+<h2 id="parada">El problema de la parada</h2>
+
+<p>La tercera máquina de la figura no se detiene nunca. Viéndola funcionar es obvio, pero ¿existe un método general que, dada <em>cualquier</em> máquina y su entrada, decida si acabará parando?</p>
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(indecidibilidad de la parada, Turing 1936)</span></span>
+  <p>No existe ninguna máquina $H$ que, para todo par $(\langle M \rangle, w)$, pare y responda</p>
+  $$H(\langle M \rangle, w) = \begin{cases} 1 & \text{si } M \text{ para con la entrada } w, \\ 0 & \text{si no para.} \end{cases}$$
+</div>
+
+<details class="proof">
+  <summary>Demostración (por diagonalización)</summary>
+  <div>
+    <p>Supongamos que $H$ existe. Construimos una máquina $D$ que, con la entrada $\langle M \rangle$, ejecuta $H(\langle M \rangle, \langle M \rangle)$ y hace <em>lo contrario</em>: si $H$ dice que $M$ para cuando se lee a sí misma, $D$ entra en un bucle infinito, y si $H$ dice que no para, $D$ para.</p>
+    <p>Preguntemos ahora qué hace $D$ con su propia descripción. Si $D(\langle D \rangle)$ para, es porque $H$ dijo que no para. Si no para, es porque $H$ dijo que para. En los dos casos $H$ se equivoca, así que esa $H$ no puede existir.</p>
+  </div>
+</details>
+
+<p>El argumento recicla el truco con el que Cantor demostró que los números reales no se pueden enumerar y con el que Gödel probó en 1931 que hay verdades aritméticas indemostrables. La respuesta al <em>Entscheidungsproblem</em> es «no»: hay preguntas bien planteadas que ningún algoritmo responde.</p>
+
+<aside class="note">Del problema de la parada sale el <strong>teorema de Rice</strong> (1953): cualquier propiedad no trivial del <em>comportamiento</em> de los programas es indecidible. Por eso ninguna herramienta puede verificar en general que un programa, o una red neuronal, «hace lo correcto».</aside>
+
+<h2>Que sea calculable no basta: el coste</h2>
+
+<p>Saber que algo se puede calcular no dice si se puede calcular <em>a tiempo</em>. La teoría de la complejidad mide cuántos pasos necesita una máquina en función del tamaño $n$ de la entrada. Los problemas de la clase $\mathrm{P}$ se resuelven en tiempo polinómico, $O(n^k)$, y los de $\mathrm{NP}$ son aquellos cuya solución se puede <em>comprobar</em> en tiempo polinómico. Si $\mathrm{P} = \mathrm{NP}$ es la pregunta abierta más famosa de la informática.</p>
+
+<p>Para la IA esto importa mucho. Muchos problemas que nos gustaría resolver de forma exacta son intratables. Hasta entrenar una red de tres neuronas para que ajuste perfectamente un conjunto de datos es NP-completo en el peor caso (Blum y Rivest, 1992). La IA moderna no promete soluciones óptimas: busca soluciones <em>suficientemente buenas</em> con métodos aproximados, estadísticos y de optimización local. Los próximos capítulos van de esos métodos.</p>
+
+<h2>1950: ¿pueden pensar las máquinas?</h2>
+
+<p>Catorce años después Turing publicó en la revista <em>Mind</em> «Computing Machinery and Intelligence». En lugar de definir «pensar», propuso el <em>juego de la imitación</em>: si un interrogador que conversa por escrito no distingue a la máquina de una persona, no tenemos motivos para negarle la inteligencia que sí concedemos a las personas. Pero la parte más visionaria del artículo es su última sección, titulada <em>Learning Machines</em>:</p>
+
+<blockquote>
+  En lugar de intentar escribir un programa que simule la mente adulta, ¿por qué no intentar uno que simule la de un niño? Si después se sometiera a una educación adecuada, se obtendría el cerebro adulto.
+  <cite>— A. M. Turing, «Computing Machinery and Intelligence», 1950 (traducción libre)</cite>
+</blockquote>
+
+<p>Es, setenta años antes, el programa de los LLM: un sistema genérico que adquiere su comportamiento aprendiendo de datos en lugar de recibir reglas escritas a mano. Para educar a una máquina hace falta, primero, una forma de razonar con la incertidumbre de los datos. Eso es la <a href="@ch:probability">probabilidad</a>.</p>
+
+<section class="references">
+  <h2>Referencias</h2>
+  <ol>
+    <li>A. M. Turing (1936). «On Computable Numbers, with an Application to the Entscheidungsproblem». <em>Proceedings of the London Mathematical Society</em>, s2-42.</li>
+    <li>A. Church (1936). «An Unsolvable Problem of Elementary Number Theory». <em>American Journal of Mathematics</em>, 58(2).</li>
+    <li>J. von Neumann (1945). <em>First Draft of a Report on the EDVAC</em>.</li>
+    <li>A. M. Turing (1950). «Computing Machinery and Intelligence». <em>Mind</em>, 59(236).</li>
+    <li>T. Radó (1962). «On Non-Computable Functions». <em>Bell System Technical Journal</em>, 41(3).</li>
+    <li>A. Blum y R. L. Rivest (1992). «Training a 3-Node Neural Network is NP-Complete». <em>Neural Networks</em>, 5(1).</li>
+  </ol>
+</section>

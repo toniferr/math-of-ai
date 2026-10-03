@@ -1,0 +1,20 @@
+{
+  "base_url": "https://toniferr.github.io/math-of-ai/",
+  "repo": "https://github.com/toniferr/math-of-ai",
+  "author": "Antonio Ferreiro",
+  "author_url": "https://toniferr.github.io/",
+  "langs": ["es"],
+  "default_lang": "es",
+  "chapters": [
+    "computation",
+    "probability",
+    "information",
+    "linear-algebra",
+    "calculus",
+    "optimization",
+    "neural-networks",
+    "learning-theory",
+    "transformers",
+    "llms"
+  ]
+}

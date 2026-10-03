@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="{{lang}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>{{title}}</title>
+<meta name="description" content="{{description}}">
+<meta name="author" content="{{author}}">
+<link rel="canonical" href="{{canonical}}">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="{{site_title}}">
+<meta property="og:title" content="{{title}}">
+<meta property="og:description" content="{{description}}">
+<meta property="og:url" content="{{canonical}}">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="{{favicon}}" type="image/svg+xml">
+<link rel="stylesheet" href="{{css}}">
+<script src="{{theme_js}}"></script>
+{{scripts}}
+</head>
+<body class="{{body_class}}" data-strings="{{strings}}">
+{{header}}
+<main id="main">
+{{main}}
+</main>
+{{footer}}
+</body>
+</html>
