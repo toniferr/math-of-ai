@@ -97,7 +97,7 @@
     function show() { out.textContent = format(value()); }
     input.addEventListener("input", function () { show(); if (o.onInput) o.onInput(value()); });
     show();
-    var el = h("div", { class: "ctl ctl-slider" + (o.wide ? " wide" : "") },
+    var el = h("div", { class: "ctl ctl-slider" + (o.wide ? " ctl-wide" : "") },
       h("label", { for: id }, o.label), input, out);
     return {
       el: el, input: input,
