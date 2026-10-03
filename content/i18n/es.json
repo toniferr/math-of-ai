@@ -56,6 +56,11 @@
         "write": "Escribe",
         "move": "Mueve",
         "next": "Pasa a"
+      },
+      "states": {
+        "right": "derecha",
+        "carry": "acarreo",
+        "halt": "fin"
       }
     },
     "coin": {
@@ -138,7 +143,21 @@
       "ex1": "rey − hombre + mujer",
       "ex2": "gatito − gato + perro",
       "ex3": "niña − mujer + hombre",
-      "result": "{a} − {b} + {c} ≈ {best}  (distancia {d})"
+      "result": "{a} − {b} + {c} ≈ {best}  (distancia {d})",
+      "words": {
+        "man": "hombre",
+        "woman": "mujer",
+        "king": "rey",
+        "queen": "reina",
+        "prince": "príncipe",
+        "princess": "princesa",
+        "boy": "niño",
+        "girl": "niña",
+        "cat": "gato",
+        "kitten": "gatito",
+        "dog": "perro",
+        "puppy": "cachorro"
+      }
     },
     "tr": {
       "title": "Transformación lineal del plano",
@@ -293,7 +312,8 @@
       "samples": "Muestras",
       "one": "Muestrear 1",
       "hundred": "Muestrear 100",
-      "clear": "Borrar recuento"
+      "clear": "Borrar recuento",
+      "words": "sofá|suelo|jardín|tejado|sillón|alféizar|regazo|teclado|coche|microondas"
     },
     "scale": {
       "title": "Pérdida frente a tamaño del modelo para presupuestos de cálculo fijos",

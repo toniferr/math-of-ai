@@ -1,0 +1,111 @@
+<!--meta
+{
+  "slug": "optimization",
+  "title": "Optimization",
+  "chain": "Optimize",
+  "headline": "Walking down a mountain blindfolded",
+  "dek": "Training a model means searching for the lowest point of a landscape with billions of dimensions, in thick fog, feeling only the slope underfoot. Gradient descent, invented by Cauchy in 1847 to compute orbits, is still the algorithm that trains every LLM.",
+  "era": "1847 – 2014",
+  "people": ["Augustin-Louis Cauchy", "Herbert Robbins", "Sutton Monro", "Boris Polyak", "Yurii Nesterov", "Diederik Kingma", "Jimmy Ba"],
+  "theorems": ["Convergence of gradient descent", "Minima of convex functions", "Robbins–Monro conditions", "Nesterov's lower bound"]
+}
+-->
+
+<p>In 1847 Augustin-Louis Cauchy presented to the Paris Academy of Sciences a three-page note entitled “General method for solving systems of simultaneous equations”. He was interested in astronomical calculations: determining the orbit of a celestial body from observations leads to systems of equations that cannot be solved exactly. His proposal was to turn the problem into minimizing a function that measures the error and to walk down it step by step, always in the direction of steepest slope. He had invented <strong>gradient descent</strong>.</p>
+
+<h2>The algorithm</h2>
+
+<p>Start from any parameters $\theta_0$ and repeat:</p>
+
+$$\theta_{t+1} = \theta_t - \eta\, \nabla \mathcal{L}(\theta_t).$$
+
+<p>The gradient, which <a href="@ch:calculus#backprop">backpropagation</a> computes cheaply, points in the direction of steepest ascent, so we step the opposite way. The number $\eta > 0$ is the <strong>learning rate</strong>: the size of the step. It is the most important hyperparameter of any training run.</p>
+
+<figure class="demo wide" data-demo="optimization/descent">
+  <figcaption>Click on the map to choose the starting point. The coloured bands are contour lines: the more intense the colour, the higher the loss. On the <strong>elongated bowl</strong>, try $\eta = 0.05$ (slow progress), $0.18$ (zigzag) and $0.21$ (divergence): the limit is exactly $2/\lambda_{\max} = 0.2$. On the landscape with <strong>several minima</strong>, the valley you reach depends on where you start. <strong>Momentum</strong> $\beta$ adds inertia: it crosses narrow valleys faster.</figcaption>
+</figure>
+
+<h2>When does it work? Convexity and smoothness</h2>
+
+<p>Guaranteeing that the algorithm works takes two conditions on the landscape. A function is <strong>convex</strong> if the segment between any two points of its graph lies above it, that is, if it is bowl-shaped. It is <strong>$\beta$-smooth</strong> if its gradient changes no faster than $\beta$: $\|\nabla f(x) - \nabla f(y)\| \le \beta \|x - y\|$.</p>
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(minima of convex functions)</span></span>
+  <p>If $f$ is convex, every local minimum is a global minimum. If it is also differentiable, $\nabla f(x^*) = 0$ is enough for $x^*$ to be a global minimum.</p>
+</div>
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(convergence of gradient descent)</span></span>
+  <p>If $f$ is convex and $\beta$-smooth and $\eta = 1/\beta$ is used, then after $k$ steps</p>
+  $$f(\theta_k) - f(\theta^*) \le \frac{\beta\,\|\theta_0 - \theta^*\|^2}{2k}.$$
+  <p>If it is also $\mu$-strongly convex, convergence is geometric: the error is multiplied at each step by at most $1 - \mu/\beta$.</p>
+</div>
+
+<details class="proof">
+  <summary>The quadratic case, where everything is visible</summary>
+  <div>
+    <p>Take $f(\theta) = \tfrac12 \theta^\top A \theta$ with $A$ symmetric and eigenvalues $0 < \lambda_{\min} \le \dots \le \lambda_{\max}$. Since $\nabla f = A\theta$, the algorithm does $\theta_{t+1} = (I - \eta A)\,\theta_t$. In the eigenvector basis, each coordinate evolves on its own:</p>
+    $$\theta^{(i)}_{t} = (1 - \eta\lambda_i)^t\, \theta^{(i)}_0.$$
+    <p>It converges if and only if $|1 - \eta\lambda_i| < 1$ for every $i$, that is, if $0 < \eta < 2/\lambda_{\max}$. If $\eta\lambda_i > 1$, that coordinate changes sign at every step (the zigzag). The slowest direction is that of $\lambda_{\min}$, and with the best $\eta$ the error shrinks per step by a factor $\frac{\kappa - 1}{\kappa + 1}$, where $\kappa = \lambda_{\max}/\lambda_{\min}$ is the <strong>condition number</strong>. Narrow, elongated valleys (large $\kappa$) are slow.</p>
+  </div>
+</details>
+
+<p>Neural networks are <strong>not convex</strong>: their loss landscape is full of local minima, plateaus and saddle points. No classical theorem guarantees that gradient descent finds a good minimum there, and yet it does, again and again. Some partial explanations: in high dimension almost all critical points are saddle points rather than minima (Dauphin et al., 2014), and in heavily overparameterized networks most local minima are almost as good as the global one. It is one of the big open questions of the field.</p>
+
+<h2>Inertia: momentum and acceleration</h2>
+
+<p>In an elongated valley the gradient almost always points at the walls rather than towards the bottom. In 1964 Boris Polyak proposed the <strong>heavy-ball method</strong>: accumulate a velocity that averages previous gradients,</p>
+
+$$v_{t+1} = \beta\, v_t - \eta\, \nabla\mathcal{L}(\theta_t), \qquad \theta_{t+1} = \theta_t + v_{t+1}.$$
+
+<p>The oscillations cancel out and progress in the right direction builds up. In 1983 Yurii Nesterov found a variant that reaches error $O(1/k^2)$ instead of $O(1/k)$ for smooth convex functions, and showed that this is the best possible:</p>
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(Nesterov's lower bound)</span></span>
+  <p>No method that only uses gradients can guarantee, for every convex $\beta$-smooth function (in high enough dimension), an error smaller than $\dfrac{3\beta\,\|\theta_0 - \theta^*\|^2}{32\,(k+1)^2}$ after $k$ steps. Nesterov's accelerated method achieves that order.</p>
+</div>
+
+<h2 id="sgd">Stochastic gradient descent</h2>
+
+<p>The loss of an LLM is an average over trillions of training words: $\mathcal{L}(\theta) = \frac{1}{N}\sum_{i=1}^N \ell_i(\theta)$. Computing the exact gradient at every step would mean going through all the data. The alternative is to estimate it with a random <strong>mini-batch</strong> $B$ of a few examples:</p>
+
+$$g_t = \frac{1}{|B|}\sum_{i \in B} \nabla \ell_i(\theta_t), \qquad \mathbb{E}[g_t] = \nabla \mathcal{L}(\theta_t).$$
+
+<p>The estimate is noisy but <strong>unbiased</strong>: on average it points the right way. Herbert Robbins and Sutton Monro proved in 1951 that this kind of procedure converges if the learning rate decreases at the right pace.</p>
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(Robbins–Monro conditions, 1951)</span></span>
+  <p>Under regularity conditions, stochastic approximation converges if the rates $\eta_t$ satisfy</p>
+  $$\sum_{t=1}^{\infty} \eta_t = \infty \qquad \text{and} \qquad \sum_{t=1}^{\infty} \eta_t^2 < \infty,$$
+  <p>for example with $\eta_t = c/t$. The first condition ensures you can get anywhere, and the second that the noise eventually dies out.</p>
+</div>
+
+<figure class="demo wide" data-demo="optimization/sgd">
+  <figcaption>Fitting a line $\hat y = wx + b$ with stochastic gradient descent. <strong>Left:</strong> the data and the current line. <strong>Right:</strong> the path of the parameters $(w, b)$ over the contour lines of the loss. With the full batch the path is smooth; with batches of one example it is erratic, but each step costs 40 times less.</figcaption>
+</figure>
+
+<p>That is why small batches are always used in practice: many cheap, noisy steps beat a few expensive, exact ones. The noise also seems to help escape “sharp” minima and find “flatter” ones, which tend to <a href="@ch:learning-theory">generalize</a> better.</p>
+
+<h2>Adam: a learning rate for every parameter</h2>
+
+<p>The parameters of a network are not alike: some receive huge gradients and others tiny ones. In 2014 Diederik Kingma and Jimmy Ba proposed <strong>Adam</strong>, which combines momentum with a normalization by the recent magnitude of each gradient:</p>
+
+$$m_t = \beta_1 m_{t-1} + (1-\beta_1)\,g_t, \qquad v_t = \beta_2 v_{t-1} + (1-\beta_2)\,g_t^2, \qquad \theta_{t+1} = \theta_t - \eta\,\frac{\hat m_t}{\sqrt{\hat v_t} + \epsilon}.$$
+
+<p>Here $\hat m_t$ and $\hat v_t$ are the averages corrected for their initial bias. Its variant with decoupled weight decay, <strong>AdamW</strong> (2017), is the optimizer practically every current LLM is trained with, almost always with a rate that rises during an initial warm-up and then decays, in the spirit of what Robbins and Monro asked for.</p>
+
+<p>We now have a general procedure for fitting parameters. The next question is <em>which</em> family of functions to parameterize, and here the oldest idea in AI appears: imitating neurons.</p>
+
+<section class="references">
+  <h2>References</h2>
+  <ol>
+    <li>A.-L. Cauchy (1847). “Méthode générale pour la résolution des systèmes d'équations simultanées”. <em>Comptes Rendus de l'Académie des Sciences</em>, 25.</li>
+    <li>H. Robbins and S. Monro (1951). “A Stochastic Approximation Method”. <em>Annals of Mathematical Statistics</em>, 22(3).</li>
+    <li>B. T. Polyak (1964). “Some methods of speeding up the convergence of iteration methods”. <em>USSR Computational Mathematics and Mathematical Physics</em>, 4(5).</li>
+    <li>Y. Nesterov (1983). “A method for solving the convex programming problem with convergence rate O(1/k²)”. <em>Doklady Akademii Nauk SSSR</em>, 269.</li>
+    <li>Y. Dauphin et al. (2014). “Identifying and attacking the saddle point problem in high-dimensional non-convex optimization”. <em>NeurIPS</em>.</li>
+    <li>D. P. Kingma and J. Ba (2015). “Adam: A Method for Stochastic Optimization”. <em>ICLR</em>.</li>
+    <li>I. Loshchilov and F. Hutter (2019). “Decoupled Weight Decay Regularization”. <em>ICLR</em>.</li>
+    <li>S. Bubeck (2015). “Convex Optimization: Algorithms and Complexity”. <em>Foundations and Trends in Machine Learning</em>, 8(3–4).</li>
+  </ol>
+</section>

@@ -1,0 +1,114 @@
+<!--meta
+{
+  "slug": "computation",
+  "title": "Computation",
+  "chain": "Compute",
+  "headline": "What can a machine compute?",
+  "dek": "Before asking whether a machine can think, someone had to define what it means to compute. Alan Turing did it with a tape, a head and a table of rules, and along the way discovered that there are questions no computer will ever be able to answer.",
+  "era": "1928 – 1950",
+  "people": ["Alan Turing", "Alonzo Church", "Kurt Gödel", "John von Neumann"],
+  "theorems": ["Universal machine", "Undecidability of halting", "Church–Turing thesis"]
+}
+-->
+
+<p>In 1928 David Hilbert posed the <em>Entscheidungsproblem</em>, the “decision problem”: is there a mechanical procedure that, given any mathematical statement, decides whether it can be proved? To answer “no” one first had to pin down what a <em>mechanical procedure</em> is, an idea nobody had defined rigorously. In 1936, aged twenty-four, Alan Turing published <em>On Computable Numbers</em> and gave the definition we still use.</p>
+
+<p>All of artificial intelligence rests on this foundation. A language model is, in the end, a program run by a computer, and what a program can or cannot do was settled in that paper, before any computer existed.</p>
+
+<h2>The Turing machine</h2>
+
+<p>Turing imagined a person calculating with pencil and paper and stripped away everything inessential. Four things were left:</p>
+
+<ul>
+  <li>an infinite <strong>tape</strong> divided into cells, each holding a symbol (or blank);</li>
+  <li>a <strong>head</strong> that reads and writes one cell at a time and moves one position left or right;</li>
+  <li>an internal <strong>state</strong>, taken from a finite list: the “working memory” of whoever is computing;</li>
+  <li>a <strong>table of rules</strong> that, for each pair (state, symbol read), says what to write, where to move and which state to go to.</li>
+</ul>
+
+<div class="definition">
+  <span class="th-title">Definition <span class="th-name">(Turing machine)</span></span>
+  <p>A Turing machine is a tuple $M = (Q, \Gamma, \delta, q_0, q_{\text{halt}})$ with a finite set of states $Q$, a finite tape alphabet $\Gamma$ that includes the blank, an initial state $q_0$, a halting state $q_{\text{halt}}$ and a transition function</p>
+  $$\delta : Q \times \Gamma \to Q \times \Gamma \times \{\mathrm{L}, \mathrm{R}\}.$$
+</div>
+
+<p>It looks far too poor to do anything interesting. Try it in the figure: the first machine adds one to a binary number with just two states and five rules.</p>
+
+<figure class="demo wide" data-demo="computation/turing-machine">
+  <figcaption>A Turing machine, step by step. The highlighted row of the table is the rule about to be applied. The two-state <em>busy beaver</em> writes as many ones as it can (four) before halting, and the third machine never halts.</figcaption>
+</figure>
+
+<aside class="note">The <strong>busy beaver</strong> (Radó, 1962) is the $n$-state machine that writes the most ones before halting. Its value grows faster than any computable function: it is known for $n \le 5$, and the case $n = 5$ was only proved in 2024.</aside>
+
+<p>Turing argued that <em>any</em> computation a person can carry out by following explicit rules can be carried out by one of these machines. That same year Alonzo Church reached the same frontier by another route, the lambda calculus, and the two definitions were shown to be equivalent.</p>
+
+<div class="idea">
+  <span class="th-title">Church–Turing thesis</span>
+  <p>Everything that is “effectively calculable” is computed by some Turing machine.</p>
+</div>
+
+<p>It is not a theorem, because “effectively calculable” is an intuitive notion rather than a formal definition. It is a thesis that no counterexample has refuted in ninety years. The lambda calculus, recursive functions, cellular automata, every programming language and neural networks with unlimited precision all compute exactly the same class of functions.</p>
+
+<h2>One machine to simulate them all</h2>
+
+<p>The paper's second idea carried even more weight. A machine's table of rules is a finite text, so it can be written on the tape of <em>another</em> machine.</p>
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(universal machine, Turing 1936)</span></span>
+  <p>There is a machine $U$ such that, for every machine $M$ and every input $w$,</p>
+  $$U(\langle M \rangle, w) = M(w),$$
+  <p>where $\langle M \rangle$ is the description of $M$ encoded as tape symbols.</p>
+</div>
+
+<p>This is the birth of the stored-program computer: a single physical machine whose behaviour is decided by a piece of data, the program. In 1945 John von Neumann described the architecture of the EDVAC around this idea, and almost every later computer follows it. The program being data has another consequence: it can also be <em>produced</em> by another program, from examples. The rest of this site is about that.</p>
+
+<h2 id="halting">The halting problem</h2>
+
+<p>The figure's third machine never stops. Watching it run, that is obvious. But is there a general method that, given <em>any</em> machine and its input, decides whether it will eventually halt?</p>
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(undecidability of halting, Turing 1936)</span></span>
+  <p>There is no machine $H$ that, for every pair $(\langle M \rangle, w)$, halts and answers</p>
+  $$H(\langle M \rangle, w) = \begin{cases} 1 & \text{if } M \text{ halts on input } w, \\ 0 & \text{if it does not.} \end{cases}$$
+</div>
+
+<details class="proof">
+  <summary>Proof (by diagonalization)</summary>
+  <div>
+    <p>Suppose $H$ exists. Build a machine $D$ that, on input $\langle M \rangle$, runs $H(\langle M \rangle, \langle M \rangle)$ and does <em>the opposite</em>: if $H$ says that $M$ halts when reading itself, $D$ enters an infinite loop; if $H$ says it does not halt, $D$ halts.</p>
+    <p>Now ask what $D$ does with its own description. If $D(\langle D \rangle)$ halts, it is because $H$ said it does not. If it does not halt, it is because $H$ said it does. Either way $H$ is wrong, so such an $H$ cannot exist.</p>
+  </div>
+</details>
+
+<p>The argument recycles the trick Cantor used to show that the real numbers cannot be listed, and Gödel in 1931 to prove that there are unprovable arithmetic truths. The answer to the <em>Entscheidungsproblem</em> is “no”: there are well-posed questions that no algorithm can answer.</p>
+
+<aside class="note">The halting problem gives <strong>Rice's theorem</strong> (1953): every non-trivial property of a program's <em>behaviour</em> is undecidable. That is why no tool can verify in general that a program, or a neural network, “does the right thing”.</aside>
+
+<h2>Computable is not enough: the cost</h2>
+
+<p>Knowing that something can be computed does not say whether it can be computed <em>in time</em>. Complexity theory counts how many steps a machine needs as a function of the input size $n$. Problems in the class $\mathrm{P}$ are solved in polynomial time, $O(n^k)$, and those in $\mathrm{NP}$ are the ones whose solution can be <em>checked</em> in polynomial time. Whether $\mathrm{P} = \mathrm{NP}$ is the most famous open question in computer science.</p>
+
+<p>This matters a lot for AI. Many problems we would like to solve exactly are intractable. Even training a three-neuron network to fit a dataset perfectly is NP-complete in the worst case (Blum and Rivest, 1992). Modern AI does not promise optimal solutions: it looks for <em>good enough</em> solutions with approximate, statistical and local-optimization methods. The next chapters are about those methods.</p>
+
+<h2>1950: can machines think?</h2>
+
+<p>Fourteen years later Turing published “Computing Machinery and Intelligence” in the journal <em>Mind</em>. Instead of defining “thinking”, he proposed the <em>imitation game</em>: if an interrogator conversing in writing cannot tell the machine from a person, we have no grounds to deny it the intelligence we grant to people. But the most visionary part of the paper is its last section, entitled <em>Learning Machines</em>:</p>
+
+<blockquote>
+  Instead of trying to produce a programme to simulate the adult mind, why not rather try to produce one which simulates the child's? If this were then subjected to an appropriate course of education one would obtain the adult brain.
+  <cite>— A. M. Turing, “Computing Machinery and Intelligence”, 1950</cite>
+</blockquote>
+
+<p>Seventy years early, this is the program of LLMs: a generic system that acquires its behaviour by learning from data instead of being handed hand-written rules. Educating a machine first requires a way of reasoning with the uncertainty of data. That is <a href="@ch:probability">probability</a>.</p>
+
+<section class="references">
+  <h2>References</h2>
+  <ol>
+    <li>A. M. Turing (1936). “On Computable Numbers, with an Application to the Entscheidungsproblem”. <em>Proceedings of the London Mathematical Society</em>, s2-42.</li>
+    <li>A. Church (1936). “An Unsolvable Problem of Elementary Number Theory”. <em>American Journal of Mathematics</em>, 58(2).</li>
+    <li>J. von Neumann (1945). <em>First Draft of a Report on the EDVAC</em>.</li>
+    <li>A. M. Turing (1950). “Computing Machinery and Intelligence”. <em>Mind</em>, 59(236).</li>
+    <li>T. Radó (1962). “On Non-Computable Functions”. <em>Bell System Technical Journal</em>, 41(3).</li>
+    <li>A. Blum and R. L. Rivest (1992). “Training a 3-Node Neural Network is NP-Complete”. <em>Neural Networks</em>, 5(1).</li>
+  </ol>
+</section>

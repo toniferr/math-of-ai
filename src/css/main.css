@@ -517,8 +517,9 @@ figcaption math { font-size: 1em; }
 .demo-svg { display: block; width: 100%; height: auto; overflow: visible; }
 .demo-error { color: var(--bad); font: 0.9rem var(--sans); }
 .js [data-demo]:not([data-ready]):not([data-error]) .demo-stage:empty { min-height: 120px; }
+html:not(.js):lang(es) figure.demo::after { content: "Esta figura es interactiva y necesita JavaScript."; }
 html:not(.js) figure.demo::after {
-  content: "Esta figura es interactiva y necesita JavaScript.";
+  content: "This figure is interactive and needs JavaScript.";
   display: block;
   font: 0.85rem var(--sans);
   color: var(--muted);

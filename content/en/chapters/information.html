@@ -1,0 +1,128 @@
+<!--meta
+{
+  "slug": "information",
+  "title": "Information",
+  "chain": "Information",
+  "headline": "Measuring surprise",
+  "dek": "In 1948 Claude Shannon turned information into a measurable quantity. With a single formula, entropy, he explained how far a message can be compressed and how to measure how far a model is from reality. That measure is, literally, the function every LLM minimizes during training.",
+  "era": "1948 – 1952",
+  "people": ["Claude Shannon", "David Huffman", "Solomon Kullback", "Richard Leibler"],
+  "theorems": ["Shannon entropy", "Source coding theorem", "Gibbs' inequality", "Cross-entropy"]
+}
+-->
+
+<p>In July 1948 an engineer at Bell Labs, Claude Shannon, published “A Mathematical Theory of Communication”. On its second page he brushed meaning aside: “these semantic aspects of communication are irrelevant to the engineering problem”. What he cared about was how much information a message contains and how to transmit it efficiently. His answer founded an entire discipline and, seventy years later, gives the best description of what a language model does.</p>
+
+<h2>Information is surprise</h2>
+
+<p>If someone tells you the sun will rise tomorrow, you learn nothing: you already knew. If they tell you it will snow in Seville tomorrow, you learn a lot. Shannon formalized this intuition: the information an event carries depends only on how <em>improbable</em> it was.</p>
+
+<div class="definition">
+  <span class="th-title">Definition <span class="th-name">(information or surprise)</span></span>
+  <p>The information of an outcome $x$ with probability $p(x)$ is</p>
+  $$I(x) = -\log_2 p(x) \quad \text{bits}.$$
+</div>
+
+<p>A certain event ($p = 1$) carries 0 bits. A fair coin carries $-\log_2 \tfrac12 = 1$ bit. An event with probability $\tfrac{1}{1024}$ carries 10 bits. The logarithm is there for a reason: we want the information of two independent events to <em>add up</em>, while their joint probability <em>multiplies</em>: $-\log(p\,q) = -\log p - \log q$.</p>
+
+<h2>Entropy: the average surprise</h2>
+
+<p>Before learning the outcome we do not know how much surprise awaits us, but we can compute its average value. That average is the entropy, the central quantity of the whole theory.</p>
+
+<div class="definition">
+  <span class="th-title">Definition <span class="th-name">(entropy, Shannon 1948)</span></span>
+  $$H(X) = \mathbb{E}\big[I(X)\big] = -\sum_{x} p(x) \log_2 p(x).$$
+  <p>It satisfies $0 \le H(X) \le \log_2 n$ if $X$ takes $n$ values. It is 0 only when one outcome is certain and reaches its maximum only when all outcomes are equally likely.</p>
+</div>
+
+<p>Shannon did not choose the formula for its looks: he proved it is the <em>only</em> reasonable measure of uncertainty.</p>
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(uniqueness, Shannon 1948)</span></span>
+  <p>Let $H(p_1, \dots, p_n)$ be a function that (1) is continuous in the $p_i$, (2) increases with $n$ when the outcomes are equally likely, and (3) is consistent when a choice is broken down into successive choices. Then</p>
+  $$H = -K \sum_{i=1}^n p_i \log p_i$$
+  <p>for some constant $K > 0$, which only sets the unit (bits if the logarithm is base 2).</p>
+</div>
+
+<p>Go back to the example on the home page. For “The cat is sitting on the…”, a distribution spread over <em>mat</em>, <em>sofa</em> and <em>floor</em> has high entropy: there is a lot of uncertainty about the next word. After “Once upon a…”, almost all the probability falls on <em>time</em> and the entropy is almost zero. Drag the bars in the figure to see how it changes.</p>
+
+<figure class="demo wide" data-demo="information/entropy">
+  <figcaption>Drag the bars to change the distribution. The entropy $H$ is the average number of yes/no questions you need to guess the outcome. The table shows the optimal <strong>Huffman code</strong> for that distribution: frequent symbols get short codes, and the average length $L$ always lies between $H$ and $H + 1$.</figcaption>
+</figure>
+
+<h2 id="compression">To compress is to predict</h2>
+
+<p>Entropy has a very concrete operational meaning: it is the limit of lossless compression.</p>
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(source coding, Shannon 1948)</span></span>
+  <p>For any prefix-free binary code for the symbols of a source with entropy $H(X)$, the average length $L = \sum_x p(x)\,\ell(x)$ satisfies $L \ge H(X)$. Moreover, there is a code with</p>
+  $$H(X) \;\le\; L \;<\; H(X) + 1.$$
+</div>
+
+<details class="proof">
+  <summary>Sketch of the proof</summary>
+  <div>
+    <p>The lengths $\ell(x)$ of a prefix-free code satisfy <strong>Kraft's inequality</strong>, $\sum_x 2^{-\ell(x)} \le 1$, so $q(x) = 2^{-\ell(x)}$ behaves like a distribution. Then $L - H = \sum_x p(x) \log_2 \frac{p(x)}{q(x)} \ge 0$ by Gibbs' inequality (below). For the upper bound, choose $\ell(x) = \lceil -\log_2 p(x) \rceil$, which satisfies Kraft and gives $L < H + 1$.</p>
+  </div>
+</details>
+
+<p>In 1952 David Huffman, then a PhD student at MIT, found a simple algorithm that builds the optimal code: repeatedly merge the two least probable symbols. The consequence is the key to everything that follows: <strong>to compress well you must predict well</strong>. Whoever knows the distribution can give short codes to what is likely. The converse also holds: a good compressor contains a good model of the data.</p>
+
+<aside class="note">With <strong>arithmetic coding</strong> (Rissanen, 1976) any sequence can be compressed using practically $-\log_2 q(x)$ bits per symbol, with no rounding. In 2023 a DeepMind team showed that an LLM used this way compresses images and audio better than PNG and FLAC, even though it was trained only on text.</aside>
+
+<h2 id="cross-entropy">Cross-entropy: the price of being wrong</h2>
+
+<p>Suppose the data follow the true distribution $p$ and your model believes they follow $q$. If you design the code with $q$, each symbol $x$ costs you $-\log_2 q(x)$ bits, and on average you pay the <strong>cross-entropy</strong>:</p>
+
+$$H(p, q) = -\sum_x p(x) \log_2 q(x) = \underbrace{H(p)}_{\text{unavoidable}} + \underbrace{D_{\mathrm{KL}}(p \,\|\, q)}_{\text{the model's fault}}.$$
+
+<p>The first term is the inherent uncertainty of the data, which no model can remove. The second, the <strong>Kullback–Leibler divergence</strong> (1951), measures the bits wasted by using $q$ instead of $p$:</p>
+
+$$D_{\mathrm{KL}}(p \,\|\, q) = \sum_x p(x) \log_2 \frac{p(x)}{q(x)}.$$
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(Gibbs' inequality)</span></span>
+  <p>For any distributions $p$ and $q$, $D_{\mathrm{KL}}(p \,\|\, q) \ge 0$, with equality if and only if $p = q$. Hence $H(p, q) \ge H(p)$.</p>
+</div>
+
+<details class="proof">
+  <summary>Proof</summary>
+  <div>
+    <p>Use $\ln y \le y - 1$, with equality only at $y = 1$. Summing over the $x$ with $p(x) > 0$:</p>
+    $$-D_{\mathrm{KL}}(p\,\|\,q) = \sum_x p(x) \ln \frac{q(x)}{p(x)} \le \sum_x p(x)\left(\frac{q(x)}{p(x)} - 1\right) = \sum_x q(x) - 1 \le 0.$$
+    <p>(Changing the base of the logarithm only multiplies by a positive constant.)</p>
+  </div>
+</details>
+
+<figure class="demo wide" data-demo="information/cross-entropy">
+  <figcaption>The hollow bars are the true distribution $p$ of the next word. The filled ones are your model $q$: drag them. The cross-entropy $H(p, q)$ never drops below $H(p)$, and the difference is exactly the KL divergence. Training a language model consists of adjusting $q$ to close that gap.</figcaption>
+</figure>
+
+<p>This is the point of the site where everything clicks into place. If $p$ is the empirical distribution of the training data, minimizing $H(p, q_\theta)$ with respect to the parameters $\theta$ is the same as minimizing the <a href="@ch:probability#likelihood">negative log-likelihood</a> from the previous chapter. <strong>Maximum likelihood, minimum cross-entropy and maximum compression are the same objective</strong>, and that objective is the <em>loss function</em> every LLM is trained with:</p>
+
+$$\mathcal{L}(\theta) = -\frac{1}{T}\sum_{t=1}^{T} \log q_\theta\left(w_t \mid w_{&lt;t}\right).$$
+
+<p>Its exponential is called <strong>perplexity</strong>, $\mathrm{PPL} = 2^{\mathcal{L}}$ (with $\mathcal{L}$ in bits): it is as if the model were hesitating, at each step, between $\mathrm{PPL}$ equally likely words.</p>
+
+<h2 id="ngrams">Shannon's approximations to English</h2>
+
+<p>In the same 1948 paper Shannon ran an experiment that seems prophetic today. He generated random text with increasingly informed models: equiprobable letters, letters with their real frequency, letters that depend on the previous one (<em>digrams</em>), on the previous two… and then the same with words. At each level the text looked more like English. It was the first statistical language model, built by hand from frequency tables taken from books.</p>
+
+<figure class="demo wide" data-demo="information/ngrams">
+  <figcaption>An $n$-gram model trained on the first chapter of <em>Alice's Adventures in Wonderland</em> (public domain). The order $n$ is how many symbols the model looks at to predict the next one. At high orders the text sounds like Lewis Carroll, but only because the model <em>copies</em> fragments of the original: with so little data, memorizing is the cheapest way to reduce entropy. This <a href="@ch:learning-theory">generalization</a> problem is the one neural networks solve.</figcaption>
+</figure>
+
+<p>In 1951 Shannon estimated the entropy of English by asking people to guess texts letter by letter, and obtained between 0.6 and 1.3 bits per letter, far below the $\log_2 27 \approx 4.75$ bits of equiprobable letters. That redundancy is what a language model exploits. An $n$-gram model cannot go much further: the number of contexts grows exponentially with $n$, and almost all of them appear once or never. To generalize to unseen contexts, words must be represented so that “cat” and “feline” end up <em>close together</em>. For that we need vectors and <a href="@ch:linear-algebra">linear algebra</a>.</p>
+
+<section class="references">
+  <h2>References</h2>
+  <ol>
+    <li>C. E. Shannon (1948). “A Mathematical Theory of Communication”. <em>Bell System Technical Journal</em>, 27(3–4).</li>
+    <li>S. Kullback and R. A. Leibler (1951). “On Information and Sufficiency”. <em>Annals of Mathematical Statistics</em>, 22(1).</li>
+    <li>C. E. Shannon (1951). “Prediction and Entropy of Printed English”. <em>Bell System Technical Journal</em>, 30(1).</li>
+    <li>D. A. Huffman (1952). “A Method for the Construction of Minimum-Redundancy Codes”. <em>Proceedings of the IRE</em>, 40(9).</li>
+    <li>T. M. Cover and J. A. Thomas (2006). <em>Elements of Information Theory</em>, 2nd ed. Wiley.</li>
+    <li>G. Delétang et al. (2024). “Language Modeling Is Compression”. <em>ICLR 2024</em>.</li>
+  </ol>
+</section>

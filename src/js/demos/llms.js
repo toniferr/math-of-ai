@@ -5,10 +5,10 @@
 
   // ------------------------------------------------------------------ sampling
 
-  var LOGITS = [["sofá", 2.6], ["suelo", 2.3], ["jardín", 2.0], ["tejado", 1.5], ["sillón", 1.2], ["alféizar", 0.5],
-    ["regazo", 0.3], ["teclado", -0.2], ["coche", -0.9], ["microondas", -2.0]];
+  var SCORES = [2.6, 2.3, 2.0, 1.5, 1.2, 0.5, 0.3, -0.2, -0.9, -2.0];
 
   M.register("llms/sampling", function (stage) {
+    var LOGITS = t("samp.words").split("|").map(function (w, i) { return [w, SCORES[i]]; });
     var T = 1, topK = 10, topP = 1;
     var counts = LOGITS.map(function () { return 0; }), total = 0, picked = -1;
     var rand = M.rng(Date.now() % 1e6);

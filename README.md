@@ -1,83 +1,77 @@
-# ¿Por qué funciona la IA? · math-of-ai
+# Why does AI work? · math-of-ai
 
-Web didáctica e interactiva sobre las matemáticas y la historia de la inteligencia artificial, publicada en
-**https://toniferr.github.io/math-of-ai/**.
+An interactive explainer on the mathematics and history of artificial intelligence, published at
+**https://toniferr.github.io/math-of-ai/** in English and Spanish ([/es/](https://toniferr.github.io/math-of-ai/es/)).
 
-Recorre en diez capítulos la cadena de ideas que lleva de Turing a ChatGPT. Cada capítulo cuenta la historia,
-enuncia los teoremas clave (con demostraciones plegables) e incluye figuras interactivas:
+Ten chapters follow the chain of ideas that leads from Turing to ChatGPT. Each one tells the history, states the key
+theorems (with foldable proofs) and includes interactive figures:
 
-| # | Capítulo | Teoremas y resultados | Figuras interactivas |
+| # | Chapter | Theorems and results | Interactive figures |
 | --- | --- | --- | --- |
-| 00 | Computación | Máquina universal, indecidibilidad de la parada | Máquina de Turing paso a paso |
-| 01 | Probabilidad | Ley de los grandes números, Bayes, máxima verosimilitud | Moneda trucada: frecuencia y posterior |
-| 02 | Información | Entropía, codificación de fuente, Gibbs, entropía cruzada | Entropía y Huffman, KL, n-gramas de Shannon |
-| 03 | Álgebra lineal | Cauchy-Schwarz, Johnson-Lindenstrauss, SVD | Analogías con embeddings, matrices 2×2 |
-| 04 | Cálculo | Regla de la cadena, gradiente barato (Baur-Strassen) | Secante → tangente, retropropagación |
-| 05 | Optimización | Convergencia de GD, Nesterov, Robbins-Monro | Paisajes de pérdida, SGD |
-| 06 | Redes neuronales | Convergencia del perceptrón, XOR, aproximación universal | Perceptrón vs. red oculta, suma de sigmoides |
-| 07 | Teoría del aprendizaje | Cota para clases finitas, VC, PAC, no free lunch | Sobreajuste, pulverización con rectas |
-| 08 | Transformers | Atención, varianza de q·k, aproximación universal | Cabezas de atención |
-| 09 | LLM | Softmax = máxima entropía, escalado, política óptima con KL, alucinaciones | Temperatura/top-k/top-p, leyes de escalado |
+| 00 | Computation | Universal machine, undecidability of halting | Step-by-step Turing machine |
+| 01 | Probability | Law of large numbers, Bayes, maximum likelihood | Biased coin: frequency and posterior |
+| 02 | Information | Entropy, source coding, Gibbs, cross-entropy | Entropy and Huffman, KL, Shannon's n-grams |
+| 03 | Linear algebra | Cauchy–Schwarz, Johnson–Lindenstrauss, SVD | Embedding analogies, 2×2 matrices |
+| 04 | Calculus | Chain rule, cheap gradient (Baur–Strassen) | Secant → tangent, backpropagation |
+| 05 | Optimization | GD convergence, Nesterov, Robbins–Monro | Loss landscapes, SGD |
+| 06 | Neural networks | Perceptron convergence, XOR, universal approximation | Perceptron vs. hidden layer, sum of sigmoids |
+| 07 | Learning theory | Finite-class bound, VC, PAC, no free lunch | Overfitting, shattering with lines |
+| 08 | Transformers | Attention, variance of q·k, universal approximation | Attention heads |
+| 09 | LLMs | Softmax = maximum entropy, scaling, KL-optimal policy, hallucinations | Temperature/top-k/top-p, scaling laws |
 
-Además: una portada con un «predictor de la siguiente palabra» y una línea temporal filtrable de 1654 a hoy.
+Plus a home page with a “next-word predictor” and a filterable timeline from 1654 to today.
 
-## Principios
+## Principles
 
-- **Sin frameworks ni dependencias.** HTML, CSS y JavaScript propios. El generador (`build.py`) solo usa la
-  biblioteca estándar de Python 3.10+.
-- **Fórmulas en MathML nativo.** Los capítulos se escriben con `$TeX$` y `texmath.py` los convierte a MathML al
-  generar el sitio: sin MathJax, sin KaTeX y sin fuentes descargadas. Un comando desconocido hace fallar el build.
-- **Seguro por defecto.** CSP estricta (solo recursos propios, sin JavaScript ni estilos en línea), sin CDN ni
-  analítica, y las actions del workflow fijadas por SHA.
-- **Preparada para traducir.** Todo el texto está en `content/` (capítulos por idioma y cadenas de la interfaz y
-  de las demos en `content/i18n/`). Hoy solo existe `es`; el build comprueba que todos los idiomas tengan las
-  mismas claves.
+- **No frameworks, no dependencies.** Hand-written HTML, CSS and JavaScript. The generator (`build.py`) uses only the
+  Python 3.10+ standard library.
+- **Native MathML.** Chapters are written with `$TeX$` and `texmath.py` converts it to MathML at build time: no MathJax,
+  no KaTeX, no downloaded fonts. An unknown command fails the build.
+- **Secure by default.** Strict CSP (own resources only, no inline JavaScript or styles), no CDN or analytics, and the
+  workflow's actions pinned by SHA.
+- **Bilingual.** English is the default language at the site root and Spanish lives under `/es/`; every page links to
+  its counterpart and declares `hreflang` alternates.
 
-## Arrancar en local
+## Running locally
 
 ```powershell
-python build.py --serve        # genera dist/ y lo sirve en http://127.0.0.1:8000
-python build.py --release      # modo estricto (el de CI): cualquier aviso hace fallar el build
+python build.py --serve        # builds dist/ and serves it at http://127.0.0.1:8000
+python build.py --release      # strict mode (the one CI uses): any warning fails the build
 ```
 
-El build avisa de enlaces internos rotos, fórmulas que no compilan, demos sin script o sin registrar y
-cadenas que usan las demos pero faltan en `i18n`.
+The build warns about broken internal links and anchors, formulas that do not compile, demos without a script or not
+registered, strings used by the demos but missing from `i18n`, and keys present in one language but not the other.
 
-## Estructura
+## Structure
 
 ```text
 content/
-├── site.json                  URL base, idiomas y orden de los capítulos
-├── i18n/es.json               textos de la interfaz y de las figuras interactivas
-└── es/
-    ├── home.html              portada (<!--chain--> se sustituye por el índice)
-    ├── timeline.json          eras y eventos de la línea temporal
-    └── chapters/<id>.html     un capítulo: bloque <!--meta {json} --> + HTML con $TeX$
+├── site.json                  base URL, languages and chapter order
+├── i18n/{en,es}.json          interface and interactive-figure strings (same keys in both)
+└── {en,es}/
+    ├── home.html              home page (<!--chain--> is replaced by the contents)
+    ├── timeline.json          eras and events of the timeline
+    └── chapters/<id>.html     one chapter: <!--meta {json} --> block + HTML with $TeX$
 src/
 ├── template.html, favicon.svg
-├── css/main.css               estilo editorial (tipo Distill), tema claro y oscuro
+├── css/main.css               editorial (Distill-like) style, light and dark themes
 └── js/
-    ├── theme.js               tema sin parpadeo (síncrono en <head>)
-    ├── core.js                registro de demos y utilidades (controles, canvas, ejes, softmax…)
-    ├── data/corpus-es.js      capítulo I del Quijote (dominio público) para los n-gramas
-    └── demos/<grupo>.js       figuras interactivas de cada capítulo
-texmath.py                     conversor TeX → MathML
-build.py                       generador → dist/
+    ├── theme.js               flicker-free theme (synchronous in <head>)
+    ├── core.js                demo registry and helpers (controls, canvas, axes, softmax…)
+    ├── data/corpus-{en,es}.js public-domain training text for the n-grams (Alice; Don Quixote)
+    └── demos/<group>.js       interactive figures for each chapter
+texmath.py                     TeX → MathML converter
+build.py                       generator → dist/ (English) and dist/es/ (Spanish)
 ```
 
-## Escribir un capítulo
+## Writing a chapter
 
-- Fórmulas: `$...$` en línea y `$$...$$` en bloque. `\class{k1}{...}` colorea un término (k1–k4), igual que
-  `<span class="k1">` en el texto.
-- Enlaces internos: `href="@ch:<id>#ancla"`, `href="@timeline"` y `href="@home"`.
-- Cajas: `<div class="theorem">`, `definition` o `idea`, con `<span class="th-title">`; las demostraciones van en
+- Formulas: `$...$` inline and `$$...$$` for display. `\class{k1}{...}` colours a term (k1–k4), just like
+  `<span class="k1">` in the text.
+- Internal links: `href="@ch:<id>#anchor"`, `href="@timeline"` and `href="@home"`.
+- Boxes: `<div class="theorem">`, `definition` or `idea`, with a `<span class="th-title">`; proofs go in
   `<details class="proof"><summary>…</summary><div>…</div></details>`.
-- Notas al margen: `<aside class="note">`.
-- Figuras interactivas: `<figure class="demo" data-demo="grupo/nombre"><figcaption>…</figcaption></figure>`; el
-  script `src/js/demos/grupo.js` la registra con `MOA.register("grupo/nombre", init)`.
-
-## Añadir un idioma
-
-1. Añade el código a `langs` en `content/site.json`.
-2. Copia `content/i18n/es.json` y `content/es/` y tradúcelos; el `slug` de cada capítulo puede cambiar.
-3. `python build.py --release` señala cualquier clave que falte.
+- Margin notes: `<aside class="note">`.
+- Interactive figures: `<figure class="demo" data-demo="group/name"><figcaption>…</figcaption></figure>`; the script
+  `src/js/demos/group.js` registers it with `MOA.register("group/name", init)` and takes its texts from the `demos`
+  section of `i18n`.

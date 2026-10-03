@@ -1,0 +1,347 @@
+{
+  "site_title": "Why does AI work?",
+  "site_short": "Math of AI",
+  "site_description": "An interactive explainer on the mathematics and history of artificial intelligence: from Turing and Shannon to Transformers and ChatGPT, one theorem at a time.",
+  "nav": {
+    "main": "Main navigation",
+    "chapters": "Chapters",
+    "timeline": "History",
+    "theme": "Switch between light and dark theme",
+    "skip": "Skip to content",
+    "lang": "Language"
+  },
+  "chapter": {
+    "label": "Chapter",
+    "era": "Period",
+    "people": "Key figures",
+    "theorems": "Key results",
+    "toc": "In this chapter",
+    "prev": "Previous",
+    "next": "Next",
+    "prevnext": "Previous and next chapter"
+  },
+  "timeline": {
+    "slug": "history",
+    "kicker": "Timeline",
+    "all": "All",
+    "filter": "Filter by chapter",
+    "read": "Chapter"
+  },
+  "footer": {
+    "text": "Text, figures and code handmade (with help from Claude Code): no frameworks, no trackers, and formulas in native MathML.",
+    "source": "Source code on GitHub"
+  },
+  "demos": {
+    "core": {
+      "error": "This figure could not be loaded."
+    },
+    "tm": {
+      "program": "Machine",
+      "programs": {
+        "increment": "Add 1 in binary",
+        "beaver": "Busy beaver (2 states)",
+        "loop": "One that never halts"
+      },
+      "states": {
+        "right": "right",
+        "carry": "carry",
+        "halt": "halt"
+      },
+      "input": "Number",
+      "step": "Step",
+      "run": "Run",
+      "pause": "Pause",
+      "reset": "Reset",
+      "status": "State “{state}” · step {steps}",
+      "halted": "Halted after {steps} steps · {ones} ones on the tape",
+      "never": "will it ever halt?",
+      "cols": {
+        "state": "State",
+        "read": "Reads",
+        "write": "Writes",
+        "move": "Moves",
+        "next": "Goes to"
+      }
+    },
+    "coin": {
+      "freqTitle": "Frequency of heads",
+      "postTitle": "Belief about p (posterior)",
+      "flips": "Flips",
+      "heads": "Heads",
+      "freq": "Frequency k/n",
+      "bayes": "Posterior mean",
+      "interval": "95% interval",
+      "truth": "True p",
+      "reveal": "Reveal p",
+      "hide": "Hide p",
+      "prior": "Initial belief",
+      "priors": {
+        "uniform": "No preference (uniform)",
+        "fair": "I think it's fair",
+        "heads": "I think it favours heads"
+      },
+      "flip1": "Flip",
+      "newCoin": "New coin",
+      "xLabel": "n (flips, log scale)",
+      "pLabel": "p",
+      "empty": "Flip the coin",
+      "head": "heads",
+      "tail": "tails"
+    },
+    "entropy": {
+      "H": "Entropy H",
+      "max": "Maximum log₂ n",
+      "L": "Huffman L",
+      "eff": "Efficiency H/L",
+      "presets": "Distribution",
+      "preset": {
+        "skewed": "Skewed",
+        "uniform": "Uniform",
+        "two": "Coin",
+        "certain": "Certain"
+      },
+      "dist": "Distribution p(x)",
+      "hint": "Drag the bars up or down.",
+      "code": "Huffman code",
+      "gauge": "Entropy, average code length and maximum compared",
+      "sym": "Symbol",
+      "surprise": "−log₂ p",
+      "codeword": "Code"
+    },
+    "xent": {
+      "words": "mat|sofa|floor|roof|chair|car",
+      "Hp": "Entropy H(p)",
+      "Hpq": "Cross-entropy H(p, q)",
+      "KL": "KL divergence",
+      "prompt": "The cat is sitting on the…",
+      "uniform": "Uniform q",
+      "perfect": "q = p (perfect model)",
+      "overconfident": "Overconfident model",
+      "stack": "Cross-entropy decomposed",
+      "stackLabel": "H(p, q) = H(p) + KL = {v} bits"
+    },
+    "ngram": {
+      "bits": "Conditional entropy",
+      "contexts": "Distinct contexts",
+      "copied": "Longest verbatim copy",
+      "order": "Order",
+      "unit": "Unit",
+      "chars": "Letters",
+      "words": "Words",
+      "again": "Generate again",
+      "perSymbol": "bits/symbol",
+      "chars_n": "{n} characters",
+      "levels": {
+        "zero": "Order 0: equiprobable symbols. Pure maximum entropy.",
+        "one": "Order 1: each symbol with its real frequency, ignoring context.",
+        "low": "Low order: plausible syllables and words appear, but no meaning.",
+        "high": "High order: it sounds like Lewis Carroll… because it copies whole chunks of the original."
+      }
+    },
+    "emb": {
+      "title": "Toy embedding space",
+      "ex1": "king − man + woman",
+      "ex2": "kitten − cat + dog",
+      "ex3": "girl − woman + man",
+      "result": "{a} − {b} + {c} ≈ {best}  (distance {d})",
+      "words": {
+        "man": "man",
+        "woman": "woman",
+        "king": "king",
+        "queen": "queen",
+        "prince": "prince",
+        "princess": "princess",
+        "boy": "boy",
+        "girl": "girl",
+        "cat": "cat",
+        "kitten": "kitten",
+        "dog": "dog",
+        "puppy": "puppy"
+      }
+    },
+    "tr": {
+      "title": "Linear transformation of the plane",
+      "det": "Determinant",
+      "kind": "Effect",
+      "preset": "Example",
+      "presets": {
+        "identity": "Identity",
+        "rotate": "30° rotation",
+        "scale": "Scaling",
+        "shear": "Shear",
+        "reflect": "Reflection",
+        "singular": "Singular (det = 0)"
+      },
+      "collapse": "flattens the plane",
+      "flip": "flips the plane",
+      "keep": "preserves orientation"
+    },
+    "deriv": {
+      "title": "Secant and tangent",
+      "secant": "Secant slope",
+      "tangent": "Derivative f′(x)",
+      "error": "Difference",
+      "fn": "Function"
+    },
+    "bp": {
+      "title": "Computational graph of one neuron",
+      "loss": "Loss 𝓛",
+      "numeric": "Numerical ∂𝓛/∂w",
+      "forward": "1 · Forward",
+      "back": "2 · One step back",
+      "all": "All",
+      "learn": "Learn: w, b ← w, b − η∇𝓛",
+      "start": "Press “Forward” to compute the values.",
+      "fwdDone": "Forward pass done: 𝓛 = {L}. Now go backwards."
+    },
+    "gd": {
+      "title": "Gradient descent on a loss landscape",
+      "iter": "Iteration",
+      "status": "Status",
+      "states": {
+        "running": "running",
+        "converged": "converged",
+        "diverged": "diverging!",
+        "stopped": "step limit"
+      },
+      "momentum": "Momentum",
+      "landscape": "Landscape",
+      "lands": {
+        "bowl": "Elongated bowl",
+        "banana": "Rosenbrock (banana)",
+        "wells": "Several minima"
+      },
+      "run": "Run",
+      "pause": "Pause",
+      "step": "Step",
+      "reset": "Reset",
+      "hint": "Click on the map to start from another point."
+    },
+    "sgd": {
+      "steps": "Steps",
+      "loss": "Loss (all data)",
+      "lossVal": "{v} (min. {min})",
+      "batch": "Batch size",
+      "full": "Full (40)",
+      "data": "Data and current line",
+      "params": "Path in (w, b) space"
+    },
+    "nn": {
+      "title": "Classifier on the plane",
+      "epoch": "Epoch",
+      "acc": "Accuracy",
+      "loss": "Loss / mistakes",
+      "state": "Status",
+      "data": "Data",
+      "datasets": {
+        "separable": "Separable",
+        "xor": "XOR",
+        "circle": "Circle",
+        "empty": "Empty (draw your own)"
+      },
+      "model": "Model",
+      "perceptron": "Perceptron",
+      "mlp": "Hidden-layer network",
+      "hidden": "Hidden neurons",
+      "add": "A click adds",
+      "blue": "blue",
+      "orange": "orange",
+      "reinit": "Reset weights",
+      "clear": "Clear points",
+      "mistakes": "{n} mistakes in the pass",
+      "converged": "converged in {n} passes",
+      "noConverge": "does not converge",
+      "training": "training…"
+    },
+    "ua": {
+      "title": "Approximation with one hidden layer of sigmoids",
+      "neurons": "Neurons",
+      "maxErr": "Maximum error",
+      "params": "Parameters",
+      "target": "Target function",
+      "targets": {
+        "wave": "Wave",
+        "bump": "Bump",
+        "zigzag": "Zigzag"
+      },
+      "steep": "Steepness"
+    },
+    "ov": {
+      "fit": "Data and fitted polynomial",
+      "errors": "Mean squared error by degree",
+      "train": "Training",
+      "test": "New data",
+      "params": "Parameters",
+      "degree": "Degree",
+      "points": "Points",
+      "resample": "New data",
+      "interp": "d = n − 1"
+    },
+    "vc": {
+      "title": "Points to be separated",
+      "points": "Points",
+      "hint": "Drag the numbered points.",
+      "yes": "separable by a line",
+      "no": "not separable by a line",
+      "shattered": "Lines shatter these {n} points: {ok} of {total} labellings are separable.",
+      "notShattered": "Not shattered: only {ok} of {total} labellings are separable by a line."
+    },
+    "attn": {
+      "tokens": "Words of the sentence",
+      "matrix": "Attention matrix: rows = queries, columns = keys",
+      "head": "Head",
+      "heads": {
+        "agreement": "Agreement",
+        "previous": "Previous word",
+        "subject": "Subject of the verb"
+      },
+      "causal": "Causal mask",
+      "scale": "Divide by √dₖ",
+      "sharp": "Sharpness",
+      "hint": "Click a word (or a row of the matrix) to see what it attends to.",
+      "detail": "“{q}” attends mostly to “{k}” ({p})",
+      "scoresFor": "Scores for “{q}” (dₖ = {d})",
+      "key": "Key",
+      "weight": "Weight"
+    },
+    "samp": {
+      "prompt": "The cat is sitting on the",
+      "words": "mat|sofa|floor|windowsill|roof|chair|lap|keyboard|car|microwave",
+      "temp": "Temperature",
+      "entropy": "Entropy",
+      "kept": "Possible tokens",
+      "samples": "Samples",
+      "one": "Sample 1",
+      "hundred": "Sample 100",
+      "clear": "Clear counts"
+    },
+    "scale": {
+      "title": "Loss versus model size for fixed compute budgets",
+      "compute": "Compute",
+      "nOpt": "Optimal parameters",
+      "dOpt": "Optimal data",
+      "ratio": "Tokens per parameter",
+      "lOpt": "Minimum loss",
+      "xLabel": "Parameters N",
+      "yLabel": "Loss (nats/token)",
+      "irreducible": "E = {e}: irreducible entropy of text",
+      "tokens": "tokens",
+      "units": {
+        "T": "trillion",
+        "B": "billion",
+        "M": "million"
+      }
+    },
+    "home": {
+      "prompt": "The cat is sitting on the",
+      "hint": "Choose the next word (or press “Sample”).",
+      "entropy": "Uncertainty H",
+      "surprise": "Surprise of the last one",
+      "prob": "Probability of the sentence",
+      "bits": "Total surprise",
+      "sample": "Sample",
+      "restart": "Start again",
+      "done": "End of the sentence. Its probability is the product of each step's (chain rule), and its total surprise is the sum."
+    }
+  }
+}

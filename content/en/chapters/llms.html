@@ -1,0 +1,144 @@
+<!--meta
+{
+  "slug": "llms",
+  "title": "Language models",
+  "chain": "LLM",
+  "headline": "Predicting the next word, at planetary scale",
+  "dek": "An LLM is a Transformer trained to minimize Shannon's cross-entropy over trillions of words. This chapter brings every piece together: how it generates text, why it improves predictably as it grows, how it becomes an assistant like ChatGPT, and why it sometimes makes things up.",
+  "era": "2018 – today",
+  "people": ["Alec Radford", "Ilya Sutskever", "Jared Kaplan", "Jordan Hoffmann", "Paul Christiano", "Long Ouyang"],
+  "theorems": ["Softmax as maximum entropy", "Scaling laws", "Optimal policy with KL", "Calibration and hallucinations"]
+}
+-->
+
+<p>On 30 November 2022 OpenAI opened an experimental chat to the public. Within five days it had a million users and, by some estimates, it became the fastest-growing consumer application in history up to that point. Under the hood, ChatGPT was a model of the GPT family, that is, a <a href="@ch:transformers">Transformer</a> trained to do a single thing: predict the next token. Everything we have seen in the previous chapters happens in it at once.</p>
+
+<h2>The recipe</h2>
+
+<ol>
+  <li><strong>Tokenize.</strong> Text is cut into frequent units with <em>Byte Pair Encoding</em>, a 1994 <a href="@ch:information#compression">compression</a> algorithm (Gage) that Sennrich and colleagues adapted to language in 2016. Common words are a single token; rare ones are split into pieces.</li>
+  <li><strong>Represent.</strong> Each token becomes an <a href="@ch:linear-algebra#embeddings">embedding</a>, and dozens of attention blocks transform it into a vector that summarizes the whole preceding context.</li>
+  <li><strong>Predict.</strong> A final matrix turns that vector into a score (<em>logit</em>) $z_i$ for each of the ~100,000 tokens in the vocabulary, and a softmax turns the scores into a distribution.</li>
+  <li><strong>Train.</strong> The cross-entropy (the <a href="@ch:probability#likelihood">negative log-likelihood</a>) is minimized over trillions of tokens, with <a href="@ch:calculus#backprop">backpropagation</a> and <a href="@ch:optimization">AdamW</a>, for weeks and on thousands of GPUs.</li>
+</ol>
+
+$$\mathcal{L}(\theta) = -\frac{1}{T}\sum_{t=1}^{T} \log p_\theta\left(w_t \mid w_1, \dots, w_{t-1}\right).$$
+
+<p>Nothing in this formula mentions grammar, facts or reasoning. But predicting well the text that people write requires, to some extent, all of that. Ilya Sutskever put it this way: compressing the data well forces you to learn what generated it.</p>
+
+<h2 id="sampling">Generating: temperature and sampling</h2>
+
+<p>To write, the model computes the distribution of the next token, <strong>picks one</strong>, appends it to the text and repeats. How it picks matters a great deal. The best-known parameter is the <strong>temperature</strong> $T$:</p>
+
+$$p_i = \frac{e^{z_i / T}}{\sum_j e^{z_j / T}}.$$
+
+<p>With $T \to 0$ the most probable token always wins (greedy decoding, repetitive). With $T = 1$ the learned distribution is sampled. With large $T$ everything tends towards equally likely (creative… and then incoherent). The name is no accident: it is the Boltzmann distribution of statistical physics, and it has a characterization that connects back to <a href="@ch:information">Shannon</a>.</p>
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(softmax as maximum entropy; Jaynes, 1957)</span></span>
+  <p>Among all distributions $p$ over the tokens with a fixed mean logit, $\sum_i p_i z_i = c$, the one with <strong>maximum entropy</strong> is $p_i \propto e^{z_i/T}$, for the temperature $T$ that satisfies the constraint.</p>
+</div>
+
+<details class="proof">
+  <summary>Proof</summary>
+  <div>
+    <p>Let $q_i = e^{z_i/T}/Z$. For any $p$ that satisfies the constraint, by Gibbs' inequality,</p>
+    $$0 \le D_{\mathrm{KL}}(p\,\|\,q) = -H(p) - \sum_i p_i \log q_i = -H(p) - \frac{c}{T} + \log Z.$$
+    <p>Hence $H(p) \le \log Z - c/T = H(q)$, with equality only if $p = q$ (all in nats).</p>
+  </div>
+</details>
+
+<p>In practice it is combined with truncation: <strong>top-$k$</strong> keeps the $k$ most probable tokens, and <strong>top-$p$</strong> (<em>nucleus sampling</em>, Holtzman et al., 2020) keeps the smallest set whose cumulative probability exceeds $p$. This avoids the oddities of the tail of the distribution without losing variety.</p>
+
+<figure class="demo wide" data-demo="llms/sampling">
+  <figcaption>The distribution of the next token for “The cat is sitting on the”. Lower the temperature so that “mat” almost always wins; raise it to give “keyboard” a chance. Tokens cut by top-$k$ or top-$p$ are dimmed and their probability is shared among the rest. With “Sample 100” you can compare the frequencies obtained with the probabilities.</figcaption>
+</figure>
+
+<h2 id="scaling">Scaling laws</h2>
+
+<p>In January 2020 Jared Kaplan and his colleagues at OpenAI found an astonishing regularity: the loss of a language model falls as a <strong>power law</strong> of the number of parameters $N$, the number of training tokens $D$ and the compute used, across seven orders of magnitude. In 2022 Jordan Hoffmann's team at DeepMind fitted an explicit form after training more than 400 models:</p>
+
+$$L(N, D) = \underbrace{E}_{\text{irreducible}} + \frac{A}{N^{\alpha}} + \frac{B}{D^{\beta}}, \qquad C \approx 6\,N D \ \text{operations}.$$
+
+<p>The term $E$ is the loss no model can remove: the <a href="@ch:information#cross-entropy">entropy</a> of text itself, the uncertainty that remains even with perfect knowledge of the language. The other two are the price of a finite model and of finite data. With a fixed compute budget $C$, minimizing $L$ is an <a href="@ch:optimization">optimization</a> problem with a simple solution.</p>
+
+<div class="theorem">
+  <span class="th-title">Result <span class="th-name">(compute-optimal allocation; Hoffmann et al., 2022)</span></span>
+  <p>Minimizing $L(N, D)$ subject to $6ND = C$ gives $N^* \propto C^{a}$ and $D^* \propto C^{b}$, with $a = \frac{\beta}{\alpha + \beta}$ and $b = \frac{\alpha}{\alpha+\beta}$. Empirically $a \approx b \approx 0.5$: <strong>parameters and data should grow at the same pace</strong>, at about 20 tokens per parameter.</p>
+</div>
+
+<figure class="demo wide" data-demo="llms/scaling">
+  <figcaption>Iso-compute curves: for a fixed budget $C$, each point is a different split between model size and data ($D = C/6N$). A model that is too small does not make use of the data; one that is too large does not see enough of it. GPT-3 (175 billion parameters, 300 billion tokens) was oversized: Chinchilla, with 70 billion parameters and 1.4 trillion tokens and similar compute, beat it. Parameters from the replication by Besiroglu et al. (2024); loss in nats per token.</figcaption>
+</figure>
+
+<p>Scaling laws turned AI into an engineering discipline with predictable budgets. They explain the race for data centres and also its limits: the improvement is slow (doubling compute cuts the reducible part of the loss by only a few per cent) and high-quality text data is not infinite.</p>
+
+<aside class="note">Some abilities seem to appear suddenly as models grow (<em>emergence</em>). Schaeffer, Miranda and Koyejo (2023) showed that many of those jumps depend on the metric chosen: with continuous metrics, improvement is usually gradual.</aside>
+
+<h2 id="rlhf">From predictor to assistant</h2>
+
+<p>A pretrained model continues texts but does not follow instructions: ask it something and it may reply with another question, because that is how many texts on the internet go on. To turn it into an assistant it is fine-tuned on example conversations and, above all, with <strong>reinforcement learning from human feedback</strong> (RLHF; Christiano et al., 2017; Ouyang et al., 2022). This is where the last branch of the table comes in: game theory and reinforcement learning, which from the Bellman equation (1957) to AlphaGo (2016) study agents that learn from rewards.</p>
+
+<p><strong>Step 1: a reward model.</strong> People compare pairs of answers. A function $r(x, y)$ is fitted with the <strong>Bradley–Terry</strong> model (1952), originally designed to rank players from the games they played:</p>
+
+$$P(y_A \succ y_B \mid x) = \sigma\big(r(x, y_A) - r(x, y_B)\big).$$
+
+<p><strong>Step 2: optimize the policy without straying too far.</strong> We look for a model $\pi$ that earns a lot of reward but still talks like the original model $\pi_{\text{ref}}$, penalizing the <a href="@ch:information#cross-entropy">KL divergence</a>:</p>
+
+$$\max_{\pi}\; \mathbb{E}_{y \sim \pi(\cdot\mid x)}\big[r(x, y)\big] - \beta\, D_{\mathrm{KL}}\big(\pi(\cdot \mid x)\,\|\,\pi_{\text{ref}}(\cdot\mid x)\big).$$
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(optimal policy with KL regularization)</span></span>
+  <p>The maximum is attained at</p>
+  $$\pi^*(y \mid x) = \frac{1}{Z(x)}\, \pi_{\text{ref}}(y \mid x)\, \exp\!\left(\frac{r(x, y)}{\beta}\right).$$
+</div>
+
+<details class="proof">
+  <summary>Proof</summary>
+  <div>
+    <p>Dividing the objective by $-\beta$ and rearranging, maximizing it is equivalent to minimizing</p>
+    $$\sum_y \pi(y)\log\frac{\pi(y)}{\pi_{\text{ref}}(y)\,e^{r(y)/\beta}} = D_{\mathrm{KL}}\big(\pi\,\|\,\pi^*\big) - \log Z,$$
+    <p>which by Gibbs' inequality is smallest exactly when $\pi = \pi^*$.</p>
+  </div>
+</details>
+
+<p>It is a softmax again: the final model reweights the probabilities of the original one by the exponential of the reward, and $\beta$ plays the role of the temperature. This result is the basis of <strong>DPO</strong> (Rafailov et al., 2023), which solves the formula for $r$ and trains directly on the preferences, with no explicit reinforcement learning. Since 2024, <strong>reasoning models</strong> have taken the idea further: they are trained with reinforcement on problems with verifiable answers (mathematics, code) and learn to “think” through long chains of steps before answering, trading compute at answer time for accuracy.</p>
+
+<h2 id="hallucinations">Why do they hallucinate?</h2>
+
+<p>An LLM sometimes states false things with total confidence. Part of the problem has a statistical explanation. A model trained by maximum likelihood tends to be <strong>calibrated</strong>: when it assigns 70% to something, it is right about 70% of the time. Kalai and Vempala (2024) proved that this comes at a cost.</p>
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(calibrated models hallucinate; Kalai and Vempala, 2024, informal)</span></span>
+  <p>For arbitrary facts that follow no pattern (such as the birthday of a little-known person), a calibrated language model must generate false facts at a rate roughly at least equal to the fraction of such facts that appear <strong>exactly once</strong> in the training data. That fraction is the Good–Turing estimate of the “unseen mass”.</p>
+</div>
+
+<p>What has been seen only once cannot be told apart well from what has never been seen. Reducing hallucinations takes more than predicting well: teaching the model to abstain, to consult external sources or to verify. No amount of scaling the training data removes this tension on its own.</p>
+
+<h2>So, why does AI work?</h2>
+
+<p>Let us walk the chain one last time. Turing showed that a universal machine can run any procedure, including a <a href="@ch:computation">learned</a> one. Probability gave the language for learning from uncertain data, and the chain rule turned text into a sequence of predictions. Shannon turned “predicting well” into a number, cross-entropy, which is at once likelihood and compression. Linear algebra provided a space where meaning is geometry; calculus and backpropagation, the gradient of billions of parameters for the price of a few evaluations; and stochastic optimization, a cheap way of walking down it. Neural networks contributed functions able to approximate almost anything, and attention, the right inductive bias for language and for hardware. At scale, the loss falls according to power laws, and reinforcement with KL regularization turns the predictor into an assistant.</p>
+
+<p>And open questions remain, very mathematical ones: why networks that could memorize everything generalize, what exactly they represent inside, and how to guarantee that they do what we want. That these questions are still open is perhaps the best reason to study the mathematics of AI.</p>
+
+<p class="cta-row"><a class="cta primary" href="@timeline">Review the full history →</a><a class="cta" href="@home">Back to the contents</a></p>
+
+<section class="references">
+  <h2>References</h2>
+  <ol>
+    <li>E. T. Jaynes (1957). “Information Theory and Statistical Mechanics”. <em>Physical Review</em>, 106(4).</li>
+    <li>R. A. Bradley and M. E. Terry (1952). “Rank Analysis of Incomplete Block Designs”. <em>Biometrika</em>, 39(3/4).</li>
+    <li>R. Sennrich, B. Haddow and A. Birch (2016). “Neural Machine Translation of Rare Words with Subword Units”. <em>ACL</em>.</li>
+    <li>P. Christiano et al. (2017). “Deep Reinforcement Learning from Human Preferences”. <em>NeurIPS</em>.</li>
+    <li>A. Radford et al. (2019). “Language Models are Unsupervised Multitask Learners”. OpenAI.</li>
+    <li>J. Kaplan et al. (2020). “Scaling Laws for Neural Language Models”. arXiv:2001.08361.</li>
+    <li>T. Brown et al. (2020). “Language Models are Few-Shot Learners”. <em>NeurIPS</em>.</li>
+    <li>A. Holtzman et al. (2020). “The Curious Case of Neural Text Degeneration”. <em>ICLR</em>.</li>
+    <li>J. Hoffmann et al. (2022). “Training Compute-Optimal Large Language Models”. <em>NeurIPS</em>.</li>
+    <li>L. Ouyang et al. (2022). “Training language models to follow instructions with human feedback”. <em>NeurIPS</em>.</li>
+    <li>R. Rafailov et al. (2023). “Direct Preference Optimization: Your Language Model is Secretly a Reward Model”. <em>NeurIPS</em>.</li>
+    <li>R. Schaeffer, B. Miranda and S. Koyejo (2023). “Are Emergent Abilities of Large Language Models a Mirage?”. <em>NeurIPS</em>.</li>
+    <li>A. T. Kalai and S. S. Vempala (2024). “Calibrated Language Models Must Hallucinate”. <em>STOC</em>.</li>
+    <li>T. Besiroglu, E. Erdil, M. Barnett and J. You (2024). “Chinchilla Scaling: A replication attempt”. arXiv:2404.10102.</li>
+  </ol>
+</section>

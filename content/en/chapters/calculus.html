@@ -1,0 +1,101 @@
+<!--meta
+{
+  "slug": "calculus",
+  "title": "Calculus",
+  "chain": "Derivatives",
+  "headline": "Which way does the error move?",
+  "dek": "A neural network has billions of knobs. To know which one to turn, and which way, you need to know how the error changes when each one moves: its derivative. The chain rule, which Leibniz wrote down in 1676, lets us compute them all at once. That algorithm is called backpropagation.",
+  "era": "1676 – 1986",
+  "people": ["Gottfried W. Leibniz", "Isaac Newton", "Seppo Linnainmaa", "Paul Werbos", "David Rumelhart", "Geoffrey Hinton", "Ronald Williams"],
+  "theorems": ["Chain rule", "Direction of steepest ascent", "Cheap gradient principle"]
+}
+-->
+
+<p>Newton and Leibniz invented calculus independently in the second half of the seventeenth century, to describe the motion of the planets and the shape of curves. Three centuries later, their central tool, the derivative, is what allows a neural network to learn. The idea is simple: if you know how the error changes when you nudge each parameter a little, you know how to move them so as to be less wrong.</p>
+
+<h2>The derivative: instantaneous sensitivity</h2>
+
+<p>The derivative of $f$ at a point $x$ measures how much $f(x)$ changes when $x$ moves by a very small amount:</p>
+
+$$f'(x) = \lim_{h \to 0} \frac{f(x + h) - f(x)}{h}.$$
+
+<p>Geometrically, it is the slope of the tangent line. The quotient with a finite $h$ is the slope of a <em>secant</em> line, which crosses the curve at two points. As $h$ shrinks, the secant turns until it coincides with the tangent.</p>
+
+<figure class="demo" data-demo="calculus/derivative">
+  <figcaption>The secant (dashed) passes through $x$ and $x + h$. As $h$ shrinks, its slope approaches the derivative, the slope of the tangent. Look at the point where the tangent is horizontal ($f'(x) = 0$): there the function has a local minimum or maximum.</figcaption>
+</figure>
+
+<h2>The gradient: the derivative with many variables</h2>
+
+<p>A loss function does not depend on one number but on millions: $\mathcal{L}(\theta_1, \dots, \theta_n)$. Each <strong>partial derivative</strong> $\partial \mathcal{L}/\partial \theta_i$ measures the sensitivity to one parameter with the others held fixed, and the vector collecting them all is the <strong>gradient</strong>:</p>
+
+$$\nabla \mathcal{L}(\theta) = \left(\frac{\partial \mathcal{L}}{\partial \theta_1}, \dots, \frac{\partial \mathcal{L}}{\partial \theta_n}\right).$$
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(direction of steepest ascent)</span></span>
+  <p>If $\mathcal{L}$ is differentiable at $\theta$ and $\nabla \mathcal{L}(\theta) \neq \mathbf{0}$, then among all unit directions $\mathbf{u}$ the directional derivative $D_{\mathbf{u}}\mathcal{L} = \nabla \mathcal{L} \cdot \mathbf{u}$ is largest when $\mathbf{u}$ points along $\nabla \mathcal{L}$ and smallest when it points the opposite way.</p>
+</div>
+
+<details class="proof">
+  <summary>Proof</summary>
+  <div>
+    <p>By <a href="@ch:linear-algebra">Cauchy–Schwarz</a>, $-\|\nabla \mathcal{L}\| \le \nabla \mathcal{L} \cdot \mathbf{u} \le \|\nabla \mathcal{L}\|$ for $\|\mathbf{u}\| = 1$, and the extremes are reached at $\mathbf{u} = \pm \nabla\mathcal{L}/\|\nabla\mathcal{L}\|$.</p>
+  </div>
+</details>
+
+<p>Here is the recipe for learning: <strong>move in the direction of $-\nabla \mathcal{L}$</strong>, the direction in which the error falls fastest. What we need is an efficient way to compute the gradient of a function with billions of variables.</p>
+
+<h2>The chain rule</h2>
+
+<p>A neural network is a composition of many simple functions, like an assembly line. The chain rule says how sensitivity propagates along that line. Leibniz used it in notes from 1676, and his notation makes it look like simply cancelling fractions:</p>
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(chain rule)</span></span>
+  <p>If $y = g(x)$ and $z = f(y)$ are differentiable, then</p>
+  $$\frac{dz}{dx} = \frac{dz}{dy} \cdot \frac{dy}{dx}, \qquad \text{that is,} \qquad (f \circ g)'(x) = f'\big(g(x)\big)\, g'(x).$$
+  <p>With several variables the derivatives become Jacobian matrices and the product becomes a matrix product: $J_{f \circ g} = J_f \, J_g$.</p>
+</div>
+
+<p>For a long chain, $\mathcal{L} = f_L(f_{L-1}(\cdots f_1(x)))$, the derivative is a product of many factors. The order in which they are multiplied does not change the result, but it changes the <em>cost</em> of the computation enormously.</p>
+
+<h2 id="backprop">Computational graphs and backpropagation</h2>
+
+<p>Any computation can be drawn as a <strong>directed acyclic graph</strong>: the nodes are elementary operations and the edges carry the intermediate results. This is where graph theory enters AI. For a neuron that predicts $\hat y = \sigma(wx + b)$ and makes an error $\mathcal{L} = (\hat y - y)^2$, the graph is the one in the figure.</p>
+
+<figure class="demo wide" data-demo="calculus/backprop">
+  <figcaption>Backpropagation step by step. The <strong>forward</strong> pass computes the values (below each node). The <strong>backward</strong> pass starts from $\partial \mathcal{L}/\partial \mathcal{L} = 1$ and multiplies by each node's local derivative in reverse topological order, leaving the gradient above each one. “Learn” takes one gradient-descent step on $w$ and $b$: repeat it and watch the loss go down.</figcaption>
+</figure>
+
+<p>This algorithm, <strong>reverse-mode automatic differentiation</strong>, was described by Seppo Linnainmaa in his 1970 master's thesis. Paul Werbos proposed applying it to neural networks in his 1974 thesis. The paper by David Rumelhart, Geoffrey Hinton and Ronald Williams in <em>Nature</em> (1986) showed that networks trained this way learn useful internal representations, and it popularized the method under the name <em>backpropagation</em>.</p>
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(cheap gradient principle; Baur–Strassen, 1983)</span></span>
+  <p>If a function $f : \mathbb{R}^n \to \mathbb{R}$ is computed with $T$ elementary operations, its full gradient, all $n$ partial derivatives, can be computed in reverse mode with $c \cdot T$ operations, where $c$ is a small constant (around 3 to 5) that <strong>does not depend on $n$</strong>.</p>
+</div>
+
+<p>This is the result that makes deep learning possible. Computing each derivative separately, by moving one parameter and measuring the change, would cost $n$ evaluations of the network: with $10^{11}$ parameters, impossible. Backpropagation delivers every derivative for roughly the price of <em>two or three</em> evaluations. Every current AI library (PyTorch, JAX, TensorFlow) is, at heart, an automatic differentiation engine.</p>
+
+<aside class="note">“Forward” mode (multiplying the Jacobians from input to output) is cheaper when there are few inputs and many outputs. A neural network is the opposite case, millions of parameters and a single loss, which is why reverse mode is used.</aside>
+
+<h2>When the gradient vanishes</h2>
+
+<p>The chain rule has a dark side. The sigmoid $\sigma(z) = 1/(1 + e^{-z})$, the classic activation function, has derivative $\sigma'(z) = \sigma(z)\,(1 - \sigma(z)) \le \tfrac14$. In a network with $L$ sigmoid layers, the gradient reaching the first layers contains a product of $L$ such factors:</p>
+
+$$\left|\frac{\partial \mathcal{L}}{\partial h_1}\right| \;\lesssim\; \prod_{\ell=1}^{L} \left|\sigma'(z_\ell)\right|\,\|W_\ell\| \;\le\; \left(\tfrac14 \max_\ell \|W_\ell\|\right)^{L}.$$
+
+<p>If the weights are moderate, the gradient shrinks exponentially with depth and the first layers do not learn. Sepp Hochreiter analysed this <strong>vanishing gradient</strong> problem in his 1991 thesis. The solutions came in several waves: LSTMs (1997), the ReLU activation, $\max(0, z)$, whose derivative is 1 on the positive side, and <strong>residual connections</strong> (2015), $h_{\ell+1} = h_\ell + F(h_\ell)$, which open a highway along which the gradient travels without fading. Transformers use the last two.</p>
+
+<p>We now know how to compute which way the error falls. What remains is to decide how far to go in that direction, and what guarantees there are of getting anywhere. That is <a href="@ch:optimization">optimization</a>.</p>
+
+<section class="references">
+  <h2>References</h2>
+  <ol>
+    <li>S. Linnainmaa (1970). <em>The representation of the cumulative rounding error of an algorithm as a Taylor expansion of the local rounding errors</em>. Master's thesis, University of Helsinki.</li>
+    <li>P. J. Werbos (1974). <em>Beyond Regression: New Tools for Prediction and Analysis in the Behavioral Sciences</em>. PhD thesis, Harvard.</li>
+    <li>W. Baur and V. Strassen (1983). “The complexity of partial derivatives”. <em>Theoretical Computer Science</em>, 22(3).</li>
+    <li>D. E. Rumelhart, G. E. Hinton and R. J. Williams (1986). “Learning representations by back-propagating errors”. <em>Nature</em>, 323.</li>
+    <li>S. Hochreiter (1991). <em>Untersuchungen zu dynamischen neuronalen Netzen</em>. Diploma thesis, TU Munich.</li>
+    <li>A. Griewank and A. Walther (2008). <em>Evaluating Derivatives</em>, 2nd ed. SIAM.</li>
+    <li>K. He, X. Zhang, S. Ren and J. Sun (2016). “Deep Residual Learning for Image Recognition”. <em>CVPR</em>.</li>
+  </ol>
+</section>

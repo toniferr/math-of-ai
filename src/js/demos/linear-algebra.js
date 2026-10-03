@@ -7,22 +7,23 @@
 
   // Hand-placed 2D vectors: x ~ "masculine <-> feminine", y ~ "status / age"; animals in their own region.
   var WORDS = {
-    hombre: [-1.5, 0.5], mujer: [1.45, 0.55],
-    rey: [-1.45, 2.55], reina: [1.5, 2.45],
-    "príncipe": [-1.65, 1.6], princesa: [1.35, 1.65],
-    "niño": [-1.3, -0.65], "niña": [1.7, -0.55],
-    gato: [-2.3, -2.3], gatito: [-1.5, -3.05],
-    perro: [0.55, -2.25], cachorro: [1.4, -3.0],
+    man: [-1.5, 0.5], woman: [1.45, 0.55],
+    king: [-1.45, 2.55], queen: [1.5, 2.45],
+    prince: [-1.65, 1.6], princess: [1.35, 1.65],
+    boy: [-1.3, -0.65], girl: [1.7, -0.55],
+    cat: [-2.3, -2.3], kitten: [-1.5, -3.05],
+    dog: [0.55, -2.25], puppy: [1.4, -3.0],
   };
+  function word(id) { return t("emb.words." + id); }
 
   M.register("linear-algebra/embeddings", function (stage) {
     var names = Object.keys(WORDS);
     var W = 560, H = 380, pad = 30;
     var x = M.linear(-3.2, 3.2, pad, W - pad), y = M.linear(-3.6, 3.2, H - pad, pad);
-    var a = "rey", b = "hombre", c = "mujer";
+    var a = "king", b = "man", c = "woman";
 
     function sel(label, value, set) {
-      return M.select({ label: label, value: value, options: names.map(function (n) { return { value: n, label: n }; }),
+      return M.select({ label: label, value: value, options: names.map(function (n) { return { value: n, label: word(n) }; }),
         onChange: function (v) { set(v); draw(); } });
     }
     var selA = sel("A", a, function (v) { a = v; }), selB = sel("− B", b, function (v) { b = v; }), selC = sel("+ C", c, function (v) { c = v; });
@@ -30,9 +31,9 @@
     var svg = M.svgBox(h("div"), W, H, t("emb.title"));
 
     stage.appendChild(M.controls(selA.el, selB.el, selC.el, h("div", { class: "btn-row" },
-      M.button(t("emb.ex1"), function () { setABC("rey", "hombre", "mujer"); }),
-      M.button(t("emb.ex2"), function () { setABC("gatito", "gato", "perro"); }),
-      M.button(t("emb.ex3"), function () { setABC("niña", "mujer", "hombre"); }))));
+      M.button(t("emb.ex1"), function () { setABC("king", "man", "woman"); }),
+      M.button(t("emb.ex2"), function () { setABC("kitten", "cat", "dog"); }),
+      M.button(t("emb.ex3"), function () { setABC("girl", "woman", "man"); }))));
     stage.appendChild(result);
     stage.appendChild(svg.parentNode);
 
@@ -67,14 +68,14 @@
         var v = WORDS[n];
         var role = n === a ? "A" : n === b ? "B" : n === c ? "C" : n === best ? "best" : "";
         var g = s("g", { class: "word " + (role ? "word-" + role.toLowerCase() : ""), tabindex: "0", role: "button",
-          "aria-label": n, onclick: function () { setABC(a, b, n); } });
+          "aria-label": word(n), onclick: function () { setABC(a, b, n); } });
         g.appendChild(s("circle", { cx: x(v[0]), cy: y(v[1]), r: role ? 6 : 4.5 }));
-        g.appendChild(s("text", { x: x(v[0]) + 9, y: y(v[1]) + 4 }, n + (role && role !== "best" ? " (" + role + ")" : "")));
+        g.appendChild(s("text", { x: x(v[0]) + 9, y: y(v[1]) + 4 }, word(n) + (role && role !== "best" ? " (" + role + ")" : "")));
         svg.appendChild(g);
       });
       svg.appendChild(s("circle", { cx: x(r[0]), cy: y(r[1]), r: 8, class: "result-ring" }));
 
-      result.textContent = t("emb.result", { a: a, b: b, c: c, best: best, d: M.fmt(bestD, 2) });
+      result.textContent = t("emb.result", { a: word(a), b: word(b), c: word(c), best: word(best), d: M.fmt(bestD, 2) });
     }
 
     draw();

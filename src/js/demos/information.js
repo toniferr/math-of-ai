@@ -247,7 +247,7 @@
   }
 
   M.register("information/ngrams", function (stage) {
-    var corpus = (window.MOA_CORPUS && window.MOA_CORPUS.es) || "";
+    var corpus = (window.MOA_CORPUS && window.MOA_CORPUS[M.lang()]) || "";
     var unit = "chars", order = 3;
     var cache = {};
     var out = h("div", { class: "gen-text", "aria-live": "polite" });

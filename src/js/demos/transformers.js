@@ -4,17 +4,33 @@
   var M = window.MOA, h = M.h, s = M.s, t = M.t;
 
   // Simple features per token. In a real model these would be built by the layers below.
-  var TOKENS = [
-    { w: "La", det: 1, fem: 1 },
-    { w: "gata", noun: 1, fem: 1, subj: 1 },
-    { w: "que", rel: 1 },
-    { w: "perseguía", verb: 1 },
-    { w: "al", det: 1, masc: 1 },
-    { w: "ratón", noun: 1, masc: 1 },
-    { w: "estaba", verb: 1 },
-    { w: "muy", adv: 1 },
-    { w: "cansada", adj: 1, fem: 1 },
-  ];
+  // "seek" marks words that must agree with a noun; "ga"/"gb" are the two agreement classes
+  // (feminine/masculine in Spanish, plural/singular in English).
+  var SENTENCES = {
+    es: { query: 8, tokens: [
+      { w: "La", seek: 1, ga: 1 },
+      { w: "gata", noun: 1, ga: 1, subj: 1 },
+      { w: "que", rel: 1 },
+      { w: "perseguía", verb: 1 },
+      { w: "al", seek: 1, gb: 1 },
+      { w: "ratón", noun: 1, gb: 1 },
+      { w: "estaba", verb: 1 },
+      { w: "muy", adv: 1 },
+      { w: "cansada", seek: 1, ga: 1 },
+    ] },
+    en: { query: 6, tokens: [
+      { w: "The", seek: 1 },
+      { w: "cats", noun: 1, ga: 1, subj: 1 },
+      { w: "that", rel: 1 },
+      { w: "chased", verb: 1 },
+      { w: "the", seek: 1 },
+      { w: "mouse", noun: 1, gb: 1 },
+      { w: "were", verb: 1, seek: 1, ga: 1 },
+      { w: "very", adv: 1 },
+      { w: "tired", adj: 1 },
+    ] },
+  };
+  var TOKENS = [];
   function f(tok, k) { return tok[k] || 0; }
 
   // Positional code: p_i = [cos(w i), sin(w i)] for a few frequencies. Rotating by -w is linear, so
@@ -28,8 +44,8 @@
 
   var HEADS = {
     agreement: {
-      q: function (tok) { var seek = f(tok, "det") || f(tok, "adj") ? 1 : 0; return [2 * seek, 2 * seek * f(tok, "fem"), 2 * seek * f(tok, "masc")]; },
-      k: function (tok) { var n = f(tok, "noun"); return [2 * n, 2 * n * f(tok, "fem"), 2 * n * f(tok, "masc")]; },
+      q: function (tok) { var seek = f(tok, "seek"); return [2 * seek, 2 * seek * f(tok, "ga"), 2 * seek * f(tok, "gb")]; },
+      k: function (tok) { var n = f(tok, "noun"); return [2 * n, 2 * n * f(tok, "ga"), 2 * n * f(tok, "gb")]; },
     },
     previous: {
       q: function (tok, i) { return pos(i - 1).map(function (v) { return 2.2 * v; }); },
@@ -42,7 +58,9 @@
   };
 
   M.register("transformers/attention", function (stage) {
-    var head = "agreement", query = 8, causal = false, scaled = true, sharp = 1;
+    var sentence = SENTENCES[M.lang()] || SENTENCES.en;
+    TOKENS = sentence.tokens;
+    var head = "agreement", query = sentence.query, causal = false, scaled = true, sharp = 1;
     var T = TOKENS.length;
 
     var tokRow = h("div", { class: "attn-tokens", role: "group", "aria-label": t("attn.tokens") });

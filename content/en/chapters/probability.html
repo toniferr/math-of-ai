@@ -1,0 +1,112 @@
+<!--meta
+{
+  "slug": "probability",
+  "title": "Probability",
+  "chain": "Probability",
+  "headline": "Learning from data",
+  "dek": "Probability puts numbers on uncertainty. Two eighteenth-century results, the law of large numbers and Bayes' theorem, explain why more data brings us closer to the truth and how to update what we believe as each new data point arrives.",
+  "era": "1654 – 1922",
+  "people": ["Blaise Pascal", "Pierre de Fermat", "Jakob Bernoulli", "Thomas Bayes", "Pierre-Simon Laplace", "Ronald Fisher"],
+  "theorems": ["Law of large numbers", "Bayes' theorem", "Maximum likelihood", "Chain rule of probability"]
+}
+-->
+
+<p>In 1654 the Chevalier de Méré put a gambling problem to Blaise Pascal: if a game of several rounds is interrupted before it ends, how should the stakes be fairly divided? Pascal wrote about it to Pierre de Fermat, and the calculus of probability was born in that correspondence. Three centuries later, the same mathematics that split wagers decides which word ChatGPT writes next.</p>
+
+<p>A language model does not “know” which word comes next: it assigns a <strong>probability</strong> to every possible word. Everything it does rests on this language.</p>
+
+<h2>Random variables and distributions</h2>
+
+<p>A <strong>random variable</strong> $X$ is a quantity whose value depends on chance: the outcome of a coin, the height of a randomly chosen person, or the next word of a text. Its <strong>distribution</strong> $p(x) = P(X = x)$ assigns each outcome a number between 0 and 1, and they all add up to 1:</p>
+
+$$p(x) \ge 0, \qquad \sum_{x} p(x) = 1.$$
+
+<p>The <strong>expected value</strong> is the average weighted by the probabilities, $\mathbb{E}[X] = \sum_x x\, p(x)$, and the <strong>variance</strong> measures how much the variable spreads around that mean, $\operatorname{Var}(X) = \mathbb{E}\big[(X - \mathbb{E}[X])^2\big]$.</p>
+
+<aside class="note">In an LLM the random variable is the next <em>token</em> (a word or a piece of a word), which can take around a hundred thousand different values. The model computes a distribution over all of them at every step.</aside>
+
+<h2>The law of large numbers</h2>
+
+<p>If a coin lands heads with a probability $p$ we do not know, intuition says that after many flips the proportion of heads will approach $p$. Jakob Bernoulli spent twenty years proving it, and the result was published in 1713, eight years after his death, in <em>Ars Conjectandi</em>. He called it his “golden theorem”.</p>
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(weak law of large numbers)</span></span>
+  <p>Let $X_1, X_2, \dots$ be independent variables with the same distribution, mean $\mu$ and finite variance $\sigma^2$, and let $\bar X_n = \tfrac{1}{n}\sum_{i=1}^n X_i$ be their sample mean. For every $\varepsilon > 0$,</p>
+  $$\lim_{n \to \infty} P\left(\left|\bar X_n - \mu\right| > \varepsilon\right) = 0.$$
+</div>
+
+<details class="proof">
+  <summary>Proof (with Chebyshev's inequality)</summary>
+  <div>
+    <p>By independence, $\operatorname{Var}(\bar X_n) = \sigma^2 / n$. Chebyshev's inequality says that a variable strays from its mean by more than $\varepsilon$ with probability at most $\operatorname{Var}/\varepsilon^2$, so</p>
+    $$P\left(\left|\bar X_n - \mu\right| > \varepsilon\right) \le \frac{\sigma^2}{n\,\varepsilon^2} \longrightarrow 0 \quad \text{as } n \to \infty.$$
+  </div>
+</details>
+
+<p>The proof gives more than the limit: the typical error of the mean shrinks like $\sigma/\sqrt{n}$. To be twice as precise you need <em>four times</em> as much data. This law of diminishing returns reappears, with other exponents, in the <a href="@ch:llms#scaling">scaling laws</a> of LLMs.</p>
+
+<figure class="demo wide" data-demo="probability/coin">
+  <figcaption>A biased coin with a hidden probability of heads $p$. <strong>Left:</strong> the frequency of heads approaches $p$ as $n$ grows (law of large numbers; the horizontal axis is logarithmic). <strong>Right:</strong> what we believe about $p$ after each flip, according to Bayes' theorem. Try starting from the belief that the coin is fair and see how long it takes to convince you otherwise.</figcaption>
+</figure>
+
+<h2>Bayes' theorem</h2>
+
+<p>The law of large numbers speaks about what happens <em>in the long run</em>, but we almost never have infinite data. What can we say about $p$ after only ten flips? The Reverend Thomas Bayes tackled this inverse problem in an essay his friend Richard Price published in 1763, after his death. Laplace rediscovered and generalized it in 1774.</p>
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(Bayes)</span></span>
+  <p>For a hypothesis $H$ and data $D$ with $P(D) > 0$,</p>
+  $$\underbrace{P(H \mid D)}_{\text{posterior}} = \frac{\overbrace{P(D \mid H)}^{\text{likelihood}}\;\overbrace{P(H)}^{\text{prior}}}{P(D)}.$$
+</div>
+
+<details class="proof">
+  <summary>Proof</summary>
+  <div>
+    <p>By the definition of conditional probability, $P(H \cap D) = P(H \mid D)\,P(D) = P(D \mid H)\,P(H)$. Just solve for $P(H \mid D)$.</p>
+  </div>
+</details>
+
+<p>The theorem fits on one line, but its reading is deep: the <strong>prior</strong> summarizes what we believed before seeing the data, the <strong>likelihood</strong> measures how well each hypothesis explains what was observed, and the <strong>posterior</strong> is the updated belief. Each new data point turns today's posterior into tomorrow's prior.</p>
+
+<p>For the coin, if the prior over $p$ is a $\mathrm{Beta}(a, b)$ distribution and we observe $k$ heads in $n$ flips, the posterior is again a Beta:</p>
+
+$$p \mid \text{data} \;\sim\; \mathrm{Beta}(a + k,\; b + n - k).$$
+
+<p>With the uniform prior ($a = b = 1$), the probability that the next flip lands heads is $\frac{k+1}{n+2}$. This is Laplace's <strong>rule of succession</strong>, with which in 1814 he computed the probability that the sun will rise tomorrow given that it has risen every day of recorded history. It was the first “smoothing” of an estimate, and statistical language models would use it two hundred years later so as not to assign zero probability to words they had never seen.</p>
+
+<h2 id="likelihood">Maximum likelihood: the loss function of AI</h2>
+
+<p>Between 1912 and 1922 Ronald Fisher proposed a more direct criterion: among all possible values of the parameter, keep the one that makes the observed data <em>most probable</em>. If the data are independent the likelihood is a product, and since multiplying many small numbers causes numerical trouble, its logarithm is maximized instead:</p>
+
+$$\hat\theta = \operatorname*{argmax}_{\theta} \prod_{i=1}^{n} p(x_i \mid \theta) = \operatorname*{argmin}_{\theta} \underbrace{\left(-\sum_{i=1}^{n} \log p(x_i \mid \theta)\right)}_{\text{negative log-likelihood}}.$$
+
+<p>For the coin we get the expected $\hat p = k/n$. But the expression on the right deserves a second look: it is <strong>exactly</strong> the function minimized when training any language model. In the <a href="@ch:information">next chapter</a> we will see that it also has a name in information theory: cross-entropy.</p>
+
+<div class="idea">
+  <span class="th-title">The key idea</span>
+  <p>Training a model means choosing the parameters that make the training data most probable. Everything else (networks, gradients, attention) is a way of expressing and optimizing that probability.</p>
+</div>
+
+<h2>The chain rule of probability</h2>
+
+<p>One piece is missing. How do you assign a probability to a whole <em>sentence</em>, when the number of possible sentences is astronomical? With an elementary identity that follows from applying the definition of conditional probability over and over:</p>
+
+<div class="theorem">
+  <span class="th-title">Chain rule</span>
+  $$P(w_1, w_2, \dots, w_T) = \prod_{t=1}^{T} P\left(w_t \mid w_1, \dots, w_{t-1}\right).$$
+</div>
+
+<p>The probability of a text is the product of the probabilities of each word <em>conditioned on all the previous ones</em>. This identity turns the impossible problem of modelling whole texts into a manageable one: predicting the next word. An LLM is a gigantic approximator of $P(w_t \mid w_{&lt;t})$, and it generates text by sampling from that distribution, one word at a time.</p>
+
+<p>We now know what we want to estimate. What remains is knowing how much uncertainty a distribution contains and how to measure how far a model is from reality. Claude Shannon answered those questions in 1948.</p>
+
+<section class="references">
+  <h2>References</h2>
+  <ol>
+    <li>J. Bernoulli (1713). <em>Ars Conjectandi</em>. Basel.</li>
+    <li>T. Bayes (1763). “An Essay towards Solving a Problem in the Doctrine of Chances”. <em>Philosophical Transactions of the Royal Society</em>, 53.</li>
+    <li>P.-S. Laplace (1814). <em>Essai philosophique sur les probabilités</em>. Paris.</li>
+    <li>R. A. Fisher (1922). “On the Mathematical Foundations of Theoretical Statistics”. <em>Philosophical Transactions of the Royal Society A</em>, 222.</li>
+    <li>E. T. Jaynes (2003). <em>Probability Theory: The Logic of Science</em>. Cambridge University Press.</li>
+  </ol>
+</section>

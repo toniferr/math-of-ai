@@ -28,6 +28,8 @@ CONTENT = ROOT / "content"
 SRC = ROOT / "src"
 DIST = ROOT / "dist"
 
+OG_LOCALE = {"en": "en_GB", "es": "es_ES"}
+
 WARNINGS: list[str] = []
 
 
@@ -251,6 +253,14 @@ def copy_assets() -> dict[str, str]:
 # --------------------------------------------------------------------------- page parts
 
 
+def same_page(site: dict, lang: str, current: str) -> str:
+    """dist/ path of the page `current` ("home", "timeline" or a chapter id) in another language."""
+    if current == "timeline":
+        return page_path(site, lang, "timeline")
+    match = [c for c in site["chapter_list"][lang] if c["id"] == current]
+    return page_path(site, lang, "chapter", match[0]) if match else page_path(site, lang, "home")
+
+
 def render_header(site: dict, lang: str, here: str, current: str) -> str:
     ui = site["ui"][lang]
     home = rel_url(here, page_path(site, lang, "home"))
@@ -265,14 +275,7 @@ def render_header(site: dict, lang: str, here: str, current: str) -> str:
     if len(site["langs"]) > 1:
         links = []
         for other in site["langs"]:
-            # The same page in the other language when it exists, else that language's home.
-            target = page_path(site, other, "home")
-            if current == "timeline":
-                target = page_path(site, other, "timeline")
-            else:
-                match = [c for c in site["chapter_list"][other] if c["id"] == current]
-                if match:
-                    target = page_path(site, other, "chapter", match[0])
+            target = same_page(site, other, current)
             cur = ' aria-current="true"' if other == lang else ""
             links.append(f'<a href="{rel_url(here, target)}" hreflang="{other}" lang="{other}"{cur}>{other.upper()}</a>')
         langs = f'<nav class="langs" aria-label="{esc(ui["nav"]["lang"])}">{"".join(links)}</nav>'
@@ -454,18 +457,27 @@ def write_page(site: dict, lang: str, here: str, assets: dict[str, str], *, titl
     scripts = [assets["js/core.js"]]
     for d in demos:
         for dep in DEMO_DEPS.get(d, []):
+            dep = dep.format(lang=lang)
             if dep not in scripts:
                 scripts.append(assets[dep])
         scripts.append(assets[f"js/demos/{d}.js"])
     script_tags = "\n".join(f'<script src="{root}{s}" defer></script>' for s in scripts)
     strings = json.dumps({"lang": lang, **ui["demos"]}, ensure_ascii=False, separators=(",", ":"))
     canonical = site["base_url"] + here[: -len("index.html")]
+    alternates = []
+    for other in site["langs"]:
+        alt = same_page(site, other, current)
+        alternates.append(f'<link rel="alternate" hreflang="{other}" href="{esc(site["base_url"] + alt[: -len("index.html")])}">')
+    default = same_page(site, site["default_lang"], current)
+    alternates.append(f'<link rel="alternate" hreflang="x-default" href="{esc(site["base_url"] + default[: -len("index.html")])}">')
     page = (template
             .replace("{{lang}}", lang)
             .replace("{{title}}", esc(title))
             .replace("{{description}}", esc(re.sub(r"<[^>]+>|\$", "", description)))
             .replace("{{site_title}}", esc(ui["site_title"]))
             .replace("{{canonical}}", esc(canonical))
+            .replace("{{alternates}}", "\n".join(alternates))
+            .replace("{{og_locale}}", OG_LOCALE.get(lang, lang))
             .replace("{{author}}", esc(site["author"]))
             .replace("{{favicon}}", root + assets["favicon.svg"])
             .replace("{{css}}", root + assets["css/main.css"])
@@ -483,8 +495,21 @@ def write_page(site: dict, lang: str, here: str, assets: dict[str, str], *, titl
 
 # Extra scripts a demo group needs loaded before it (shared data files).
 DEMO_DEPS = {
-    "information": ["js/data/corpus-es.js"],
+    "information": ["js/data/corpus-{lang}.js"],
 }
+
+
+def check_anchors() -> None:
+    """Every internal link with a #fragment must land on an existing id."""
+    pages = {p: p.read_text(encoding="utf-8") for p in DIST.rglob("*.html")}
+    for page, text in pages.items():
+        for path, frag in re.findall(r'href="([^"#:]*)#([^"]+)"', text):
+            target = (page.parent / path / "index.html").resolve() if path else page
+            if target not in pages and target.resolve() not in {p.resolve() for p in pages}:
+                warn(f"{page.relative_to(DIST)}: link to missing page {path}")
+                continue
+            if f'id="{frag}"' not in target.read_text(encoding="utf-8"):
+                warn(f"{page.relative_to(DIST)}: link to missing anchor {path}#{frag}")
 
 
 def build() -> None:
@@ -518,6 +543,7 @@ def build() -> None:
                        body_class=f'page-chapter ch-{ch["id"]}', current=ch["id"])
             count += 1
 
+    check_anchors()
     (DIST / ".nojekyll").write_text("", encoding="utf-8")
     print(f"built {count} pages into {DIST.relative_to(ROOT)}/" + (f" with {len(WARNINGS)} warning(s)" if WARNINGS else ""))
 

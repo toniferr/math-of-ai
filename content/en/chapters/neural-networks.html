@@ -1,0 +1,114 @@
+<!--meta
+{
+  "slug": "neural-networks",
+  "title": "Neural networks",
+  "chain": "Neurons",
+  "headline": "From the perceptron to universal approximation",
+  "dek": "In 1958 a US Navy machine learned to tell cards marked on the left from cards marked on the right, and the press announced it would soon walk, talk and be conscious of its existence. Eleven years later, a book proved it could not compute something as simple as “exclusive or”. This is the story of how a single hidden layer fixed everything.",
+  "era": "1943 – 2012",
+  "people": ["Warren McCulloch", "Walter Pitts", "Frank Rosenblatt", "Marvin Minsky", "Seymour Papert", "George Cybenko", "Yann LeCun"],
+  "theorems": ["Perceptron convergence", "XOR is not linearly separable", "Universal approximation"]
+}
+-->
+
+<p>In 1943 the neurophysiologist Warren McCulloch and the young logician Walter Pitts published “A Logical Calculus of the Ideas Immanent in Nervous Activity”. They modelled the neuron as a switch that fires if the sum of its inputs exceeds a threshold, and showed that networks of such neurons can compute any logical function. It was the first time anyone connected the brain with Turing's <a href="@ch:computation">computation</a>. The crucial piece was missing: how those connections <em>learn</em>.</p>
+
+<h2>The perceptron</h2>
+
+<p>In 1949 the psychologist Donald Hebb proposed that connections between neurons that fire together are strengthened. Frank Rosenblatt, a psychologist at the Cornell Aeronautical Laboratory, turned that intuition into an algorithm in 1957: the <strong>perceptron</strong>. It computes a weighted sum of its inputs and answers with its sign:</p>
+
+$$\hat y = \operatorname{sgn}\left(\mathbf{w} \cdot \mathbf{x} + b\right) \in \{-1, +1\}.$$
+
+<p>Geometrically, the equation $\mathbf{w} \cdot \mathbf{x} + b = 0$ is a line (a hyperplane in high dimension) that splits space in two, one half for each class. What was new was the learning rule: whenever the perceptron gets an example $(\mathbf{x}, y)$ wrong, it corrects</p>
+
+$$\mathbf{w} \leftarrow \mathbf{w} + \eta\, y\, \mathbf{x}, \qquad b \leftarrow b + \eta\, y.$$
+
+<p>If it classifies correctly, it changes nothing. Rosenblatt built a physical version, the <em>Mark I Perceptron</em>, with 400 photocells and potentiometers driven by electric motors as adjustable weights. In July 1958, after a public demonstration, the <em>New York Times</em> wrote that the Navy expected it to be the embryo of a computer able to “walk, talk, see, write, reproduce itself and be conscious of its existence”.</p>
+
+<figure class="demo wide" data-demo="neural-networks/playground">
+  <figcaption>A classification lab. Click to add points of the chosen class. With <strong>separable</strong> data the perceptron finds a line in a few passes, as Novikoff's theorem guarantees. With <strong>XOR</strong> it never succeeds: switch to the hidden-layer network and watch it bend the boundary. The background shows the model's confidence in each region.</figcaption>
+</figure>
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(perceptron convergence; Novikoff, 1962)</span></span>
+  <p>Suppose $\|\mathbf{x}_i\| \le R$ for every example and there is a unit vector $\mathbf{w}^*$ that separates the classes with margin $\gamma > 0$: $\;y_i\,(\mathbf{w}^* \cdot \mathbf{x}_i) \ge \gamma$. Then the perceptron (with $b$ folded into $\mathbf{w}$ and starting from $\mathbf{w} = \mathbf{0}$) makes at most</p>
+  $$\left(\frac{R}{\gamma}\right)^2$$
+  <p>mistakes, regardless of the order of the examples or how many there are.</p>
+</div>
+
+<details class="proof">
+  <summary>Proof</summary>
+  <div>
+    <p>Let $\mathbf{w}_k$ be the vector after the $k$-th mistake, made on $(\mathbf{x}, y)$. Take $\eta = 1$, since its value does not affect the result. Two bounds:</p>
+    <p><strong>It grows in the right direction:</strong> $\mathbf{w}_{k} \cdot \mathbf{w}^* = \mathbf{w}_{k-1}\cdot \mathbf{w}^* + y\,\mathbf{x}\cdot\mathbf{w}^* \ge \mathbf{w}_{k-1}\cdot \mathbf{w}^* + \gamma$, so $\mathbf{w}_k \cdot \mathbf{w}^* \ge k\gamma$.</p>
+    <p><strong>It does not grow too much:</strong> $\|\mathbf{w}_k\|^2 = \|\mathbf{w}_{k-1}\|^2 + 2y\,\mathbf{w}_{k-1}\cdot\mathbf{x} + \|\mathbf{x}\|^2 \le \|\mathbf{w}_{k-1}\|^2 + R^2$, because there was a mistake ($y\,\mathbf{w}_{k-1}\cdot\mathbf{x} \le 0$). So $\|\mathbf{w}_k\|^2 \le kR^2$.</p>
+    <p>By Cauchy–Schwarz, $k\gamma \le \mathbf{w}_k\cdot\mathbf{w}^* \le \|\mathbf{w}_k\| \le \sqrt{k}\,R$, hence $k \le (R/\gamma)^2$.</p>
+  </div>
+</details>
+
+<h2 id="xor">The XOR problem and the first winter</h2>
+
+<p>In 1969 Marvin Minsky and Seymour Papert published <em>Perceptrons</em>, a rigorous mathematical analysis of what a single-layer perceptron can and cannot do. The most famous example is “exclusive or” (XOR): output 1 if exactly one of two binary inputs is 1.</p>
+
+<div class="theorem">
+  <span class="th-title">Proposition <span class="th-name">(XOR is not linearly separable)</span></span>
+  <p>There are no $w_1, w_2, b$ such that $\operatorname{sgn}(w_1 x_1 + w_2 x_2 + b)$ is $+1$ at $(0,1)$ and $(1,0)$, and $-1$ at $(0,0)$ and $(1,1)$.</p>
+</div>
+
+<details class="proof">
+  <summary>Proof</summary>
+  <div>
+    <p>We would need $b < 0$, $\;w_2 + b > 0$, $\;w_1 + b > 0$ and $w_1 + w_2 + b < 0$. Adding the second and third gives $w_1 + w_2 + 2b > 0$, that is, $w_1 + w_2 + b > -b > 0$, which contradicts the fourth.</p>
+  </div>
+</details>
+
+<p>The book acknowledged that multi-layer networks do not have this limitation, but nobody knew how to train them. Together with the Lighthill report (1973) in the UK, the scepticism cut funding and led to the first <a href="@timeline">AI winter</a>. Rosenblatt died in a boating accident in 1971, without seeing his ideas vindicated.</p>
+
+<h2>The hidden layer</h2>
+
+<p>The solution is composition. A <strong>multi-layer neural network</strong> applies a linear transformation, a non-linearity, another linear transformation…</p>
+
+$$f(\mathbf{x}) = W_2\, \sigma\left(W_1 \mathbf{x} + \mathbf{b}_1\right) + \mathbf{b}_2.$$
+
+<p>The hidden-layer neurons compute new features (for XOR, for instance, “at least one input on” and “both inputs on”), and in that new space the problem is separable. As we saw in the <a href="@ch:linear-algebra">linear algebra chapter</a>, without the non-linearity $\sigma$ everything would collapse into a single matrix. Since 1986 we know how to train these networks with <a href="@ch:calculus#backprop">backpropagation</a> and <a href="@ch:optimization">gradient descent</a>. How far does their expressive power reach?</p>
+
+<h2 id="approximation">The universal approximation theorem</h2>
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(universal approximation; Cybenko 1989, Hornik 1991, Leshno et al. 1993)</span></span>
+  <p>Let $\sigma$ be a continuous sigmoidal function (or, more generally, any continuous function that is not a polynomial). For every continuous function $f : [0,1]^d \to \mathbb{R}$ and every $\varepsilon > 0$ there exist $N$ and parameters $\alpha_i, b_i \in \mathbb{R}$, $\mathbf{w}_i \in \mathbb{R}^d$ such that</p>
+  $$\left|\, f(\mathbf{x}) - \sum_{i=1}^{N} \alpha_i\, \sigma\left(\mathbf{w}_i \cdot \mathbf{x} + b_i\right) \right| < \varepsilon \qquad \text{for all } \mathbf{x} \in [0,1]^d.$$
+</div>
+
+<p>With a single, wide enough hidden layer, <em>any</em> continuous function can be approximated as closely as you like. In one dimension the idea is easy to see: a very steep sigmoid is almost a step, and a sum of steps can imitate any curve.</p>
+
+<figure class="demo wide" data-demo="neural-networks/universal">
+  <figcaption>A network with one hidden layer of $N$ sigmoid neurons approximates the target curve (grey). Each neuron contributes a smooth step at one position; their heights are adjusted to follow the function. As you raise $N$ and the steepness $k$, the maximum error falls as low as you want. It is a constructive proof of the theorem in one dimension.</figcaption>
+</figure>
+
+<p>The theorem should be read with care. It guarantees that the approximation <em>exists</em>, but it does not say how many neurons are needed (there may be exponentially many), nor that gradient descent will find it, nor that the network will work well on data it has not seen. Depth matters: there are functions that a deep network represents with few neurons and that a single-layer network would need exponentially more neurons to approximate (Telgarsky, 2016). That is why learning is <em>deep</em>.</p>
+
+<aside class="note">The Kolmogorov–Arnold theorem (1957) is a distant cousin: every continuous function of several variables can be written <em>exactly</em> as sums and compositions of continuous functions of one variable.</aside>
+
+<h2>The comeback: deep learning</h2>
+
+<p>In 1989 Yann LeCun used backpropagation to train a <strong>convolutional network</strong> that read handwritten ZIP codes for the US Postal Service. Convolutions reuse the same weights at every position of the image, a way of building into the architecture the knowledge that an edge is an edge wherever it appears. Even so, during the 1990s and 2000s other techniques, such as support vector machines, dominated machine learning.</p>
+
+<p>The change came when three ingredients finally coincided: massive data (ImageNet, 2009, with over a million labelled images for its competition), massive compute (GPUs) and a few technical tricks (ReLU, <em>dropout</em>, good initialization). In 2012 the <em>AlexNet</em> network by Alex Krizhevsky, Ilya Sutskever and Geoffrey Hinton won the ImageNet competition with a top-5 error of 15.3%, against 26.2% for the runner-up. Within a few years deep networks came to dominate vision, speech and, later, language.</p>
+
+<p>One mystery remains. Modern networks have far more parameters than training examples: they could memorize everything, and yet they get new data right. Why? That is the question of <a href="@ch:learning-theory">learning theory</a>.</p>
+
+<section class="references">
+  <h2>References</h2>
+  <ol>
+    <li>W. S. McCulloch and W. Pitts (1943). “A Logical Calculus of the Ideas Immanent in Nervous Activity”. <em>Bulletin of Mathematical Biophysics</em>, 5.</li>
+    <li>F. Rosenblatt (1958). “The Perceptron: A Probabilistic Model for Information Storage and Organization in the Brain”. <em>Psychological Review</em>, 65(6).</li>
+    <li>A. B. J. Novikoff (1962). “On Convergence Proofs on Perceptrons”. <em>Symposium on the Mathematical Theory of Automata</em>, 12.</li>
+    <li>M. Minsky and S. Papert (1969). <em>Perceptrons</em>. MIT Press.</li>
+    <li>G. Cybenko (1989). “Approximation by Superpositions of a Sigmoidal Function”. <em>Mathematics of Control, Signals and Systems</em>, 2(4).</li>
+    <li>K. Hornik (1991). “Approximation Capabilities of Multilayer Feedforward Networks”. <em>Neural Networks</em>, 4(2).</li>
+    <li>Y. LeCun et al. (1989). “Backpropagation Applied to Handwritten Zip Code Recognition”. <em>Neural Computation</em>, 1(4).</li>
+    <li>A. Krizhevsky, I. Sutskever and G. E. Hinton (2012). “ImageNet Classification with Deep Convolutional Neural Networks”. <em>NeurIPS</em>.</li>
+    <li>M. Telgarsky (2016). “Benefits of depth in neural networks”. <em>COLT</em>.</li>
+  </ol>
+</section>

@@ -1,0 +1,118 @@
+<!--meta
+{
+  "slug": "learning-theory",
+  "title": "Learning theory",
+  "chain": "Generalize",
+  "headline": "Why does it work on data it has never seen?",
+  "dek": "Memorizing the examples is easy; getting unseen ones right is not. Learning theory studies when and why a model trained on some data generalizes to other data. Its classical theorems are elegant… and deep networks defy them.",
+  "era": "1971 – 2019",
+  "people": ["Vladimir Vapnik", "Alexey Chervonenkis", "Leslie Valiant", "David Wolpert", "Mikhail Belkin"],
+  "theorems": ["Generalization bound (finite class)", "VC dimension", "Fundamental theorem of PAC learning", "No free lunch"]
+}
+-->
+
+<p>A student who memorizes last year's exam answers scores full marks on that exam and fails this year's. The same happens with machines: what matters is not the error on the training data but on <em>new</em> data. That ability is called <strong>generalization</strong>, and it is the property that distinguishes learning from memorizing.</p>
+
+<h2>Empirical risk and true risk</h2>
+
+<p>Suppose the examples $(x, y)$ come from an unknown distribution $\mathcal{D}$. For a model (or <em>hypothesis</em>) $h$ chosen from a class $\mathcal{H}$ and a loss function $\ell$, there are two errors:</p>
+
+$$R(h) = \mathbb{E}_{(x,y)\sim\mathcal{D}}\big[\ell(h(x), y)\big] \qquad \text{and} \qquad \hat R_n(h) = \frac{1}{n}\sum_{i=1}^{n} \ell(h(x_i), y_i).$$
+
+<p>The <strong>true risk</strong> $R$ is what we care about, but we cannot compute it. The <strong>empirical risk</strong> $\hat R_n$ is what we measure on the data. Training is almost always <strong>empirical risk minimization</strong>, a principle Vladimir Vapnik placed at the centre of the theory. The question is when a small $\hat R_n$ guarantees a small $R$.</p>
+
+<figure class="demo wide" data-demo="learning-theory/overfitting">
+  <figcaption>Fitting a polynomial of degree $d$ to $n$ noisy points (the dashed curve is the true function). <strong>Right:</strong> the error on the training data always goes down as the degree rises, but the error on new data traces a U. With a low degree the model is too rigid (<em>underfitting</em>); with a high degree it chases the noise (<em>overfitting</em>). Press “New data” to see how much the high-degree fit changes with another sample: that is variance.</figcaption>
+</figure>
+
+<p>The figure illustrates the <strong>bias–variance decomposition</strong> (Geman, Bienenstock and Doursat, 1992). For squared loss, the expected error at a new point splits into three terms:</p>
+
+$$\mathbb{E}\big[(y - \hat h(x))^2\big] = \underbrace{\big(\mathbb{E}[\hat h(x)] - f(x)\big)^2}_{\text{bias}^2} + \underbrace{\operatorname{Var}\big(\hat h(x)\big)}_{\text{variance}} + \underbrace{\sigma^2}_{\text{noise}}.$$
+
+<p>Simple models have high bias and low variance; complex ones, the reverse. Classical wisdom says to look for the sweet spot in between.</p>
+
+<h2>PAC learning</h2>
+
+<p>In 1984 Leslie Valiant gave a formal definition of “learning” with a deliberately modest name: <strong>probably approximately correct</strong> (PAC). We do not demand always being right; it is enough that, <em>with high probability</em> over the sample, the model has <em>small error</em>.</p>
+
+<div class="definition">
+  <span class="th-title">Definition <span class="th-name">(PAC learning, Valiant 1984)</span></span>
+  <p>A class $\mathcal{H}$ is learnable if there is an algorithm and a function $n(\varepsilon, \delta)$ such that, for every distribution $\mathcal{D}$ and all $\varepsilon, \delta \in (0,1)$, with $n \ge n(\varepsilon,\delta)$ examples the algorithm returns $h$ with</p>
+  $$P\Big(R(h) \le \min_{h' \in \mathcal{H}} R(h') + \varepsilon\Big) \ge 1 - \delta.$$
+</div>
+
+<p>For a finite class, the answer comes from combining two classic tools.</p>
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(generalization bound for finite classes)</span></span>
+  <p>If $\mathcal{H}$ is finite and the loss takes values in $[0,1]$, then with probability at least $1-\delta$ over the sample, for <strong>every</strong> $h \in \mathcal{H}$ simultaneously,</p>
+  $$R(h) \;\le\; \hat R_n(h) + \sqrt{\frac{\ln|\mathcal{H}| + \ln(2/\delta)}{2n}}.$$
+</div>
+
+<details class="proof">
+  <summary>Proof</summary>
+  <div>
+    <p>For a fixed $h$, $\hat R_n(h)$ is the mean of $n$ independent variables in $[0,1]$ with expectation $R(h)$. <strong>Hoeffding's inequality</strong> (1963) says that $P(|\hat R_n(h) - R(h)| > \varepsilon) \le 2e^{-2n\varepsilon^2}$: the <a href="@ch:probability">law of large numbers</a> with an exponential rate. By the <strong>union bound</strong>, the probability that <em>some</em> of the $|\mathcal{H}|$ hypotheses deviates is at most $2|\mathcal{H}|e^{-2n\varepsilon^2}$. Setting it equal to $\delta$ and solving for $\varepsilon$ gives the bound.</p>
+  </div>
+</details>
+
+<p>The bound captures the intuition of Occam's razor: the price of choosing among many hypotheses grows with $\ln|\mathcal{H}|$, roughly the number of bits needed to describe the chosen hypothesis. More data compensates for it as $1/\sqrt{n}$.</p>
+
+<h2 id="vc">The VC dimension</h2>
+
+<p>The interesting classes are infinite: there are infinitely many lines in the plane. In 1971 Vladimir Vapnik and Alexey Chervonenkis found the right measure of their capacity. A class is said to <strong>shatter</strong> a set of points if it can produce <em>every</em> possible labelling of them.</p>
+
+<div class="definition">
+  <span class="th-title">Definition <span class="th-name">(Vapnik–Chervonenkis dimension)</span></span>
+  <p>The VC dimension of $\mathcal{H}$ is the largest $d$ such that some set of $d$ points is shattered by $\mathcal{H}$. If sets of every size can be shattered, it is infinite.</p>
+</div>
+
+<figure class="demo wide" data-demo="learning-theory/shatter">
+  <figcaption>Can lines shatter these points? Each thumbnail is one of the $2^n$ possible labellings, with the line that separates it (if one exists). Drag the points. With 3 points in general position you get all 8, but with 4 you never get all 16: there is always an XOR-like labelling that is impossible. The VC dimension of lines in the plane is 3 (and that of hyperplanes in $\mathbb{R}^k$ is $k+1$).</figcaption>
+</figure>
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(fundamental theorem of PAC learning)</span></span>
+  <p>For binary classification, $\mathcal{H}$ is PAC-learnable if and only if its VC dimension $d$ is finite. In that case the number of examples needed is</p>
+  $$n(\varepsilon, \delta) = \Theta\!\left(\frac{d + \ln(1/\delta)}{\varepsilon^2}\right),$$
+  <p>and empirical risk minimization is an algorithm that achieves it.</p>
+</div>
+
+<p>This result, built by Vapnik and Chervonenkis (1971) and Blumer, Ehrenfeucht, Haussler and Warmuth (1989), is one of the peaks of the theory: it reduces the question “can this be learned?” to a combinatorial number. In the 1990s it inspired <strong>support vector machines</strong> (Boser, Guyon and Vapnik, 1992; Cortes and Vapnik, 1995), which maximize the margin to control capacity and were the star method before deep learning.</p>
+
+<h2>No free lunch</h2>
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(no free lunch; Wolpert, 1996)</span></span>
+  <p>Averaged over all possible target functions, every learning algorithm has the same mean error outside the training sample. No method beats another on every problem.</p>
+</div>
+
+<p>Generalizing requires assuming something about the world, an <strong>inductive bias</strong>. Convolutions assume that what matters in an image does not depend on its position. <a href="@ch:transformers">Attention</a> assumes that any word can depend on any other, with a weight computed from the content. Choosing the architecture is, to a large extent, choosing the right assumptions.</p>
+
+<h2 id="mystery">The mystery of deep networks</h2>
+
+<p>In 2017 Chiyuan Zhang and his colleagues ran a devastating experiment: they trained standard vision networks on images whose labels had been <em>randomly shuffled</em>. The networks memorized them perfectly. Their capacity is therefore enough to fit anything, so VC-based bounds are useless for them: they predict errors above 100%. And yet, with the true labels, those same networks generalize beautifully.</p>
+
+<p>Belkin and his colleagues (2019) also documented <strong>double descent</strong>: if model size is increased beyond the point where it fits the data perfectly, the test error, which had got worse following the classic U-shaped curve, <em>goes down again</em>. LLMs live far to the right of that curve.</p>
+
+<div class="idea">
+  <span class="th-title">Open question</span>
+  <p>There is still no complete theory of why overparameterized networks generalize. The candidate explanations are the implicit regularization of stochastic gradient descent (which tends towards “simple” or small-norm solutions), a preference for flat minima, PAC-Bayes bounds (which do give non-trivial guarantees in some cases) and the structure of real-world data itself.</p>
+</div>
+
+<p>With the right data, architecture and optimization algorithm, generalization arrives. For language, the architecture that changed everything appeared in 2017.</p>
+
+<section class="references">
+  <h2>References</h2>
+  <ol>
+    <li>V. N. Vapnik and A. Y. Chervonenkis (1971). “On the Uniform Convergence of Relative Frequencies of Events to Their Probabilities”. <em>Theory of Probability and Its Applications</em>, 16(2).</li>
+    <li>W. Hoeffding (1963). “Probability Inequalities for Sums of Bounded Random Variables”. <em>JASA</em>, 58(301).</li>
+    <li>L. G. Valiant (1984). “A Theory of the Learnable”. <em>Communications of the ACM</em>, 27(11).</li>
+    <li>A. Blumer, A. Ehrenfeucht, D. Haussler and M. K. Warmuth (1989). “Learnability and the Vapnik-Chervonenkis Dimension”. <em>Journal of the ACM</em>, 36(4).</li>
+    <li>S. Geman, E. Bienenstock and R. Doursat (1992). “Neural Networks and the Bias/Variance Dilemma”. <em>Neural Computation</em>, 4(1).</li>
+    <li>D. H. Wolpert (1996). “The Lack of A Priori Distinctions Between Learning Algorithms”. <em>Neural Computation</em>, 8(7).</li>
+    <li>C. Zhang, S. Bengio, M. Hardt, B. Recht and O. Vinyals (2017). “Understanding Deep Learning Requires Rethinking Generalization”. <em>ICLR</em>.</li>
+    <li>M. Belkin, D. Hsu, S. Ma and S. Mandal (2019). “Reconciling modern machine-learning practice and the classical bias-variance trade-off”. <em>PNAS</em>, 116(32).</li>
+    <li>S. Shalev-Shwartz and S. Ben-David (2014). <em>Understanding Machine Learning: From Theory to Algorithms</em>. Cambridge University Press.</li>
+  </ol>
+</section>

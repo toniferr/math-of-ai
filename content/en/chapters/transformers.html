@@ -1,0 +1,108 @@
+<!--meta
+{
+  "slug": "transformers",
+  "title": "Transformers",
+  "chain": "Attention",
+  "headline": "Attention: every word looks at all the others",
+  "dek": "In 2017 eight researchers at Google published a paper with a provocative title: “Attention Is All You Need”. Their architecture, the Transformer, replaced word-by-word reading with an operation in which each word decides, with a dot product and a softmax, which others to pay attention to.",
+  "era": "1990 – 2017",
+  "people": ["Sepp Hochreiter", "Jürgen Schmidhuber", "Dzmitry Bahdanau", "Kyunghyun Cho", "Yoshua Bengio", "Ashish Vaswani", "Noam Shazeer"],
+  "theorems": ["Attention as soft lookup", "Variance of the dot product ($\\sqrt{d_k}$)", "Universal approximation of sequences"]
+}
+-->
+
+<p>Read this sentence: “The cats that chased the mouse <em>were</em> very tired”. To know that the verb must be plural you have to remember “cats”, five words back, and not be misled by “mouse”, which is closer. An <a href="@ch:information#ngrams">$n$-gram</a> model that only looks at the previous two or three words cannot do it. Capturing long-range dependencies was for decades the great problem of language modelling.</p>
+
+<h2>Before attention: reading left to right</h2>
+
+<p><strong>Recurrent networks</strong> (Elman, 1990) read text word by word, updating a state vector, a kind of summarized memory: $h_t = \sigma(W h_{t-1} + U x_t)$. In practice they forgot quickly, because of the <a href="@ch:calculus">vanishing gradient</a> along the chain. The <strong>LSTMs</strong> of Sepp Hochreiter and Jürgen Schmidhuber (1997) added gates that decide what to keep and what to forget, and they dominated machine translation and speech recognition for twenty years.</p>
+
+<p>But they were still sequential. To translate, an encoder compressed the whole input sentence into <em>a single vector</em>, and a decoder generated the translation from it (Sutskever, Vinyals and Le, 2014). A long sentence does not fit well in one vector. In 2014 Dzmitry Bahdanau, Kyunghyun Cho and Yoshua Bengio proposed letting the decoder, at each step, <strong>look at</strong> every word of the input and choose which ones to focus on. They called it attention.</p>
+
+<h2>Attention: a soft lookup in a dictionary</h2>
+
+<p>Think of a Python dictionary: you look up a <em>key</em> and get its <em>value</em>. Attention is a “soft”, differentiable version of that lookup. Each word (each <em>token</em>) produces three vectors from its embedding $\mathbf{x}$, through three learned matrices:</p>
+
+<ul>
+  <li>a <span class="k1">query</span> $\mathbf{q} = W_Q \mathbf{x}$: “what am I looking for?”;</li>
+  <li>a <span class="k2">key</span> $\mathbf{k} = W_K \mathbf{x}$: “what do I offer?”;</li>
+  <li>a <span class="k3">value</span> $\mathbf{v} = W_V \mathbf{x}$: “here is my information if you pick me”.</li>
+</ul>
+
+<p>The match between the query of word $i$ and the key of word $j$ is a <a href="@ch:linear-algebra">dot product</a>. A softmax turns those scores into weights that add up to 1, and the output is the average of the values weighted by those weights. With all the words at once, in matrix form:</p>
+
+$$\operatorname{Attention}(Q, K, V) = \operatorname{softmax}\!\left(\frac{\class{k1}{Q}\class{k2}{K^\top}}{\sqrt{d_k}}\right)\class{k3}{V}, \qquad \operatorname{softmax}(\mathbf{s})_j = \frac{e^{s_j}}{\sum_{l} e^{s_l}}.$$
+
+<figure class="demo wide" data-demo="transformers/attention">
+  <figcaption>Three attention “heads” over the same sentence. Click a word to see which words it attends to; the matrix shows every row at once. The matrices $W_Q$ and $W_K$ are designed by hand on simple features (noun, number, position, subject role) so that what each head does is easy to understand; in a real model they are learned and the features are built by the earlier layers. Turn on the <strong>causal mask</strong> to see the attention of a generative model, which cannot look at the future.</figcaption>
+</figure>
+
+<p>Look at the agreement head: “were” attends to “cats” and not to “mouse”, even though “mouse” is closer. Distance does not matter. Any word can query any other word directly, in a single step.</p>
+
+<h2>Why divide by $\sqrt{d_k}$?</h2>
+
+<p>The factor in the formula is not decorative. It comes from a variance calculation.</p>
+
+<div class="theorem">
+  <span class="th-title">Proposition <span class="th-name">(scale of the dot product)</span></span>
+  <p>If the components of $\mathbf{q}, \mathbf{k} \in \mathbb{R}^{d_k}$ are independent, with mean 0 and variance 1, then</p>
+  $$\mathbb{E}[\mathbf{q}\cdot\mathbf{k}] = 0, \qquad \operatorname{Var}(\mathbf{q}\cdot\mathbf{k}) = d_k.$$
+</div>
+
+<details class="proof">
+  <summary>Proof</summary>
+  <div>
+    <p>$\mathbf{q}\cdot\mathbf{k} = \sum_{i=1}^{d_k} q_i k_i$. Each term has mean $\mathbb{E}[q_i]\mathbb{E}[k_i] = 0$ and variance $\mathbb{E}[q_i^2]\mathbb{E}[k_i^2] = 1$, and the terms are independent, so the variances add up.</p>
+  </div>
+</details>
+
+<p>With $d_k = 128$, the scores would have a standard deviation above 11. The softmax of such disparate numbers is practically “one and all zeros”, and in that regime its gradient is almost zero: the network would stop learning. Dividing by $\sqrt{d_k}$ brings the variance back to 1. You can check it in the figure by switching the division off.</p>
+
+<h2>The Transformer block</h2>
+
+<p>A Transformer stacks dozens of identical blocks. Each has two parts:</p>
+
+<ol>
+  <li><strong>Multi-head attention.</strong> Several attentions in parallel, each with its own $W_Q, W_K, W_V$, which can specialize in different relations (syntax, position, coreference…). Their outputs are concatenated and mixed with another matrix.</li>
+  <li><strong>A two-layer neural network</strong> applied to each position separately. Much of the model's factual “knowledge” is believed to be stored there.</li>
+</ol>
+
+<p>Around each part there is a <strong>residual connection</strong>, $\mathbf{x} \leftarrow \mathbf{x} + \operatorname{Layer}(\mathbf{x})$, and a normalization. Attention alone does not distinguish word order: “the dog bites the man” and “the man bites the dog” would look the same. That is why a <strong>positional encoding</strong> is added to each embedding. The original paper used sines and cosines of different frequencies,</p>
+
+$$\mathrm{PE}_{(p,\,2i)} = \sin\!\left(\frac{p}{10000^{2i/d}}\right), \qquad \mathrm{PE}_{(p,\,2i+1)} = \cos\!\left(\frac{p}{10000^{2i/d}}\right),$$
+
+<p>chosen because shifting the position amounts to a <em>rotation</em>, a linear transformation. The “previous word” head in the figure relies on exactly that property.</p>
+
+<aside class="note">Many current LLMs use <strong>RoPE</strong> (Su et al., 2021), which rotates the queries and keys directly according to their position, so that $\mathbf{q}_i\cdot\mathbf{k}_j$ depends only on the distance $i - j$.</aside>
+
+<h2>Generating text: the causal mask</h2>
+
+<p>A model like GPT is a “decoder-only” Transformer: at each position it predicts the <a href="@ch:probability">next token</a>. To stop it from cheating during training, each position is prevented from looking at later ones by putting $-\infty$ in those scores before the softmax. Thanks to this <strong>causal mask</strong>, a single pass over a text of $T$ tokens yields $T$ training predictions at once.</p>
+
+<p>Here lies the practical reason for the Transformer's success: unlike recurrent networks, it processes every position <strong>in parallel</strong>, with matrix multiplications that GPUs execute very fast. It has a price: the attention matrix has $T \times T$ entries, so the cost grows with the square of the context length. Much current research (FlashAttention, sparse attention, state-space models) tries to make that term cheaper.</p>
+
+<h2>What we know in theory</h2>
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(universal approximation of sequences; Yun et al., 2020)</span></span>
+  <p>Transformers with positional encoding can approximate to arbitrary precision any continuous function from fixed-length sequences to sequences, on a compact domain.</p>
+</div>
+
+<p>It is the sequence version of the <a href="@ch:neural-networks#approximation">universal approximation theorem</a>. Pérez, Barceló and Marinković (2021) also proved that, with unlimited arithmetic precision, Transformers are <a href="@ch:computation">Turing-complete</a>: the circle closes with the first chapter. Even more intriguing is <strong>in-context learning</strong>: it has been shown that attention can implement, within a single pass, algorithms such as a step of gradient descent on examples given in the text itself (von Oswald et al., 2023). It is a clue to how an LLM “learns” from the examples in a prompt without changing its weights.</p>
+
+<p>We now have all the pieces. In the last chapter we put them together at scale: trillions of tokens, hundreds of billions of parameters and an objective as simple as predicting the next word.</p>
+
+<section class="references">
+  <h2>References</h2>
+  <ol>
+    <li>J. L. Elman (1990). “Finding Structure in Time”. <em>Cognitive Science</em>, 14(2).</li>
+    <li>S. Hochreiter and J. Schmidhuber (1997). “Long Short-Term Memory”. <em>Neural Computation</em>, 9(8).</li>
+    <li>I. Sutskever, O. Vinyals and Q. V. Le (2014). “Sequence to Sequence Learning with Neural Networks”. <em>NeurIPS</em>.</li>
+    <li>D. Bahdanau, K. Cho and Y. Bengio (2015). “Neural Machine Translation by Jointly Learning to Align and Translate”. <em>ICLR</em> (arXiv 2014).</li>
+    <li>A. Vaswani et al. (2017). “Attention Is All You Need”. <em>NeurIPS</em>.</li>
+    <li>C. Yun, S. Bhojanapalli, A. S. Rawat, S. J. Reddi and S. Kumar (2020). “Are Transformers universal approximators of sequence-to-sequence functions?”. <em>ICLR</em>.</li>
+    <li>J. Pérez, P. Barceló and J. Marinković (2021). “Attention is Turing Complete”. <em>JMLR</em>, 22.</li>
+    <li>J. Su et al. (2021). “RoFormer: Enhanced Transformer with Rotary Position Embedding”. arXiv:2104.09864.</li>
+    <li>J. von Oswald et al. (2023). “Transformers Learn In-Context by Gradient Descent”. <em>ICML</em>.</li>
+  </ol>
+</section>

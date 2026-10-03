@@ -3,15 +3,17 @@
   "use strict";
   var M = window.MOA, h = M.h, t = M.t;
   var BLANK = "_";
+  var NAMED = { right: 1, carry: 1, halt: 1 };
+  function stateName(q) { return NAMED[q] ? t("tm.states." + q) : q; }
 
   // rules[state][symbol] = [write, move, next]
   var PROGRAMS = {
     increment: {
-      start: "derecha",
+      start: "right",
       input: "1011",
       rules: {
-        derecha: { "0": ["0", "R", "derecha"], "1": ["1", "R", "derecha"], _: ["_", "L", "acarreo"] },
-        acarreo: { "1": ["0", "L", "acarreo"], "0": ["1", "L", "fin"], _: ["1", "L", "fin"] },
+        right: { "0": ["0", "R", "right"], "1": ["1", "R", "right"], _: ["_", "L", "carry"] },
+        carry: { "1": ["0", "L", "carry"], "0": ["1", "L", "halt"], _: ["1", "L", "halt"] },
       },
     },
     beaver: {
@@ -19,7 +21,7 @@
       input: "",
       rules: {
         A: { _: ["1", "R", "B"], "1": ["1", "L", "B"] },
-        B: { _: ["1", "L", "A"], "1": ["1", "R", "fin"] },
+        B: { _: ["1", "L", "A"], "1": ["1", "R", "halt"] },
       },
     },
     loop: {
@@ -92,16 +94,16 @@
     function read(i) { return tape[i] || BLANK; }
 
     function step() {
-      if (state === "fin") return false;
+      if (state === "halt") return false;
       var sym = read(head);
       var rule = PROGRAMS[program].rules[state][sym];
-      if (!rule) { state = "fin"; return false; }
+      if (!rule) { state = "halt"; return false; }
       if (rule[0] === BLANK) delete tape[head]; else tape[head] = rule[0];
       head += rule[1] === "R" ? 1 : -1;
       state = rule[2];
       steps++;
       if (steps > 5000) { anim.stop(); return false; }
-      return state !== "fin";
+      return state !== "halt";
     }
 
     function render() {
@@ -113,12 +115,12 @@
           sym === BLANK ? "·" : sym));
       }
       var ones = Object.keys(tape).filter(function (k) { return tape[k] === "1"; }).length;
-      if (state === "fin") {
+      if (state === "halt") {
         status.className = "tm-status halted";
         status.textContent = t("tm.halted", { steps: steps, ones: ones });
       } else {
         status.className = "tm-status";
-        status.textContent = t("tm.status", { state: state, steps: steps }) +
+        status.textContent = t("tm.status", { state: stateName(state), steps: steps }) +
           (program === "loop" && steps > 12 ? " · " + t("tm.never") : "");
       }
 
@@ -127,20 +129,20 @@
         ["state", "read", "write", "move", "next"].map(function (k) { return h("th", {}, t("tm.cols." + k)); }))));
       var body = h("tbody");
       var rules = PROGRAMS[program].rules;
-      var pending = state !== "fin" ? state + "|" + read(head) : null;
+      var pending = state !== "halt" ? state + "|" + read(head) : null;
       Object.keys(rules).forEach(function (q) {
         Object.keys(rules[q]).forEach(function (sym) {
           var r = rules[q][sym];
           var key = q + "|" + sym;
           body.appendChild(h("tr", { class: key === pending ? "active" : "" },
-            h("td", {}, q), h("td", {}, sym === BLANK ? "·" : sym), h("td", {}, r[0] === BLANK ? "·" : r[0]),
-            h("td", {}, r[1] === "R" ? "→" : "←"), h("td", {}, r[2])));
+            h("td", {}, stateName(q)), h("td", {}, sym === BLANK ? "·" : sym), h("td", {}, r[0] === BLANK ? "·" : r[0]),
+            h("td", {}, r[1] === "R" ? "→" : "←"), h("td", {}, stateName(r[2]))));
         });
       });
       table.appendChild(body);
-      stepBtn.disabled = state === "fin";
-      runBtn.disabled = state === "fin";
-      if (state === "fin") runBtn.textContent = t("tm.run");
+      stepBtn.disabled = state === "halt";
+      runBtn.disabled = state === "halt";
+      if (state === "halt") runBtn.textContent = t("tm.run");
     }
 
     reset();

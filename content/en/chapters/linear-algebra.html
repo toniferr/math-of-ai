@@ -1,0 +1,114 @@
+<!--meta
+{
+  "slug": "linear-algebra",
+  "title": "Linear algebra",
+  "chain": "Vectors",
+  "headline": "Words turned into arrows",
+  "dek": "A computer has no idea what a cat is, but it can multiply matrices at enormous speed. Linear algebra lets us represent words, images and concepts as vectors, and measure how alike they are with a simple dot product.",
+  "era": "1844 – 2013",
+  "people": ["Hermann Grassmann", "Arthur Cayley", "Zellig Harris", "John R. Firth", "Tomas Mikolov"],
+  "theorems": ["Cauchy–Schwarz inequality", "Johnson–Lindenstrauss lemma", "Singular value decomposition"]
+}
+-->
+
+<p>Open up a language model and what you find are numbers arranged in matrices: hundreds of billions of them. Answering a question consists almost entirely of multiplying vectors by matrices. That is why GPUs, chips designed to multiply matrices while drawing video games, became the engine of AI.</p>
+
+<p>Linear algebra is the language in which models represent the world. Hermann Grassmann formulated the idea of a space of arbitrary dimension in 1844, and Arthur Cayley defined the matrix product in 1858. Neither could have imagined they were writing the language of AI.</p>
+
+<h2>Vectors and the dot product</h2>
+
+<p>A vector $\mathbf{u} = (u_1, \dots, u_d) \in \mathbb{R}^d$ is a list of $d$ numbers that can be seen as a point or as an arrow from the origin. The key operation is the <strong>dot product</strong>:</p>
+
+$$\mathbf{u} \cdot \mathbf{v} = \sum_{i=1}^{d} u_i v_i = \|\mathbf{u}\|\,\|\mathbf{v}\| \cos\theta.$$
+
+<p>It measures how much two vectors “point the same way”. Dividing by their lengths gives the <strong>cosine similarity</strong>, $\cos\theta$, which is 1 for parallel vectors, 0 for perpendicular ones and −1 for opposite ones. That it never leaves this range is guaranteed by a classic:</p>
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(Cauchy–Schwarz inequality)</span></span>
+  <p>For all $\mathbf{u}, \mathbf{v} \in \mathbb{R}^d$, $\;|\mathbf{u} \cdot \mathbf{v}| \le \|\mathbf{u}\|\,\|\mathbf{v}\|$, with equality if and only if they are proportional.</p>
+</div>
+
+<details class="proof">
+  <summary>Proof</summary>
+  <div>
+    <p>If $\mathbf{v} = \mathbf{0}$ it is trivial. Otherwise, for every $\lambda \in \mathbb{R}$, $0 \le \|\mathbf{u} - \lambda \mathbf{v}\|^2 = \|\mathbf{u}\|^2 - 2\lambda\, \mathbf{u}\cdot\mathbf{v} + \lambda^2 \|\mathbf{v}\|^2$. A quadratic in $\lambda$ that is never negative has discriminant $\le 0$: $4(\mathbf{u}\cdot\mathbf{v})^2 - 4\|\mathbf{u}\|^2\|\mathbf{v}\|^2 \le 0$.</p>
+  </div>
+</details>
+
+<p>This simple operation, multiply and add, is what the <a href="@ch:transformers">attention mechanism</a> uses to decide which words of a sentence should look at which.</p>
+
+<h2 id="embeddings">Embeddings: meaning as geometry</h2>
+
+<p>How do you turn a word into a vector? The answer comes from linguistics. In 1954 Zellig Harris formulated the <strong>distributional hypothesis</strong>: words that appear in similar contexts have similar meanings. John R. Firth summed it up in 1957: “You shall know a word by the company it keeps.”</p>
+
+<p>An <strong>embedding</strong> assigns each word a vector so that words with similar contexts end up close together. In 2003 Yoshua Bengio and his colleagues trained such vectors for the first time, together with a neural network that predicted the next word. In 2013 Tomas Mikolov and his team at Google published <em>word2vec</em>, which trained embeddings on billions of words in a few hours, and discovered something unexpected: relationships between concepts turn into <em>directions</em>.</p>
+
+$$\mathbf{v}_{\text{king}} - \mathbf{v}_{\text{man}} + \mathbf{v}_{\text{woman}} \approx \mathbf{v}_{\text{queen}}.$$
+
+<figure class="demo wide" data-demo="linear-algebra/embeddings">
+  <figcaption>A toy embedding space in two dimensions. Real ones have hundreds to thousands, and are learned from data instead of placed by hand. Pick three words: the dashed arrow is $B \to A$ moved to start at $C$, and the result is compared with every word to find the closest. If the difference “king − man” encodes something like “royalty”, adding it to “woman” should land on “queen”.</figcaption>
+</figure>
+
+<aside class="note">word2vec analogies are more fragile than the headlines suggest: the search usually excludes the starting words, and many analogies fail. Still, the underlying idea (concepts as directions in a space) has proved very fruitful for understanding what models represent internally.</aside>
+
+<h2>Matrices: functions that transform space</h2>
+
+<p>An $m \times d$ matrix $W$ defines a <strong>linear transformation</strong> $\mathbf{x} \mapsto W\mathbf{x}$ from $\mathbb{R}^d$ to $\mathbb{R}^m$. It can be understood at a glance by looking at its columns: column $j$ is where the unit vector $\mathbf{e}_j$ goes. Since the transformation respects sums and scaling, knowing where the basis goes is enough to know everything:</p>
+
+$$W\mathbf{x} = x_1 \,(\text{column } 1) + x_2\,(\text{column } 2) + \dots + x_d\,(\text{column } d).$$
+
+<figure class="demo wide" data-demo="linear-algebra/transform">
+  <figcaption>The matrix $\begin{pmatrix} a & b \\ c & d \end{pmatrix}$ transforms the grid. The coloured arrows are the columns of the matrix, that is, where $\mathbf{e}_1$ and $\mathbf{e}_2$ go. The determinant $ad - bc$ is the factor by which areas are multiplied. If it is negative the plane is flipped, and if it is zero it collapses onto a line and the lost information can no longer be recovered.</figcaption>
+</figure>
+
+<p>Multiplying matrices is composing transformations: $W_2(W_1\mathbf{x}) = (W_2 W_1)\mathbf{x}$. This innocent-looking property has a decisive consequence for neural networks:</p>
+
+<div class="theorem">
+  <span class="th-title">Observation <span class="th-name">(linear layers collapse)</span></span>
+  <p>A composition of linear transformations is linear: $W_L \cdots W_2 W_1 = W$. Stacking a hundred linear layers gives no more expressive power than a single one.</p>
+</div>
+
+<p>That is why each layer of a neural network applies, after the matrix, a non-linear function $\sigma$:</p>
+
+$$\mathbf{h} = \sigma\left(W\mathbf{x} + \mathbf{b}\right).$$
+
+<p>Stretch, bend, stretch, bend… With that recipe any continuous function can be approximated, as we will see with the <a href="@ch:neural-networks#approximation">universal approximation theorem</a>.</p>
+
+<h2>The surprising roominess of high dimensions</h2>
+
+<p>The embeddings of a modern LLM have between roughly a thousand and twenty thousand dimensions. Is that a lot or a little to represent every concept a model handles? Three-dimensional intuition is misleading: in high dimension there is a vast amount of room.</p>
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(Johnson–Lindenstrauss lemma, 1984)</span></span>
+  <p>For every $0 < \varepsilon < 1$ and every set of $n$ points in $\mathbb{R}^D$ there is a linear map $f : \mathbb{R}^D \to \mathbb{R}^k$ with $k = O\!\left(\varepsilon^{-2} \log n\right)$ such that, for every pair of points,</p>
+  $$(1 - \varepsilon)\,\|\mathbf{u} - \mathbf{v}\|^2 \le \|f(\mathbf{u}) - f(\mathbf{v})\|^2 \le (1 + \varepsilon)\,\|\mathbf{u} - \mathbf{v}\|^2.$$
+  <p>Moreover, a random projection works with high probability.</p>
+</div>
+
+<p>The dimension needed grows only with the <em>logarithm</em> of the number of points. The flip side of the same geometry: $\mathbb{R}^k$ has room for exponentially many directions that are <em>almost</em> perpendicular to each other. The <strong>superposition</strong> hypothesis, studied by interpretability teams, holds that models exploit this to encode many more concepts than they have dimensions, each in a direction almost orthogonal to the rest.</p>
+
+<h2>Low rank: the essence of a matrix</h2>
+
+<p>Every real matrix, however large, breaks down into three simple transformations: a rotation, a stretch along the axes and another rotation.</p>
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(singular value decomposition)</span></span>
+  <p>Every $W \in \mathbb{R}^{m \times d}$ can be written as $W = U \Sigma V^\top$, with $U, V$ orthogonal and $\Sigma$ diagonal, whose entries $\sigma_1 \ge \sigma_2 \ge \dots \ge 0$ are the <em>singular values</em>. By the Eckart–Young theorem (1936), keeping the $r$ largest gives the best rank-$r$ approximation of $W$.</p>
+</div>
+
+<p>Many real matrices have almost all their “information” concentrated in a few singular values. This idea underpins current techniques such as <strong>LoRA</strong> (2021), which adapts a huge LLM to a new task by training only a low-rank correction, $W + BA$, with tiny $B$ and $A$, instead of retraining the billions of parameters in $W$.</p>
+
+<p>We now know where knowledge is stored: in the numbers of the matrices. What is missing is the procedure for <em>choosing</em> those numbers, and for that we need to know how the error changes when each of them moves. That is <a href="@ch:calculus">calculus</a>.</p>
+
+<section class="references">
+  <h2>References</h2>
+  <ol>
+    <li>A. Cayley (1858). “A Memoir on the Theory of Matrices”. <em>Philosophical Transactions of the Royal Society</em>, 148.</li>
+    <li>Z. Harris (1954). “Distributional Structure”. <em>Word</em>, 10(2–3).</li>
+    <li>W. B. Johnson and J. Lindenstrauss (1984). “Extensions of Lipschitz mappings into a Hilbert space”. <em>Contemporary Mathematics</em>, 26.</li>
+    <li>Y. Bengio, R. Ducharme, P. Vincent and C. Jauvin (2003). “A Neural Probabilistic Language Model”. <em>JMLR</em>, 3.</li>
+    <li>T. Mikolov, K. Chen, G. Corrado and J. Dean (2013). “Efficient Estimation of Word Representations in Vector Space”. arXiv:1301.3781.</li>
+    <li>E. J. Hu et al. (2021). “LoRA: Low-Rank Adaptation of Large Language Models”. arXiv:2106.09685.</li>
+    <li>N. Elhage et al. (2022). “Toy Models of Superposition”. <em>Transformer Circuits Thread</em>.</li>
+  </ol>
+</section>

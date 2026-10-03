@@ -25,7 +25,7 @@
     if (!isFinite(x)) return x > 0 ? "∞" : x < 0 ? "−∞" : "—";
     var key = digits + ":" + (minDigits === undefined ? digits : minDigits);
     if (!formatters[key]) {
-      formatters[key] = new Intl.NumberFormat(strings.lang || "es", {
+      formatters[key] = new Intl.NumberFormat(lang(), {
         maximumFractionDigits: digits,
         minimumFractionDigits: minDigits === undefined ? digits : minDigits,
       });
@@ -34,8 +34,11 @@
   }
 
   function pct(p, digits) {
-    return fmt(100 * p, digits === undefined ? 1 : digits) + " %";
+    // Spanish style separates the sign ("30 %"); English does not ("30%").
+    return fmt(100 * p, digits === undefined ? 1 : digits) + (lang() === "es" ? " %" : "%");
   }
+
+  function lang() { return strings.lang || document.documentElement.lang || "en"; }
 
   // ------------------------------------------------------------------ DOM
 
@@ -357,7 +360,7 @@
   }
 
   window.MOA = {
-    register: register, t: t, fmt: fmt, pct: pct, h: h, s: s, clear: clear,
+    register: register, t: t, fmt: fmt, pct: pct, lang: lang, h: h, s: s, clear: clear,
     slider: slider, button: button, select: select, toggle: toggle, segmented: segmented,
     controls: controls, stat: stat, color: color, onTheme: onTheme, canvas: canvas, svgBox: svgBox,
     axes: axes, path: path,

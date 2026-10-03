@@ -4,20 +4,35 @@
   var M = window.MOA, h = M.h, t = M.t;
 
   // Next-token distributions keyed by the last choice; "*" is the fallback once the sentence is underway.
-  var TREE = {
-    "": [["sofá", 0.3], ["suelo", 0.22], ["jardín", 0.17], ["tejado", 0.1], ["sillón", 0.08], ["alféizar", 0.05], ["regazo", 0.04], ["teclado", 0.04]],
-    "sofá": [["del salón", 0.38], [".", 0.2], [",", 0.2], ["nuevo", 0.12], ["de la abuela", 0.1]],
-    "suelo": [["de la cocina", 0.4], [".", 0.3], [",", 0.2], ["frío", 0.1]],
-    "jardín": [["de casa", 0.3], [".", 0.3], [",", 0.2], ["bajo el sol", 0.2]],
-    "tejado": [["de enfrente", 0.35], [".", 0.3], ["mirando la luna", 0.2], [",", 0.15]],
-    "sillón": [["de mimbre", 0.35], [".", 0.35], [",", 0.3]],
-    "alféizar": [["de la ventana", 0.7], [".", 0.3]],
-    "regazo": [["de su dueña", 0.6], [".", 0.4]],
-    "teclado": [["del portátil", 0.5], [", escribiendo", 0.3], [".", 0.2]],
-    "*": [[".", 0.45], ["sin moverse", 0.2], [", ronroneando", 0.2], ["mientras llueve", 0.15]],
+  var TREES = {
+    es: {
+      "": [["sofá", 0.3], ["suelo", 0.22], ["jardín", 0.17], ["tejado", 0.1], ["sillón", 0.08], ["alféizar", 0.05], ["regazo", 0.04], ["teclado", 0.04]],
+      "sofá": [["del salón", 0.38], [".", 0.2], [",", 0.2], ["nuevo", 0.12], ["de la abuela", 0.1]],
+      "suelo": [["de la cocina", 0.4], [".", 0.3], [",", 0.2], ["frío", 0.1]],
+      "jardín": [["de casa", 0.3], [".", 0.3], [",", 0.2], ["bajo el sol", 0.2]],
+      "tejado": [["de enfrente", 0.35], [".", 0.3], ["mirando la luna", 0.2], [",", 0.15]],
+      "sillón": [["de mimbre", 0.35], [".", 0.35], [",", 0.3]],
+      "alféizar": [["de la ventana", 0.7], [".", 0.3]],
+      "regazo": [["de su dueña", 0.6], [".", 0.4]],
+      "teclado": [["del portátil", 0.5], [", escribiendo", 0.3], [".", 0.2]],
+      "*": [[".", 0.45], ["sin moverse", 0.2], [", ronroneando", 0.2], ["mientras llueve", 0.15]],
+    },
+    en: {
+      "": [["mat", 0.3], ["sofa", 0.22], ["floor", 0.17], ["windowsill", 0.1], ["roof", 0.08], ["chair", 0.05], ["lap", 0.04], ["keyboard", 0.04]],
+      "mat": [[".", 0.4], ["by the door", 0.25], [",", 0.2], ["again", 0.15]],
+      "sofa": [["in the living room", 0.38], [".", 0.2], [",", 0.2], ["cushion", 0.12], ["by the fire", 0.1]],
+      "floor": [["of the kitchen", 0.4], [".", 0.3], [",", 0.2], ["in the sun", 0.1]],
+      "windowsill": [["watching the birds", 0.4], [".", 0.35], [",", 0.25]],
+      "roof": [["next door", 0.35], [".", 0.3], ["watching the moon", 0.2], [",", 0.15]],
+      "chair": [["by the window", 0.35], [".", 0.35], [",", 0.3]],
+      "lap": [["of its owner", 0.6], [".", 0.4]],
+      "keyboard": [["of the laptop", 0.5], [", typing", 0.3], [".", 0.2]],
+      "*": [[".", 0.45], ["without moving", 0.2], [", purring", 0.2], ["while it rains", 0.15]],
+    },
   };
 
   M.register("home/next-token", function (stage) {
+    var TREE = TREES[M.lang()] || TREES.en;
     var chosen = [], bits = 0, prob = 1, rand = M.rng(Date.now() % 1e6);
 
     var prompt = h("div", { class: "tok-prompt", "aria-live": "polite" });
@@ -74,7 +89,7 @@
         stH.set("—");
       }
       sampleBtn.disabled = !d;
-      stP.set(chosen.length ? (prob < 0.001 ? prob.toExponential(1).replace("e", "·10^") : M.pct(prob, 2)) : "100 %");
+      stP.set(chosen.length ? (prob < 0.001 ? prob.toExponential(1).replace("e", "·10^") : M.pct(prob, 2)) : M.pct(1, 0));
       stB.set(M.fmt(bits, 2) + " bits");
     }
 
