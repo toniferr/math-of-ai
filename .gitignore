@@ -5,3 +5,6 @@ __pycache__/
 Thumbs.db
 .vscode/
 .idea/
+
+# Local working notes for Claude, not published
+PROGRESS.md

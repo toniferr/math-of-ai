@@ -1,0 +1,176 @@
+<!--meta
+{
+  "slug": "logic",
+  "title": "Logic",
+  "chain": "Deduce",
+  "headline": "Can a machine reason?",
+  "dek": "The first plan for artificial intelligence was not to learn but to deduce: write knowledge down as logical formulas and let the machine draw the consequences. It produced a beautiful theory, a programming language in which you describe the problem instead of the solution, and a lesson about its limits.",
+  "era": "1854 – 1992",
+  "people": ["George Boole", "Gottlob Frege", "Kurt Gödel", "John Alan Robinson", "Alain Colmerauer", "Robert Kowalski"],
+  "theorems": ["Gödel's completeness", "Most general unifier", "Completeness of resolution", "Least Herbrand model", "Completeness of SLD resolution"]
+}
+-->
+
+<p>In the seventeenth century Leibniz dreamed of a <em>calculus ratiocinator</em>: a language so precise that disputes could be settled by calculating. “Let us calculate”, two philosophers would say, and sit down with pencil and paper. Two centuries later George Boole wrote the laws of thought as algebra (<em>The Laws of Thought</em>, 1854), and in 1879 Gottlob Frege published the <em>Begriffsschrift</em>, the first complete formal language for mathematics: variables, quantifiers and rules of inference.</p>
+
+<p>When computers arrived, the dream looked within reach. If reasoning is calculating, and a computer calculates, then a computer can reason. In 1956, at the same Dartmouth workshop that named the field, Allen Newell, Herbert Simon and Cliff Shaw presented the <em>Logic Theorist</em>, which proved 38 of the first 52 theorems in chapter 2 of Russell and Whitehead's <em>Principia Mathematica</em>. Symbolic AI was born: intelligence as the manipulation of symbols according to logical rules.</p>
+
+<h2>Truth and proof</h2>
+
+<p>First-order logic talks about objects ($x$, $y$, $\text{tom}$), functions ($\text{father}(x)$), relations ($\text{parent}(x, y)$), connectives ($\lnot, \wedge, \vee, \to$) and the quantifiers $\forall$ and $\exists$. A set of formulas $\Gamma$ can say, for example, that every parent of an ancestor is an ancestor:</p>
+
+$$\forall x\, \forall y\, \forall z\; \big(\text{parent}(x, z) \wedge \text{anc}(z, y) \to \text{anc}(x, y)\big).$$
+
+<p>There are two ways of saying that a formula $\varphi$ “follows” from $\Gamma$. The semantic one, $\Gamma \models \varphi$: $\varphi$ is true in every world (every interpretation of the symbols) in which all of $\Gamma$ is true. And the syntactic one, $\Gamma \vdash \varphi$: there is a proof, a finite sequence of formulas in which each step applies a mechanical rule. The first is about meaning, the second about pushing symbols around. The miracle is that they coincide.</p>
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(completeness, Gödel 1929)</span></span>
+  <p>For every set of first-order formulas $\Gamma$ and every formula $\varphi$,</p>
+  $$\Gamma \models \varphi \iff \Gamma \vdash \varphi.$$
+</div>
+
+<p>Every truth that follows from the axioms has a proof, and every proof establishes a truth. This is what makes the Leibniz dream plausible: “true in all worlds”, an infinite notion, is reduced to “there is a finite proof”, which a machine can search for. Do not confuse it with Gödel's other, more famous theorem: <em>incompleteness</em> (1931) says that no consistent, effective set of axioms proves every truth <em>about the natural numbers</em>. Completeness is about what follows from the axioms; incompleteness, about what the axioms fail to pin down.</p>
+
+<p>But searching is not deciding. Proofs can be listed one by one, so if $\Gamma \vdash \varphi$ the search will eventually find a proof. If $\varphi$ does not follow, the search may never end. In 1936 Church and Turing proved that this cannot be fixed: there is no algorithm that decides whether a first-order formula is valid. It is the logical face of the <a href="@ch:computation#halting">halting problem</a>. First-order logic is <em>semi-decidable</em>: a machine can confirm every consequence, but it cannot always rule one out.</p>
+
+<h2>Resolution: one rule is enough</h2>
+
+<p>Proof systems for humans have many rules. In 1965 John Alan Robinson found one that is enough by itself, and is made for machines. First, every formula is turned into <em>clausal form</em>: a conjunction of clauses, each a disjunction of literals (atoms or negated atoms), with the existential quantifiers replaced by new functions (Skolem functions) and the universal ones left implicit. Satisfiability is preserved, and that is enough, because to prove $\varphi$ from $\Gamma$ it suffices to show that $\Gamma \cup \{\lnot \varphi\}$ has no model.</p>
+
+<div class="definition">
+  <span class="th-title">Definition <span class="th-name">(resolution rule)</span></span>
+  <p>From two clauses with complementary literals $L$ and $\lnot L'$ that can be made equal by a substitution $\theta$, derive their resolvent:</p>
+  $$\frac{C \vee L \qquad D \vee \lnot L'}{(C \vee D)\,\theta}\qquad \theta = \operatorname{mgu}(L, L').$$
+</div>
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(soundness and refutation completeness of resolution, Robinson 1965)</span></span>
+  <p>A set of clauses $S$ is unsatisfiable if and only if the empty clause $\square$ can be derived from $S$ by resolution.</p>
+</div>
+
+<p>Deriving $\square$ means having reached a contradiction, as in a proof by reductio ad absurdum. Behind the theorem lies Herbrand's (1930): a set of clauses is unsatisfiable if and only if some <em>finite</em> set of its ground instances (with constants substituted for the variables) already is, as plain propositional logic. Resolution searches for those instances lazily, substituting only what is needed. The key to doing that is the operation in the rule's subscript, which deserves a section of its own.</p>
+
+<h2 id="unification">Unification</h2>
+
+<p>To resolve $\text{parent}(\text{tom}, X)$ against $\lnot\, \text{parent}(Y, \text{bob})$ we need a substitution that makes both atoms equal: $\theta = \{X \mapsto \text{bob},\ Y \mapsto \text{tom}\}$. A substitution like that is a <strong>unifier</strong>. There can be infinitely many (to unify $f(X)$ and $f(Y)$ you can set both to $a$, to $b$, to $g(a)$…), but they are not all equally good: $\{X \mapsto Y\}$ commits to nothing more than it has to.</p>
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(most general unifier, Robinson 1965)</span></span>
+  <p>If two terms $s$ and $t$ have a unifier, they have a <em>most general</em> one, $\theta = \operatorname{mgu}(s, t)$: every unifier $\sigma$ of $s$ and $t$ can be written as $\sigma = \theta\lambda$ for some substitution $\lambda$. It is unique up to renaming variables, and there is an algorithm that computes it or reports that it does not exist.</p>
+</div>
+
+<details class="proof">
+  <summary>Proof (the Martelli–Montanari algorithm)</summary>
+  <div>
+    <p>Start from the set of equations $\{s = t\}$ and apply any of these rules while one applies:</p>
+    <ol>
+      <li><strong>Decompose:</strong> replace $f(s_1, \dots, s_n) = f(t_1, \dots, t_n)$ by $s_1 = t_1, \dots, s_n = t_n$.</li>
+      <li><strong>Clash:</strong> if $f(\dots) = g(\dots)$ with different symbols or arities, fail.</li>
+      <li><strong>Delete:</strong> remove $X = X$.</li>
+      <li><strong>Swap:</strong> replace $t = X$, with $t$ not a variable, by $X = t$.</li>
+      <li><strong>Occurs check:</strong> if $X = t$ with $X$ occurring inside $t \ne X$, fail.</li>
+      <li><strong>Eliminate:</strong> if $X = t$ with $X$ not in $t$ but present in other equations, substitute $t$ for $X$ in all of them.</li>
+    </ol>
+    <p>Each rule preserves the set of unifiers of the system, and the two failure rules apply only to systems without unifiers: no substitution makes $f$ equal to $g$, and none makes $X$ equal to a term strictly larger than itself. The process terminates, because each step reduces, in lexicographic order, the number of variables not yet solved, the total size of the terms and the number of equations of the form $t = X$. When no rule applies, the system has the form $\{X_1 = t_1, \dots, X_k = t_k\}$, with distinct variables that appear nowhere else. Then $\theta = \{X_i \mapsto t_i\}$ is a unifier, and since the original system has the same unifiers as the final one, any other unifier $\sigma$ must satisfy $X_i\sigma = t_i\sigma$, that is, $\sigma = \theta\sigma$. So $\sigma$ factors through $\theta$.</p>
+  </div>
+</details>
+
+<figure class="demo" data-demo="logic/unify">
+  <figcaption>The unification algorithm, rule by rule. Write two terms (variables start with a capital letter) or choose an example. The last two examples fail: one because of a clash of symbols, the other because of the occurs check, which would require $X$ to equal $f(X)$, an infinite term.</figcaption>
+</figure>
+
+<aside class="note">Unification reappears far from logic. It is how compilers for Haskell, OCaml or Rust <strong>infer types</strong> you never wrote (Hindley–Milner, 1969–1978), and how pattern matching works in many languages.</aside>
+
+<h2>Prolog: logic as a program</h2>
+
+<p>Resolution on arbitrary clauses explodes combinatorially. But if every clause has at most one positive literal (a <strong>Horn clause</strong>), it can be read as a rule, “$A$ is true if $B_1, \dots, B_n$ are”:</p>
+
+$$A \leftarrow B_1 \wedge \dots \wedge B_n.$$
+
+<p>In 1972 Alain Colmerauer and Philippe Roussel, in Marseille, built a language on that idea to process natural language: <strong>Prolog</strong> (<em>programmation en logique</em>). Robert Kowalski, in Edinburgh, gave the theory: a set of Horn clauses can be read in two ways, as statements that are true or as procedures that are executed. He summed it up as “algorithm = logic + control”. You write <em>what</em> is true; the machine decides <em>how</em> to search.</p>
+
+<pre class="code-block"><code>parent(tom, bob).        % facts: clauses with no body
+parent(bob, ann).
+parent(bob, pat).
+
+anc(X, Y) :- parent(X, Y).              % rules: ":-" reads "if"
+anc(X, Y) :- parent(X, Z), anc(Z, Y).   % "," reads "and"</code></pre>
+
+<p>A query such as <code>?- anc(tom, Who).</code> is a goal to refute: the machine assumes that nobody is a descendant of Tom and looks for the contradiction. Resolving always the leftmost goal against the program's clauses, in order, is <strong>SLD resolution</strong>, and the substitution it collects along the way is the answer: <code>Who = bob</code>, <code>Who = ann</code>, <code>Who = pat</code>.</p>
+
+<h2>What a logic program means</h2>
+
+<p>A program has a meaning independent of how it is run. Call $\mathcal{B}_P$ the set of all ground atoms (atoms without variables) that can be written with the program's symbols, and $\operatorname{ground}(P)$ the set of ground instances of its clauses. Consider the operator that takes a set $I \subseteq \mathcal{B}_P$ and returns everything that can be deduced from it in one step:</p>
+
+$$T_P(I) = \{\, A : (A \leftarrow B_1, \dots, B_n) \in \operatorname{ground}(P),\ \ B_1, \dots, B_n \in I \,\}.$$
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(least Herbrand model, van Emden and Kowalski 1976)</span></span>
+  <p>Every definite program $P$ has a least model $M_P$. It is the least fixed point of $T_P$, it is reached by iterating from the empty set, and it contains exactly the ground atoms that follow from $P$:</p>
+  $$M_P = \bigcup_{k \ge 0} T_P^{\,k}(\varnothing) = \{\, A \in \mathcal{B}_P : P \models A \,\}.$$
+</div>
+
+<details class="proof">
+  <summary>Proof</summary>
+  <div>
+    <p>A set of ground atoms $I$ is a model of $P$ exactly when $T_P(I) \subseteq I$: every rule whose body holds in $I$ has its head in $I$. The intersection of models is a model (if the body is in all of them, so is the head), so there is a least model, $M_P$, the intersection of all of them.</p>
+    <p>$T_P$ is monotone ($I \subseteq J$ implies $T_P(I) \subseteq T_P(J)$) and, since each body is finite, continuous: an atom deduced from a union of an increasing chain is already deduced at some finite stage. By Kleene's fixed-point theorem, $\bigcup_k T_P^{\,k}(\varnothing)$ is the least fixed point. It is contained in every model, by induction on $k$, and is itself a model, so it equals $M_P$. Finally, $P \models A$ for a ground $A$ means that $A$ is true in every model of $P$, and it is enough to look at models made of ground atoms (any model induces one with the same true ground atoms). If $A$ is true in all of them it is in $M_P$; and every atom of $M_P$ is true in all of them, because they all contain $M_P$.</p>
+  </div>
+</details>
+
+<p>For the family program: $T_P(\varnothing)$ contains the three facts; one more step adds $\text{anc}(\text{tom}, \text{bob})$, $\text{anc}(\text{bob}, \text{ann})$ and $\text{anc}(\text{bob}, \text{pat})$; one more, $\text{anc}(\text{tom}, \text{ann})$ and $\text{anc}(\text{tom}, \text{pat})$; and after that nothing new appears. That is the meaning of the program, and the procedure matches it:</p>
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(soundness and completeness of SLD resolution)</span></span>
+  <p>Let $P$ be a definite program and $G$ a query. Every answer computed by SLD resolution is correct ($P$ implies the instantiated query), and for every correct answer there is a computed answer that is at least as general, <em>provided the tree of possibilities is explored fairly</em>.</p>
+</div>
+
+<p>The proviso matters. Prolog explores the tree <em>depth first</em>, clause by clause, because it is fast and uses little memory. But if a branch is infinite, Prolog falls into it and never comes back, even though there are answers further to the right. Write the recursive rule as <code>anc(X, Y) :- anc(Z, Y), parent(X, Z).</code> and put it first: the logical meaning is exactly the same, but the program no longer answers anything. Compare both versions in the figure.</p>
+
+<figure class="demo wide" data-demo="logic/sld">
+  <figcaption>The SLD tree of a query, explored in Prolog's order: depth first, top to bottom. Each row is a list of pending goals; the label says which clause was used and what was substituted. <strong>□</strong> is a success (an answer) and <strong>✗</strong> a dead end. With left recursion the first branch is infinite and Prolog never gets past it.</figcaption>
+</figure>
+
+<p>Prolog also adds pieces from outside pure logic: arithmetic (<code>X is Y + 1</code>), the <em>cut</em> <code>!</code>, which prunes alternatives in the tree, and <strong>negation as failure</strong> (Clark, 1978): <code>\+ P</code> succeeds if $P$ cannot be proved. It is the <em>closed-world assumption</em>, “what I cannot deduce is false”. It is very practical in databases, and not monotonic: adding a fact can turn a conclusion false.</p>
+
+<h2 id="playground">Your own Prolog</h2>
+
+<p>The figure below is a complete Prolog interpreter running in your browser: unification, backtracking, cut, arithmetic with integers of any size, lists, definite clause grammars and the usual built-in predicates. Choose an example, edit it or write your own program, and ask it questions. Turn on the trace to see the four classic ports of each call: <em>Call</em>, <em>Exit</em>, <em>Redo</em> and <em>Fail</em>.</p>
+
+<figure class="demo wide" data-demo="logic/playground">
+  <figcaption>A Prolog interpreter in the browser, with no server: the program is loaded when you press “Consult”, and each query shows its answers one at a time, as in a real Prolog. There is a limit on inference steps, so an infinite loop ends with an error instead of freezing the page.</figcaption>
+</figure>
+
+<h2>Expert systems, and their limits</h2>
+
+<p>In the 1970s and 1980s symbolic AI went to industry. <strong>Expert systems</strong> stored the knowledge of a specialist as hundreds or thousands of rules: MYCIN (Stanford, 1976) recommended treatments for blood infections, and in a 1979 blind evaluation its prescriptions were rated as highly as those of infectious-disease specialists; XCON configured DEC computers and saved the company millions a year. In 1982 Japan launched the Fifth Generation Computer Systems project, ten years of public money to build machines that would run logic programs in parallel. Logic programming was its core.</p>
+
+<p>It did not deliver what it promised. The obstacles were not in the logic but in the world:</p>
+
+<ul>
+  <li><strong>The knowledge acquisition bottleneck.</strong> Experts know more than they can put into rules, and every rule has exceptions to the exceptions.</li>
+  <li><strong>Brittleness.</strong> Outside the cases foreseen by the rules, an expert system does not degrade gracefully: it simply fails.</li>
+  <li><strong>Uncertainty.</strong> Logic speaks of true and false, and the world is made of “probably”. MYCIN had to invent ad hoc “certainty factors”.</li>
+  <li><strong>The combinatorial explosion.</strong> Semi-decidability and the size of the search space are not technicalities: they make reasoning expensive exactly where it matters.</li>
+</ul>
+
+<p>The Lisp machine market collapsed in 1987, and with it came the second AI winter. But logic did not disappear. It lives on in Datalog and in the recursive queries of SQL, in type inference, in SAT and SMT solvers that verify chips and programs, in theorem provers like Lean, which mathematicians now use to check proofs, and in systems that combine language models with symbolic tools. The difference from that era is the order: today the rules are not written by hand, they are <em>learned</em>.</p>
+
+<p>Learning from examples means accepting that conclusions are never certain, only more or less likely. Reasoning with degrees of belief instead of with truth values requires another mathematics. That is <a href="@ch:probability">probability</a>.</p>
+
+<section class="references">
+  <h2>References</h2>
+  <ol>
+    <li>G. Boole (1854). <em>An Investigation of the Laws of Thought</em>. Walton and Maberly.</li>
+    <li>G. Frege (1879). <em>Begriffsschrift, eine der arithmetischen nachgebildete Formelsprache des reinen Denkens</em>. Halle.</li>
+    <li>K. Gödel (1930). “Die Vollständigkeit der Axiome des logischen Funktionenkalküls”. <em>Monatshefte für Mathematik und Physik</em>, 37.</li>
+    <li>A. Newell and H. A. Simon (1956). “The Logic Theory Machine”. <em>IRE Transactions on Information Theory</em>, 2(3).</li>
+    <li>J. A. Robinson (1965). “A Machine-Oriented Logic Based on the Resolution Principle”. <em>Journal of the ACM</em>, 12(1).</li>
+    <li>R. Kowalski (1974). “Predicate Logic as Programming Language”. <em>Proceedings of IFIP Congress 74</em>.</li>
+    <li>M. H. van Emden and R. Kowalski (1976). “The Semantics of Predicate Logic as a Programming Language”. <em>Journal of the ACM</em>, 23(4).</li>
+    <li>K. L. Clark (1978). “Negation as Failure”. In <em>Logic and Data Bases</em>, Plenum Press.</li>
+    <li>A. Martelli and U. Montanari (1982). “An Efficient Unification Algorithm”. <em>ACM Transactions on Programming Languages and Systems</em>, 4(2).</li>
+    <li>J. W. Lloyd (1987). <em>Foundations of Logic Programming</em>, 2nd ed. Springer.</li>
+    <li>A. Colmerauer and P. Roussel (1993). “The Birth of Prolog”. <em>ACM SIGPLAN Notices</em>, 28(3).</li>
+  </ol>
+</section>

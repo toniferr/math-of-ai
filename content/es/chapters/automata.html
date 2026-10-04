@@ -1,0 +1,175 @@
+<!--meta
+{
+  "slug": "automatas",
+  "title": "Circuitos y autómatas",
+  "chain": "Conmutar",
+  "headline": "¿Cómo calcula una máquina, por dentro?",
+  "dek": "Debajo de cualquier programa hay interruptores. El álgebra de Boole, unas pocas puertas lógicas y un poco de memoria bastan para construir un sumador, un autómata finito y, al final, un procesador. Por el camino aparece el primer límite: hay patrones que ninguna máquina con memoria finita puede reconocer.",
+  "era": "1854 – 1959",
+  "people": ["George Boole", "Claude Shannon", "Stephen Kleene", "Michael Rabin", "Dana Scott", "Noam Chomsky", "John von Neumann"],
+  "theorems": ["Completitud funcional de NAND", "Teorema de Kleene", "Construcción de subconjuntos", "Lema de bombeo", "Jerarquía de Chomsky"]
+}
+-->
+
+<p>Un modelo de lenguaje que corre en una tarjeta gráfica hace billones de operaciones por segundo, y cada una, en el fondo, está hecha de interruptores que están encendidos o apagados. ¿Cómo se pasa de un interruptor a una máquina que suma, recuerda y sigue un programa? La respuesta tardó un siglo en armarse, del álgebra de George Boole (1854) a los primeros ordenadores con programa almacenado (1948), y es el cimiento sobre el que se apoya todo lo demás de esta web.</p>
+
+<p>La pieza clave salió de una tesis de máster. En 1937 Claude Shannon, con veintiún años, mostró que los circuitos de relés de las centralitas telefónicas obedecen exactamente el álgebra de Boole: un interruptor es una variable que vale $0$ o $1$, dos interruptores en serie son un $\wedge$ (<em>y</em>) y dos en paralelo, un $\vee$ (<em>o</em>). Diseñar un circuito pasó a ser cuestión de manipular fórmulas, y razonar con fórmulas, algo que podía hacer un circuito.</p>
+
+<h2>Basta una puerta</h2>
+
+<p>Una <strong>función booleana</strong> de $n$ entradas es cualquier regla $f : \{0,1\}^n \to \{0,1\}$. Hay muchas: cada una de las $2^n$ entradas posibles puede ir a $0$ o a $1$, así que hay $2^{2^n}$ funciones, ya 65 536 para $n = 4$. Y sin embargo un puñado de piezas basta para construirlas todas; de hecho, basta una sola: la puerta <strong>NAND</strong>, «no y».</p>
+
+$$\mathrm{NAND}(x, y) = \lnot(x \wedge y) = 1 - xy.$$
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(completitud funcional)</span></span>
+  <p>Toda función booleana $f : \{0,1\}^n \to \{0,1\}$ se puede calcular con un circuito de puertas $\wedge$, $\vee$ y $\lnot$. También bastan solo puertas NAND.</p>
+</div>
+
+<details class="proof">
+  <summary>Demostración</summary>
+  <div>
+    <p>Para cada entrada $a \in \{0,1\}^n$ con $f(a) = 1$, se forma la conjunción $m_a(x) = \ell_1 \wedge \dots \wedge \ell_n$, donde $\ell_i = x_i$ si $a_i = 1$ y $\ell_i = \lnot x_i$ si $a_i = 0$. Por construcción, $m_a(x) = 1$ exactamente cuando $x = a$. Así que</p>
+    $$f(x) = \bigvee_{a \,:\, f(a) = 1} m_a(x),$$
+    <p>que vale $1$ justo en las entradas en que $f$ vale $1$ (si no hay ninguna, $f = x_1 \wedge \lnot x_1$). Es la <em>forma normal disyuntiva</em>. Para NAND basta con reconstruir las tres puertas:</p>
+    $$\lnot x = \mathrm{NAND}(x, x), \qquad x \wedge y = \lnot\, \mathrm{NAND}(x, y), \qquad x \vee y = \mathrm{NAND}(\lnot x, \lnot y),$$
+    <p>la última por la ley de De Morgan, $\lnot(\lnot x \wedge \lnot y) = x \vee y$.</p>
+  </div>
+</details>
+
+<p>La demostración construye circuitos que pueden ser enormes, y Shannon probó en 1949 que, para la mayoría de las funciones, no hay remedio: hay $2^{2^n}$ funciones pero muchísimos menos circuitos pequeños, así que casi toda función de $n$ entradas necesita del orden de $2^n / n$ puertas. Las funciones que nos interesan son las raras excepciones con circuitos pequeños. La suma es una de ellas.</p>
+
+<h2>De las puertas a la aritmética</h2>
+
+<p>Para sumar dos números en binario se hace lo que se aprende en el colegio: columna a columna, llevándose. En la columna $i$ entran tres bits, $x_i$, $y_i$ y el acarreo $c_i$, y salen dos: la cifra del resultado $s_i$ y el acarreo siguiente $c_{i+1}$. Con $\oplus$ para el <em>o exclusivo</em> (que vale $1$ cuando lo vale exactamente una de sus entradas), el <strong>sumador completo</strong> es</p>
+
+$$s_i = x_i \oplus y_i \oplus c_i, \qquad c_{i+1} = (x_i \wedge y_i) \vee \big(c_i \wedge (x_i \oplus y_i)\big).$$
+
+<div class="theorem">
+  <span class="th-title">Proposición <span class="th-name">(sumador con propagación de acarreo)</span></span>
+  <p>Encadenar $n$ sumadores completos, con $c_0 = 0$, calcula la suma de dos números $x$ e $y$ de $n$ bits:</p>
+  $$\sum_{i=0}^{n-1} s_i\, 2^i + c_n\, 2^n = x + y.$$
+</div>
+
+<details class="proof">
+  <summary>Demostración</summary>
+  <div>
+    <p>Comprobando las ocho entradas posibles se ve que el sumador completo escribe en binario la suma de sus tres bits: $x_i + y_i + c_i = s_i + 2c_{i+1}$. Multiplicando por $2^i$ y sumando en $i$,</p>
+    $$x + y = \sum_i (x_i + y_i)\,2^i = \sum_i \big(s_i + 2c_{i+1} - c_i\big)\,2^i = \sum_i s_i\,2^i + \sum_i \big(c_{i+1}2^{i+1} - c_i 2^i\big),$$
+    <p>y la última suma es telescópica: vale $c_n 2^n - c_0 = c_n 2^n$.</p>
+  </div>
+</details>
+
+<figure class="demo wide" data-demo="automata/adder">
+  <figcaption>Un sumador de 4 bits. Pulsa los bits de $A$ y $B$ para cambiarlos. Cada columna es un sumador completo de cinco puertas; elige una columna para ver su circuito, con los cables que llevan un $1$ iluminados. Si el resultado no cabe en cuatro bits, el último acarreo se convierte en un quinto bit.</figcaption>
+</figure>
+
+<p>Cada sumador completo cuesta cinco puertas (o nueve puertas NAND), así que sumar números de 64 bits lleva unos cientos de puertas. Multiplicar, comparar o calcular un $\mathrm{softmax}$ es cuestión de más circuitos del mismo tipo. Lo que aún falta es la memoria.</p>
+
+<h2>La memoria, y los autómatas finitos</h2>
+
+<p>Un circuito cuya salida vuelve a su entrada puede recordar. Dos puertas NAND conectadas en bucle forman un <em>biestable</em> que guarda un bit hasta que se le ordena cambiarlo. Con $k$ de esos bits y un reloj que marca el paso, un circuito tiene $2^k$ estados posibles y, en cada tic, pasa de un estado a otro según el estado y lo que entra. Ese objeto, quitada la electrónica, es un <strong>autómata finito</strong>.</p>
+
+<div class="definition">
+  <span class="th-title">Definición <span class="th-name">(autómata finito determinista)</span></span>
+  <p>Un AFD es una tupla $M = (Q, \Sigma, \delta, q_0, F)$ con un conjunto finito de estados $Q$, un alfabeto de entrada $\Sigma$, una función de transición $\delta : Q \times \Sigma \to Q$, un estado inicial $q_0$ y un conjunto de estados de aceptación $F \subseteq Q$. Lee una palabra $w = a_1 a_2 \cdots a_m$ símbolo a símbolo, $q_{j} = \delta(q_{j-1}, a_j)$, y la <em>acepta</em> si termina en $F$. El conjunto de palabras aceptadas es el lenguaje $L(M)$.</p>
+</div>
+
+<p>La idea vino de un sitio inesperado: el modelo de neuronas de McCulloch y Pitts (1943), redes de unidades con umbral que Stephen Kleene analizó en 1951 para preguntarse qué «sucesos» podían detectar. La respuesta, los lenguajes que reconocen los autómatas finitos, tiene además una descripción muy concreta.</p>
+
+<figure class="demo wide" data-demo="automata/dfa">
+  <figcaption>Un autómata finito leyendo una palabra símbolo a símbolo. El primero decide si un número binario es múltiplo de tres sin guardarlo nunca: le basta con recordar el resto. El último acepta $a^nb^n$, pero solo hasta $n = 3$. Prueba con <code>aaaabbbb</code>: no hay ningún estado para «cuatro».</figcaption>
+</figure>
+
+<p>Una <strong>expresión regular</strong> describe un conjunto de palabras con tres operaciones: unión ($r \mid s$, una u otra), concatenación ($rs$, una detrás de otra) y la estrella de Kleene ($r^*$, cualquier número de repeticiones). Por ejemplo, $(0 \mid 1)^*\,01$ es «cualquier palabra que termine en $01$».</p>
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(Kleene 1956)</span></span>
+  <p>Un lenguaje se describe con una expresión regular si y solo si lo reconoce un autómata finito.</p>
+</div>
+
+<p>Para pasar de expresiones a autómatas conviene dejar que el autómata adivine. Un autómata <em>no determinista</em> (AFN) puede tener varias transiciones con el mismo símbolo, o ninguna, y acepta si <em>alguna</em> elección lleva a un estado de aceptación. Cada operación de una expresión se convierte entonces en una pequeña pieza de AFN (la construcción de Thompson, de 1968, todavía en el corazón de muchos motores de expresiones regulares). Adivinar parece dar más poder. No lo da:</p>
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(construcción de subconjuntos, Rabin y Scott 1959)</span></span>
+  <p>Para todo AFN con $n$ estados hay un AFD que reconoce el mismo lenguaje con como mucho $2^n$ estados.</p>
+</div>
+
+<details class="proof">
+  <summary>Demostración</summary>
+  <div>
+    <p>El AFD lleva la cuenta de <em>todos</em> los estados en que podría estar el AFN. Sus estados son los subconjuntos $S \subseteq Q$; empieza en $\{q_0\}$; al leer $a$ pasa a $\delta'(S, a) = \bigcup_{q \in S} \delta(q, a)$; y acepta si $S \cap F \ne \varnothing$. Por inducción en la longitud de la palabra, tras leer $w$ el AFD está exactamente en el conjunto de estados a los que el AFN puede llegar con $w$, así que acepta si y solo si lo hace alguna ejecución del AFN. Hay $2^n$ subconjuntos.</p>
+  </div>
+</details>
+
+<p>La exponencial es real: el lenguaje «el $n$-ésimo símbolo empezando por el final es un $1$» tiene un AFN con $n + 1$ estados, y todo AFD para él necesita al menos $2^n$. Rabin y Scott recibieron el premio Turing en 1976 por este artículo, que además introdujo el no determinismo, una idea que una década después estaría en la base de la pregunta $\mathrm{P}$ frente a $\mathrm{NP}$.</p>
+
+<h2 id="bombeo">Lo que no puede hacer la memoria finita</h2>
+
+<p>El autómata de la figura no se puede ampliar para reconocer $a^nb^n$ para todo $n$, por muchos estados que le demos. No es falta de ingenio: es un teorema.</p>
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(lema de bombeo, Bar-Hillel, Perles y Shamir 1961)</span></span>
+  <p>Si $L$ es regular, hay un número $p$ tal que toda palabra $w \in L$ con $\left|w\right| \ge p$ se puede partir como $w = xyz$, con $\left|xy\right| \le p$ y $\left|y\right| \ge 1$, de forma que $xy^iz \in L$ para todo $i \ge 0$.</p>
+</div>
+
+<details class="proof">
+  <summary>Demostración</summary>
+  <div>
+    <p>Sea $p$ el número de estados de un AFD para $L$. Al leer los $p$ primeros símbolos de $w$, el autómata pasa por $p + 1$ estados, así que por el principio del palomar repite alguno: hay posiciones $j < k \le p$ con $q_j = q_k$. Sea $x$ los $j$ primeros símbolos, $y$ los $k - j$ siguientes y $z$ el resto. Leer $y$ lleva al autómata de $q_j$ al mismo estado, así que puede hacerlo cero veces o cien, y acabará donde acababa con $w$: en un estado de aceptación.</p>
+  </div>
+</details>
+
+<p>Toma $L = \{a^nb^n : n \ge 0\}$ y supón que fuera regular, con constante $p$. La palabra $a^pb^p$ está en $L$ y, como $\left|xy\right| \le p$, el trozo $y$ está formado solo por aes. Al bombearlo, $xy^2z$ tiene más aes que bes, y no está en $L$. Contradicción. Un autómata finito no puede contar sin límite: para comprobar que hay tantas bes como aes tendría que recordar un número que puede ser arbitrariamente grande.</p>
+
+<h2>La jerarquía de Chomsky</h2>
+
+<p>En 1956 el lingüista Noam Chomsky se preguntó qué tipo de gramática podría describir una lengua humana, y en 1959 ya había ordenado los lenguajes formales en cuatro niveles. Cada tipo de gramática corresponde exactamente a un tipo de máquina, que solo se distinguen por su memoria:</p>
+
+<table class="mini-table">
+  <thead><tr><th>Tipo</th><th>Gramática</th><th>Máquina</th><th>Memoria</th><th>Ejemplo que no está en el nivel anterior</th></tr></thead>
+  <tbody>
+    <tr><td>3</td><td>Regular</td><td>Autómata finito</td><td>Finita</td><td>$(0 \mid 1)^*01$</td></tr>
+    <tr><td>2</td><td>Independiente del contexto</td><td>Autómata con pila</td><td>Una pila</td><td>$a^nb^n$</td></tr>
+    <tr><td>1</td><td>Dependiente del contexto</td><td>Autómata linealmente acotado</td><td>Una cinta tan larga como la entrada</td><td>$a^nb^nc^n$</td></tr>
+    <tr><td>0</td><td>Sin restricciones</td><td>Máquina de Turing</td><td>Una cinta ilimitada</td><td>El problema de la parada</td></tr>
+  </tbody>
+</table>
+
+$$\mathrm{REG} \subsetneq \mathrm{CFL} \subsetneq \mathrm{CSL} \subsetneq \mathrm{RE}.$$
+
+<p>Para $a^nb^n$ basta una pila: se apila una ficha por cada $a$ y se desapila una por cada $b$. Las gramáticas independientes del contexto, escritas en la notación de Backus–Naur de ALGOL 60, describen la sintaxis de casi todos los lenguajes de programación, y por eso todo compilador empieza con un autómata finito que trocea el texto en símbolos y un autómata con pila que construye el árbol sintáctico. Las lenguas humanas resultaron más escurridizas: algunas construcciones, como las dependencias cruzadas del alemán de Suiza, quedan fuera de las gramáticas independientes del contexto. Sesenta años después, los modelos que mejor predicen el lenguaje no son gramáticas en absoluto, pero eso es otro capítulo.</p>
+
+<h2>La máquina de debajo</h2>
+
+<p>Con sumadores, memoria y un autómata finito que los coordine se puede construir un ordenador. En 1945 John von Neumann describió el diseño del EDVAC: una memoria que guarda <em>a la vez</em> los datos y el programa, una unidad que hace la aritmética y una unidad de control que repite siempre el mismo ciclo. El 21 de junio de 1948 el «Baby» de Mánchester fue el primer ordenador que ejecutó un programa guardado en su propia memoria.</p>
+
+<ol>
+  <li><strong>Buscar:</strong> leer de la memoria la instrucción a la que apunta el contador de programa, y avanzar el contador.</li>
+  <li><strong>Decodificar:</strong> el autómata de control averigua qué operación es y a qué celda de memoria se refiere.</li>
+  <li><strong>Ejecutar:</strong> el sumador o la memoria hacen el trabajo, y el ciclo vuelve a empezar.</li>
+</ol>
+
+<figure class="demo wide" data-demo="automata/cpu">
+  <figcaption>Un procesador de juguete con un acumulador y 24 celdas de memoria. Las instrucciones también son números: <code>322</code> significa «suma el contenido de la celda 22». Avanza paso a paso por el ciclo de búsqueda, decodificación y ejecución, y mira cómo el contador de programa salta hacia atrás para repetir un bucle.</figcaption>
+</figure>
+
+<p>Un ordenador real es, en sentido estricto, un autómata finito: con $k$ bits de memoria tiene como mucho $2^k$ estados. Pero con 16 gigabytes, $k$ es del orden de $1{,}4 \times 10^{11}$, y $2^k$ es un número que nada en el universo puede enumerar. Tiene más sentido pensar en la memoria como una cinta que siempre se puede alargar. Esa idealización, la cinta infinita, es exactamente la <a href="@ch:computation">máquina de Turing</a>.</p>
+
+<section class="references">
+  <h2>Referencias</h2>
+  <ol>
+    <li>G. Boole (1854). <em>An Investigation of the Laws of Thought</em>. Walton and Maberly.</li>
+    <li>C. E. Shannon (1938). «A Symbolic Analysis of Relay and Switching Circuits». <em>Transactions of the AIEE</em>, 57(12).</li>
+    <li>W. S. McCulloch y W. Pitts (1943). «A Logical Calculus of the Ideas Immanent in Nervous Activity». <em>Bulletin of Mathematical Biophysics</em>, 5.</li>
+    <li>J. von Neumann (1945). <em>First Draft of a Report on the EDVAC</em>.</li>
+    <li>C. E. Shannon (1949). «The Synthesis of Two-Terminal Switching Circuits». <em>Bell System Technical Journal</em>, 28(1).</li>
+    <li>S. C. Kleene (1956). «Representation of Events in Nerve Nets and Finite Automata». En <em>Automata Studies</em>, Princeton University Press.</li>
+    <li>N. Chomsky (1956). «Three Models for the Description of Language». <em>IRE Transactions on Information Theory</em>, 2(3).</li>
+    <li>N. Chomsky (1959). «On Certain Formal Properties of Grammars». <em>Information and Control</em>, 2(2).</li>
+    <li>M. O. Rabin y D. Scott (1959). «Finite Automata and Their Decision Problems». <em>IBM Journal of Research and Development</em>, 3(2).</li>
+    <li>Y. Bar-Hillel, M. Perles y E. Shamir (1961). «On Formal Properties of Simple Phrase Structure Grammars». <em>Zeitschrift für Phonetik, Sprachwissenschaft und Kommunikationsforschung</em>, 14.</li>
+    <li>K. Thompson (1968). «Regular Expression Search Algorithm». <em>Communications of the ACM</em>, 11(6).</li>
+    <li>J. E. Hopcroft, R. Motwani y J. D. Ullman (2006). <em>Introduction to Automata Theory, Languages, and Computation</em>, 3.ª ed. Addison-Wesley.</li>
+  </ol>
+</section>

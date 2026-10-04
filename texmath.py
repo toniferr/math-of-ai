@@ -40,12 +40,14 @@ OPERATORS = {
     "lfloor": "⌊", "rfloor": "⌋", "lceil": "⌈", "rceil": "⌉", "colon": ":", "setminus": "∖",
     "triangleq": "≜", "coloneqq": "≔", "uparrow": "↑", "downarrow": "↓", "perp": "⟂",
     "lessapprox": "⪅", "lesssim": "≲", "gtrsim": "≳", "longrightarrow": "⟶", "longmapsto": "⟼", "succ": "≻", "prec": "≺", "approxeq": "≊", "leftrightarrow": "↔",
+    "vdash": "⊢", "models": "⊨", "wedge": "∧", "vee": "∨", "lnot": "¬", "subsetneq": "⊊", "supseteq": "⊇",
+    "nexists": "∄", "Downarrow": "⇓",
 }
 IDENTIFIERS = {
     "infty": "∞", "partial": "∂", "nabla": "∇", "ell": "ℓ", "emptyset": "∅", "varnothing": "∅",
-    "top": "⊤", "bot": "⊥", "hbar": "ℏ", "aleph": "ℵ", "Box": "□", "checkmark": "✓",
+    "top": "⊤", "bot": "⊥", "hbar": "ℏ", "aleph": "ℵ", "Box": "□", "square": "□", "checkmark": "✓",
 }
-LARGE_OPS = {"sum": "∑", "prod": "∏", "bigcup": "⋃", "bigcap": "⋂", "coprod": "∐"}
+LARGE_OPS = {"sum": "∑", "prod": "∏", "bigcup": "⋃", "bigcap": "⋂", "coprod": "∐", "bigvee": "⋁", "bigwedge": "⋀"}
 INTEGRALS = {"int": "∫", "iint": "∬", "oint": "∮"}
 FUNCTIONS = {
     "log", "ln", "exp", "sin", "cos", "tan", "tanh", "sinh", "cosh", "det", "dim", "ker",

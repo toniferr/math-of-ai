@@ -28,7 +28,7 @@
     "read": "Capítulo"
   },
   "footer": {
-    "text": "Texto, figuras y código hechos a mano (con ayuda de Claude Code), sin frameworks, sin rastreadores y con las fórmulas en MathML nativo.",
+    "text": "Texto, figuras y código hechos a mano (con ayuda de Claude Code), sin frameworks, sin rastreadores y con las fórmulas en MathML nativo. Web hermana: <a href=\"https://toniferr.github.io/math-of-quantum/es/\">Math of Quantum</a>.",
     "source": "Código fuente en GitHub"
   },
   "demos": {
@@ -342,6 +342,151 @@
       "sample": "Muestrear",
       "restart": "Empezar de nuevo",
       "done": "Fin de la frase. Su probabilidad es el producto de las de cada paso (regla de la cadena), y su sorpresa total, la suma."
+    },
+    "uni": {
+      "left": "Término izquierdo",
+      "right": "Término derecho",
+      "example": "Ejemplo",
+      "step": "Paso",
+      "all": "Resolver",
+      "reset": "Reiniciar",
+      "system": "Ecuaciones por resolver",
+      "steps": "Reglas aplicadas",
+      "rules": {
+        "decompose": "Descomponer",
+        "delete": "Borrar",
+        "swap": "Intercambiar",
+        "eliminate": "Eliminar",
+        "clash": "Choque",
+        "occurs": "Prueba de ocurrencia"
+      },
+      "mgu": "Unificador más general θ = {theta}. Los dos términos quedan como {common}.",
+      "fail": {
+        "clash": "No hay unificador: tendrían que ser iguales dos símbolos distintos.",
+        "occurs": "No hay unificador: una variable tendría que ser igual a un término que la contiene."
+      },
+      "syntax": "No se pueden leer esos términos. Las variables empiezan por mayúscula o _, y las constantes y funciones por minúscula.",
+      "running": "{n} paso(s) por ahora.",
+      "hint": "Pulsa «Paso» para aplicar la primera regla que encaje."
+    },
+    "sld": {
+      "program": "Programa",
+      "presets": {
+        "family": "Antepasados",
+        "append": "Partir una lista",
+        "left": "Recursión por la izquierda"
+      },
+      "clauses": "Cláusulas, en orden",
+      "query": "Consulta",
+      "step": "Siguiente nodo",
+      "all": "Ver todo",
+      "reset": "Reiniciar",
+      "true": "true",
+      "forever": "↓ rama infinita: Prolog no vuelve nunca",
+      "found": "Respuestas hasta ahora: {list}",
+      "done": "La búsqueda ha terminado. Respuestas: {list}",
+      "loops": "Prolog se queda para siempre en esta rama. Respuestas que dio antes: {list}"
+    },
+    "pl": {
+      "example": "Ejemplo",
+      "examples": {
+        "family": "Árbol genealógico",
+        "lists": "Listas",
+        "peano": "Aritmética de Peano",
+        "numbers": "Números",
+        "sorting": "Ordenación",
+        "queens": "N reinas",
+        "grammar": "Una gramática",
+        "hanoi": "Torres de Hanói"
+      },
+      "trace": "Traza",
+      "program": "Programa Prolog",
+      "consult": "Consultar",
+      "query": "Consulta",
+      "placeholder": "Escribe una consulta, por ejemplo antepasado(tomas, X)",
+      "run": "Ejecutar",
+      "next": "Siguiente respuesta",
+      "stop": "Parar",
+      "clear": "Limpiar la consola",
+      "console": "Consola de Prolog",
+      "hint": "Intro ejecuta la consulta; Intro con la línea vacía pide la siguiente respuesta.",
+      "changed": "El programa ha cambiado: se volverá a consultar antes de la próxima consulta.",
+      "errors": "{n} error(es) en el programa",
+      "loaded": "{n} cláusula(s) cargada(s)",
+      "error": "Error:",
+      "traceCut": "(traza recortada)"
+    },
+    "add": {
+      "label": "Bits de A y B",
+      "circuit": "Sumador completo de la columna elegida",
+      "column": "Columna",
+      "carry": "acarreo",
+      "gates": "Puertas",
+      "gateCount": "4 sumadores completos · 20 puertas (36 NAND)"
+    },
+    "dfa": {
+      "machine": "Autómata",
+      "machines": {
+        "mult3": "Múltiplos de 3",
+        "endsab": "Termina en ab",
+        "anbn": "aⁿbⁿ hasta n = 3"
+      },
+      "word": "Palabra",
+      "step": "Paso",
+      "run": "Ejecutar",
+      "pause": "Pausa",
+      "reset": "Reiniciar",
+      "diagram": "Diagrama de estados del autómata",
+      "rowA": "aes leídas hasta ahora",
+      "rowB": "bes que aún faltan",
+      "value": "{bin} en binario es {dec}",
+      "status": "Estado {state} · leídos {read} de {total} símbolos",
+      "accept": "Aceptada: la palabra termina en {state}, un estado de aceptación.",
+      "reject": "Rechazada: la palabra termina en {state}, que no es de aceptación.",
+      "dead": "Rechazada: no hay transición para «{sym}», así que el autómata se atasca."
+    },
+    "cpu": {
+      "program": "Programa",
+      "programs": {
+        "multiply": "Multiplicar a × b",
+        "fibonacci": "Fibonacci"
+      },
+      "params": {
+        "a": "a",
+        "b": "b",
+        "n": "Términos"
+      },
+      "memory": "Memoria",
+      "output": "Salida",
+      "phases": {
+        "fetch": "Buscar",
+        "decode": "Decodificar",
+        "execute": "Ejecutar"
+      },
+      "step": "Una fase",
+      "instr": "Una instrucción",
+      "run": "Ejecutar",
+      "pause": "Pausa",
+      "reset": "Reiniciar",
+      "ready": "Lista. El contador de programa (PC) apunta a la celda 0.",
+      "limit": "Detenida: demasiados pasos.",
+      "bad": "La celda {addr} no existe, así que la máquina se detiene.",
+      "did": {
+        "fetch": "Buscar: copia la celda {pc}, que contiene {ir}, en el registro de instrucción, y avanza el PC.",
+        "decode": "Decodificar: {ir} significa {op}, con dirección {addr}.",
+        "decodeBare": "Decodificar: {ir} significa {op}."
+      },
+      "ops": {
+        "load": "Ejecutar LOAD: ACC ← celda {addr}, que vale {acc}.",
+        "store": "Ejecutar STORE: celda {addr} ← ACC, que vale {acc}.",
+        "add": "Ejecutar ADD: ACC ← ACC + celda {addr} = {acc}.",
+        "sub": "Ejecutar SUB: ACC ← ACC − celda {addr} = {acc}.",
+        "jmp": "Ejecutar JMP: la siguiente instrucción es la de la celda {pc}.",
+        "jz": "Ejecutar JZ: ACC vale 0, así que salta a la celda {pc}.",
+        "jzno": "Ejecutar JZ: ACC vale {acc}, no 0, así que sigue.",
+        "out": "Ejecutar OUT: escribe {acc} en la salida.",
+        "halt": "Ejecutar HALT: el programa ha terminado."
+      }
     }
   }
 }

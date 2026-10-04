@@ -28,7 +28,7 @@
     "read": "Chapter"
   },
   "footer": {
-    "text": "Text, figures and code handmade (with help from Claude Code): no frameworks, no trackers, and formulas in native MathML.",
+    "text": "Text, figures and code handmade (with help from Claude Code): no frameworks, no trackers, and formulas in native MathML. Companion site: <a href=\"https://toniferr.github.io/math-of-quantum/\">Math of Quantum</a>.",
     "source": "Source code on GitHub"
   },
   "demos": {
@@ -342,6 +342,151 @@
       "sample": "Sample",
       "restart": "Start again",
       "done": "End of the sentence. Its probability is the product of each step's (chain rule), and its total surprise is the sum."
+    },
+    "uni": {
+      "left": "Left term",
+      "right": "Right term",
+      "example": "Example",
+      "step": "Step",
+      "all": "Solve",
+      "reset": "Restart",
+      "system": "Equations still to solve",
+      "steps": "Rules applied",
+      "rules": {
+        "decompose": "Decompose",
+        "delete": "Delete",
+        "swap": "Swap",
+        "eliminate": "Eliminate",
+        "clash": "Clash",
+        "occurs": "Occurs check"
+      },
+      "mgu": "Most general unifier θ = {theta}. Both terms become {common}.",
+      "fail": {
+        "clash": "No unifier: two different symbols would have to be equal.",
+        "occurs": "No unifier: a variable would have to equal a term that contains it."
+      },
+      "syntax": "Those terms cannot be read. Variables start with a capital letter or _, constants and function symbols with a lower-case letter.",
+      "running": "{n} step(s) so far.",
+      "hint": "Press “Step” to apply the first rule that fits."
+    },
+    "sld": {
+      "program": "Program",
+      "presets": {
+        "family": "Ancestors",
+        "append": "Splitting a list",
+        "left": "Left recursion"
+      },
+      "clauses": "Clauses, in order",
+      "query": "Query",
+      "step": "Next node",
+      "all": "Show all",
+      "reset": "Restart",
+      "true": "true",
+      "forever": "↓ infinite branch: Prolog never comes back",
+      "found": "Answers so far: {list}",
+      "done": "The search is over. Answers: {list}",
+      "loops": "Prolog loops forever on this branch. Answers it gave before: {list}"
+    },
+    "pl": {
+      "example": "Example",
+      "examples": {
+        "family": "Family tree",
+        "lists": "Lists",
+        "peano": "Peano arithmetic",
+        "numbers": "Numbers",
+        "sorting": "Sorting",
+        "queens": "N queens",
+        "grammar": "A grammar",
+        "hanoi": "Towers of Hanoi"
+      },
+      "trace": "Trace",
+      "program": "Prolog program",
+      "consult": "Consult",
+      "query": "Query",
+      "placeholder": "Write a query, for example anc(tom, X)",
+      "run": "Run",
+      "next": "Next answer",
+      "stop": "Stop",
+      "clear": "Clear the console",
+      "console": "Prolog console",
+      "hint": "Enter runs the query; Enter on an empty line asks for the next answer.",
+      "changed": "The program has changed: it will be consulted again before the next query.",
+      "errors": "{n} error(s) in the program",
+      "loaded": "{n} clause(s) loaded",
+      "error": "Error:",
+      "traceCut": "(trace cut short)"
+    },
+    "add": {
+      "label": "Bits of A and B",
+      "circuit": "Full adder of the selected column",
+      "column": "Column",
+      "carry": "carry",
+      "gates": "Gates",
+      "gateCount": "4 full adders · 20 gates (36 NAND)"
+    },
+    "dfa": {
+      "machine": "Automaton",
+      "machines": {
+        "mult3": "Multiples of 3",
+        "endsab": "Ends in ab",
+        "anbn": "aⁿbⁿ up to n = 3"
+      },
+      "word": "Word",
+      "step": "Step",
+      "run": "Run",
+      "pause": "Pause",
+      "reset": "Restart",
+      "diagram": "State diagram of the automaton",
+      "rowA": "a's read so far",
+      "rowB": "b's still missing",
+      "value": "{bin} in binary is {dec}",
+      "status": "State {state} · {read} of {total} symbols read",
+      "accept": "Accepted: the word ends in {state}, an accepting state.",
+      "reject": "Rejected: the word ends in {state}, which is not accepting.",
+      "dead": "Rejected: there is no transition for “{sym}”, so the automaton gets stuck."
+    },
+    "cpu": {
+      "program": "Program",
+      "programs": {
+        "multiply": "Multiply a × b",
+        "fibonacci": "Fibonacci"
+      },
+      "params": {
+        "a": "a",
+        "b": "b",
+        "n": "Terms"
+      },
+      "memory": "Memory",
+      "output": "Output",
+      "phases": {
+        "fetch": "Fetch",
+        "decode": "Decode",
+        "execute": "Execute"
+      },
+      "step": "One phase",
+      "instr": "One instruction",
+      "run": "Run",
+      "pause": "Pause",
+      "reset": "Restart",
+      "ready": "Ready. The program counter (PC) points at cell 0.",
+      "limit": "Stopped: too many steps.",
+      "bad": "Cell {addr} does not exist, so the machine stops.",
+      "did": {
+        "fetch": "Fetch: copy cell {pc}, which holds {ir}, into the instruction register, and advance PC.",
+        "decode": "Decode: {ir} means {op}, with address {addr}.",
+        "decodeBare": "Decode: {ir} means {op}."
+      },
+      "ops": {
+        "load": "Execute LOAD: ACC ← cell {addr}, which is {acc}.",
+        "store": "Execute STORE: cell {addr} ← ACC, which is {acc}.",
+        "add": "Execute ADD: ACC ← ACC + cell {addr} = {acc}.",
+        "sub": "Execute SUB: ACC ← ACC − cell {addr} = {acc}.",
+        "jmp": "Execute JMP: the next instruction is the one in cell {pc}.",
+        "jz": "Execute JZ: ACC is 0, so jump to cell {pc}.",
+        "jzno": "Execute JZ: ACC is {acc}, not 0, so carry on.",
+        "out": "Execute OUT: write {acc} to the output.",
+        "halt": "Execute HALT: the program has finished."
+      }
     }
   }
 }

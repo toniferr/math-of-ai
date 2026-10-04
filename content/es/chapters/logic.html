@@ -1,0 +1,177 @@
+<!--meta
+{
+  "slug": "logica",
+  "title": "Lógica",
+  "chain": "Deducir",
+  "headline": "¿Puede razonar una máquina?",
+  "dek": "El primer plan para la inteligencia artificial no fue aprender sino deducir: escribir el conocimiento como fórmulas lógicas y dejar que la máquina sacara las consecuencias. Dejó una teoría preciosa, un lenguaje de programación en el que se describe el problema en vez de la solución, y una lección sobre sus límites.",
+  "era": "1854 – 1992",
+  "people": ["George Boole", "Gottlob Frege", "Kurt Gödel", "John Alan Robinson", "Alain Colmerauer", "Robert Kowalski"],
+  "theorems": ["Completitud de Gödel", "Unificador más general", "Completitud de la resolución", "Mínimo modelo de Herbrand", "Completitud de la resolución SLD"]
+}
+-->
+
+<p>En el siglo XVII Leibniz soñó con un <em>calculus ratiocinator</em>: un lenguaje tan preciso que las disputas se zanjarían calculando. «Calculemos», dirían dos filósofos, y se sentarían con lápiz y papel. Dos siglos después George Boole escribió las leyes del pensamiento como álgebra (<em>The Laws of Thought</em>, 1854), y en 1879 Gottlob Frege publicó la <em>Begriffsschrift</em>, el primer lenguaje formal completo para las matemáticas: variables, cuantificadores y reglas de inferencia.</p>
+
+<p>Cuando llegaron los ordenadores, el sueño pareció al alcance. Si razonar es calcular, y un ordenador calcula, un ordenador puede razonar. En 1956, en el mismo taller de Dartmouth que bautizó la disciplina, Allen Newell, Herbert Simon y Cliff Shaw presentaron el <em>Logic Theorist</em>, que demostró 38 de los 52 primeros teoremas del capítulo 2 de los <em>Principia Mathematica</em> de Russell y Whitehead. Nacía la IA simbólica: la inteligencia como manipulación de símbolos según reglas lógicas.</p>
+
+<h2>Verdad y demostración</h2>
+
+<p>La lógica de primer orden habla de objetos ($x$, $y$, $\text{tomas}$), funciones ($\text{madre}(x)$), relaciones ($\text{progenitor}(x, y)$), conectivas ($\lnot, \wedge, \vee, \to$) y los cuantificadores $\forall$ y $\exists$. Un conjunto de fórmulas $\Gamma$ puede decir, por ejemplo, que todo progenitor de un antepasado es un antepasado:</p>
+
+$$\forall x\, \forall y\, \forall z\; \big(\text{progenitor}(x, z) \wedge \text{antepasado}(z, y) \to \text{antepasado}(x, y)\big).$$
+
+<p>Hay dos maneras de decir que una fórmula $\varphi$ «se sigue» de $\Gamma$. La semántica, $\Gamma \models \varphi$: $\varphi$ es verdadera en todo mundo (toda interpretación de los símbolos) en el que lo es todo $\Gamma$. Y la sintáctica, $\Gamma \vdash \varphi$: hay una demostración, una sucesión finita de fórmulas en la que cada paso aplica una regla mecánica. La primera habla de significado; la segunda, de mover símbolos. El milagro es que coinciden.</p>
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(completitud, Gödel 1929)</span></span>
+  <p>Para todo conjunto de fórmulas de primer orden $\Gamma$ y toda fórmula $\varphi$,</p>
+  $$\Gamma \models \varphi \iff \Gamma \vdash \varphi.$$
+</div>
+
+<p>Toda verdad que se sigue de los axiomas tiene demostración, y toda demostración establece una verdad. Esto es lo que hace verosímil el sueño de Leibniz: «verdadero en todos los mundos», una noción infinita, se reduce a «hay una demostración finita», algo que una máquina puede buscar. No hay que confundirlo con el otro teorema de Gödel, más famoso: la <em>incompletitud</em> (1931) dice que ningún conjunto de axiomas consistente y efectivo demuestra todas las verdades <em>sobre los números naturales</em>. La completitud trata de lo que se sigue de los axiomas; la incompletitud, de lo que los axiomas no llegan a fijar.</p>
+
+<p>Pero buscar no es decidir. Las demostraciones se pueden enumerar una a una, así que si $\Gamma \vdash \varphi$ la búsqueda acabará encontrando una. Si $\varphi$ no se sigue, la búsqueda puede no terminar nunca. En 1936 Church y Turing demostraron que esto no tiene arreglo: no hay ningún algoritmo que decida si una fórmula de primer orden es válida. Es la cara lógica del <a href="@ch:computation#parada">problema de la parada</a>. La lógica de primer orden es <em>semidecidible</em>: una máquina puede confirmar toda consecuencia, pero no siempre descartarla.</p>
+
+<h2>Resolución: basta una regla</h2>
+
+<p>Los sistemas de demostración pensados para personas tienen muchas reglas. En 1965 John Alan Robinson encontró una que basta por sí sola y está hecha para máquinas. Primero, toda fórmula se pasa a <em>forma clausal</em>: una conjunción de cláusulas, cada una una disyunción de literales (átomos o átomos negados), con los cuantificadores existenciales sustituidos por funciones nuevas (funciones de Skolem) y los universales implícitos. Se conserva la satisfacibilidad, y eso basta, porque para demostrar $\varphi$ a partir de $\Gamma$ es suficiente ver que $\Gamma \cup \{\lnot \varphi\}$ no tiene modelo.</p>
+
+<div class="definition">
+  <span class="th-title">Definición <span class="th-name">(regla de resolución)</span></span>
+  <p>De dos cláusulas con literales complementarios $L$ y $\lnot L'$ que una sustitución $\theta$ puede hacer iguales, se deriva su resolvente:</p>
+  $$\frac{C \vee L \qquad D \vee \lnot L'}{(C \vee D)\,\theta}\qquad \theta = \operatorname{mgu}(L, L').$$
+</div>
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(corrección y completitud refutacional de la resolución, Robinson 1965)</span></span>
+  <p>Un conjunto de cláusulas $S$ es insatisfacible si y solo si de $S$ se puede derivar por resolución la cláusula vacía $\square$.</p>
+</div>
+
+<p>Derivar $\square$ es haber llegado a una contradicción, como en una demostración por reducción al absurdo. Detrás del teorema está el de Herbrand (1930): un conjunto de cláusulas es insatisfacible si y solo si ya lo es, como lógica proposicional, algún conjunto <em>finito</em> de sus instancias básicas (con constantes en lugar de variables). La resolución busca esas instancias de forma perezosa, sustituyendo solo lo necesario. La clave para hacerlo es la operación del subíndice de la regla, que merece sección propia.</p>
+
+<h2 id="unificacion">Unificación</h2>
+
+<p>Para resolver $\text{progenitor}(\text{tomas}, X)$ contra $\lnot\, \text{progenitor}(Y, \text{bea})$ hace falta una sustitución que haga iguales los dos átomos: $\theta = \{X \mapsto \text{bea},\ Y \mapsto \text{tomas}\}$. Una sustitución así es un <strong>unificador</strong>. Puede haber infinitos (para unificar $f(X)$ y $f(Y)$ se pueden poner las dos a $a$, a $b$, a $g(a)$…), pero no todos son igual de buenos: $\{X \mapsto Y\}$ no se compromete a nada más de lo necesario.</p>
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(unificador más general, Robinson 1965)</span></span>
+  <p>Si dos términos $s$ y $t$ tienen un unificador, tienen uno <em>más general</em>, $\theta = \operatorname{mgu}(s, t)$: todo unificador $\sigma$ de $s$ y $t$ se escribe como $\sigma = \theta\lambda$ para alguna sustitución $\lambda$. Es único salvo renombrar variables, y hay un algoritmo que lo calcula o informa de que no existe.</p>
+</div>
+
+<details class="proof">
+  <summary>Demostración (el algoritmo de Martelli y Montanari)</summary>
+  <div>
+    <p>Se parte del conjunto de ecuaciones $\{s = t\}$ y se aplica cualquiera de estas reglas mientras alguna encaje:</p>
+    <ol>
+      <li><strong>Descomponer:</strong> se sustituye $f(s_1, \dots, s_n) = f(t_1, \dots, t_n)$ por $s_1 = t_1, \dots, s_n = t_n$.</li>
+      <li><strong>Choque:</strong> si $f(\dots) = g(\dots)$ con símbolos o aridades distintos, se falla.</li>
+      <li><strong>Borrar:</strong> se quita $X = X$.</li>
+      <li><strong>Intercambiar:</strong> se sustituye $t = X$, con $t$ que no es variable, por $X = t$.</li>
+      <li><strong>Prueba de ocurrencia:</strong> si $X = t$ con $X$ dentro de $t \ne X$, se falla.</li>
+      <li><strong>Eliminar:</strong> si $X = t$ con $X$ que no aparece en $t$ pero sí en otras ecuaciones, se sustituye $X$ por $t$ en todas ellas.</li>
+    </ol>
+    <p>Cada regla conserva el conjunto de unificadores del sistema, y las dos de fallo solo se aplican a sistemas sin unificador: ninguna sustitución hace igual $f$ a $g$, ni $X$ igual a un término estrictamente mayor que el propio $X$. El proceso termina, porque cada paso reduce, en orden lexicográfico, el número de variables aún sin resolver, el tamaño total de los términos y el número de ecuaciones de la forma $t = X$. Cuando no encaja ninguna regla, el sistema tiene la forma $\{X_1 = t_1, \dots, X_k = t_k\}$, con variables distintas que no aparecen en ningún otro sitio. Entonces $\theta = \{X_i \mapsto t_i\}$ es un unificador y, como el sistema original tiene los mismos unificadores que el final, cualquier otro unificador $\sigma$ cumple $X_i\sigma = t_i\sigma$, es decir, $\sigma = \theta\sigma$. Así que $\sigma$ se factoriza a través de $\theta$.</p>
+  </div>
+</details>
+
+<figure class="demo" data-demo="logic/unify">
+  <figcaption>El algoritmo de unificación, regla a regla. Escribe dos términos (las variables empiezan por mayúscula) o elige un ejemplo. Los dos últimos fallan: uno por un choque de símbolos y otro por la prueba de ocurrencia, que exigiría que $X$ fuera igual a $f(X)$, un término infinito.</figcaption>
+</figure>
+
+<aside class="note">La unificación reaparece lejos de la lógica. Es como los compiladores de Haskell, OCaml o Rust <strong>infieren los tipos</strong> que no has escrito (Hindley–Milner, 1969–1978), y como funciona el encaje de patrones de muchos lenguajes.</aside>
+
+<h2>Prolog: la lógica como programa</h2>
+
+<p>La resolución sobre cláusulas cualesquiera explota combinatoriamente. Pero si cada cláusula tiene como mucho un literal positivo (una <strong>cláusula de Horn</strong>), se puede leer como una regla, «$A$ es cierto si lo son $B_1, \dots, B_n$»:</p>
+
+$$A \leftarrow B_1 \wedge \dots \wedge B_n.$$
+
+<p>En 1972 Alain Colmerauer y Philippe Roussel, en Marsella, construyeron sobre esa idea un lenguaje para procesar lenguaje natural: <strong>Prolog</strong> (<em>programmation en logique</em>). Robert Kowalski, en Edimburgo, puso la teoría: un conjunto de cláusulas de Horn se puede leer de dos maneras, como afirmaciones verdaderas o como procedimientos que se ejecutan. Lo resumió como «algoritmo = lógica + control». Tú escribes <em>qué</em> es cierto; la máquina decide <em>cómo</em> buscar.</p>
+
+<pre class="code-block"><code>progenitor(tomas, bea).        % hechos: cláusulas sin cuerpo
+progenitor(bea, ana).
+progenitor(bea, pablo).
+
+antepasado(X, Y) :- progenitor(X, Y).        % reglas: ":-" se lee "si"
+antepasado(X, Y) :- progenitor(X, Z),        % "," se lee "y"
+                    antepasado(Z, Y).</code></pre>
+
+<p>Una consulta como <code>?- antepasado(tomas, Quien).</code> es un objetivo que refutar: la máquina supone que nadie desciende de Tomás y busca la contradicción. Resolver siempre el objetivo de más a la izquierda contra las cláusulas del programa, en orden, es la <strong>resolución SLD</strong>, y la sustitución que va acumulando es la respuesta: <code>Quien = bea</code>, <code>Quien = ana</code>, <code>Quien = pablo</code>.</p>
+
+<h2>Qué significa un programa lógico</h2>
+
+<p>Un programa tiene un significado independiente de cómo se ejecute. Llamemos $\mathcal{B}_P$ al conjunto de todos los átomos básicos (sin variables) que se pueden escribir con los símbolos del programa, y $\operatorname{ground}(P)$ al conjunto de instancias básicas de sus cláusulas. Considera el operador que toma un conjunto $I \subseteq \mathcal{B}_P$ y devuelve todo lo que se deduce de él en un paso:</p>
+
+$$T_P(I) = \{\, A : (A \leftarrow B_1, \dots, B_n) \in \operatorname{ground}(P),\ \ B_1, \dots, B_n \in I \,\}.$$
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(mínimo modelo de Herbrand, van Emden y Kowalski 1976)</span></span>
+  <p>Todo programa definido $P$ tiene un modelo mínimo $M_P$. Es el menor punto fijo de $T_P$, se alcanza iterando desde el conjunto vacío y contiene exactamente los átomos básicos que se siguen de $P$:</p>
+  $$M_P = \bigcup_{k \ge 0} T_P^{\,k}(\varnothing) = \{\, A \in \mathcal{B}_P : P \models A \,\}.$$
+</div>
+
+<details class="proof">
+  <summary>Demostración</summary>
+  <div>
+    <p>Un conjunto de átomos básicos $I$ es modelo de $P$ exactamente cuando $T_P(I) \subseteq I$: toda regla cuyo cuerpo se cumple en $I$ tiene su cabeza en $I$. La intersección de modelos es un modelo (si el cuerpo está en todos, la cabeza también), así que hay un modelo mínimo, $M_P$, la intersección de todos.</p>
+    <p>$T_P$ es monótono ($I \subseteq J$ implica $T_P(I) \subseteq T_P(J)$) y, como cada cuerpo es finito, continuo: un átomo deducido de la unión de una cadena creciente ya se deduce en alguna etapa finita. Por el teorema del punto fijo de Kleene, $\bigcup_k T_P^{\,k}(\varnothing)$ es el menor punto fijo. Está contenido en todo modelo, por inducción en $k$, y es a su vez un modelo, así que coincide con $M_P$. Por último, $P \models A$ para un $A$ básico significa que $A$ es verdadero en todo modelo de $P$, y basta mirar los modelos formados por átomos básicos (todo modelo induce uno con los mismos átomos básicos verdaderos). Si $A$ es verdadero en todos ellos, está en $M_P$; y todo átomo de $M_P$ es verdadero en todos, porque todos contienen a $M_P$.</p>
+  </div>
+</details>
+
+<p>Para el programa de la familia: $T_P(\varnothing)$ contiene los tres hechos; un paso más añade $\text{antepasado}(\text{tomas}, \text{bea})$, $\text{antepasado}(\text{bea}, \text{ana})$ y $\text{antepasado}(\text{bea}, \text{pablo})$; otro más, $\text{antepasado}(\text{tomas}, \text{ana})$ y $\text{antepasado}(\text{tomas}, \text{pablo})$; y a partir de ahí no aparece nada nuevo. Ese es el significado del programa, y el procedimiento está a la altura:</p>
+
+<div class="theorem">
+  <span class="th-title">Teorema <span class="th-name">(corrección y completitud de la resolución SLD)</span></span>
+  <p>Sean $P$ un programa definido y $G$ una consulta. Toda respuesta calculada por resolución SLD es correcta ($P$ implica la consulta instanciada) y, para toda respuesta correcta, hay una respuesta calculada al menos igual de general, <em>siempre que el árbol de posibilidades se recorra de forma equitativa</em>.</p>
+</div>
+
+<p>La condición importa. Prolog recorre el árbol <em>en profundidad</em>, cláusula a cláusula, porque es rápido y gasta poca memoria. Pero si una rama es infinita, Prolog se mete en ella y no vuelve, aunque haya respuestas más a la derecha. Escribe la regla recursiva como <code>antepasado(X, Y) :- antepasado(Z, Y), progenitor(X, Z).</code> y ponla la primera: el significado lógico es exactamente el mismo, pero el programa ya no responde nada. Compara las dos versiones en la figura.</p>
+
+<figure class="demo wide" data-demo="logic/sld">
+  <figcaption>El árbol SLD de una consulta, recorrido en el orden de Prolog: en profundidad, de arriba abajo. Cada fila es una lista de objetivos pendientes; la etiqueta dice qué cláusula se usó y qué se sustituyó. <strong>□</strong> es un éxito (una respuesta) y <strong>✗</strong>, un callejón sin salida. Con la recursión por la izquierda la primera rama es infinita y Prolog no pasa de ella.</figcaption>
+</figure>
+
+<p>Prolog añade además piezas ajenas a la lógica pura: aritmética (<code>X is Y + 1</code>), el <em>corte</em> <code>!</code>, que poda alternativas del árbol, y la <strong>negación por fallo</strong> (Clark, 1978): <code>\+ P</code> tiene éxito si $P$ no se puede demostrar. Es la <em>hipótesis del mundo cerrado</em>, «lo que no puedo deducir es falso». Es muy práctica en bases de datos, y no es monótona: añadir un hecho puede volver falsa una conclusión.</p>
+
+<h2 id="prolog">Tu propio Prolog</h2>
+
+<p>La figura de abajo es un intérprete de Prolog completo que se ejecuta en tu navegador: unificación, vuelta atrás, corte, aritmética con enteros de cualquier tamaño, listas, gramáticas de cláusulas definidas y los predicados predefinidos habituales. Elige un ejemplo, modifícalo o escribe tu propio programa, y hazle preguntas. Activa la traza para ver los cuatro puertos clásicos de cada llamada: <em>Call</em> (llamada), <em>Exit</em> (salida), <em>Redo</em> (reintento) y <em>Fail</em> (fallo).</p>
+
+<figure class="demo wide" data-demo="logic/playground">
+  <figcaption>Un intérprete de Prolog en el navegador, sin servidor: el programa se carga al pulsar «Consultar», y cada consulta muestra sus respuestas de una en una, como en un Prolog de verdad. Hay un límite de pasos de inferencia, así que un bucle infinito termina con un error en lugar de bloquear la página.</figcaption>
+</figure>
+
+<h2>Sistemas expertos, y sus límites</h2>
+
+<p>En los años setenta y ochenta la IA simbólica llegó a la industria. Los <strong>sistemas expertos</strong> guardaban el conocimiento de un especialista en cientos o miles de reglas: MYCIN (Stanford, 1976) recomendaba tratamientos para infecciones de la sangre, y en una evaluación a ciegas de 1979 sus prescripciones recibieron tan buena nota como las de especialistas en enfermedades infecciosas; XCON configuraba ordenadores de DEC y le ahorraba a la empresa millones al año. En 1982 Japón lanzó el proyecto de Sistemas de Computación de Quinta Generación, diez años de dinero público para construir máquinas que ejecutaran programas lógicos en paralelo. La programación lógica era su núcleo.</p>
+
+<p>No cumplió lo prometido. Los obstáculos no estaban en la lógica sino en el mundo:</p>
+
+<ul>
+  <li><strong>El cuello de botella de la adquisición del conocimiento.</strong> Los expertos saben más de lo que pueden poner en reglas, y cada regla tiene excepciones a las excepciones.</li>
+  <li><strong>La fragilidad.</strong> Fuera de los casos previstos por las reglas, un sistema experto no se degrada con elegancia: simplemente falla.</li>
+  <li><strong>La incertidumbre.</strong> La lógica habla de verdadero y falso, y el mundo está hecho de «probablemente». MYCIN tuvo que inventarse unos «factores de certeza» ad hoc.</li>
+  <li><strong>La explosión combinatoria.</strong> La semidecidibilidad y el tamaño del espacio de búsqueda no son tecnicismos: encarecen el razonamiento justo donde importa.</li>
+</ul>
+
+<p>El mercado de las máquinas Lisp se hundió en 1987, y con él llegó el segundo invierno de la IA. Pero la lógica no desapareció. Sigue viva en Datalog y en las consultas recursivas de SQL, en la inferencia de tipos, en los solucionadores SAT y SMT que verifican chips y programas, en asistentes de demostración como Lean, que los matemáticos ya usan para comprobar demostraciones, y en sistemas que combinan modelos de lenguaje con herramientas simbólicas. La diferencia con aquella época es el orden: hoy las reglas no se escriben a mano, se <em>aprenden</em>.</p>
+
+<p>Aprender de ejemplos significa aceptar que las conclusiones nunca son seguras, solo más o menos probables. Razonar con grados de creencia en lugar de con valores de verdad exige otra matemática. Eso es la <a href="@ch:probability">probabilidad</a>.</p>
+
+<section class="references">
+  <h2>Referencias</h2>
+  <ol>
+    <li>G. Boole (1854). <em>An Investigation of the Laws of Thought</em>. Walton and Maberly.</li>
+    <li>G. Frege (1879). <em>Begriffsschrift, eine der arithmetischen nachgebildete Formelsprache des reinen Denkens</em>. Halle.</li>
+    <li>K. Gödel (1930). «Die Vollständigkeit der Axiome des logischen Funktionenkalküls». <em>Monatshefte für Mathematik und Physik</em>, 37.</li>
+    <li>A. Newell y H. A. Simon (1956). «The Logic Theory Machine». <em>IRE Transactions on Information Theory</em>, 2(3).</li>
+    <li>J. A. Robinson (1965). «A Machine-Oriented Logic Based on the Resolution Principle». <em>Journal of the ACM</em>, 12(1).</li>
+    <li>R. Kowalski (1974). «Predicate Logic as Programming Language». <em>Proceedings of IFIP Congress 74</em>.</li>
+    <li>M. H. van Emden y R. Kowalski (1976). «The Semantics of Predicate Logic as a Programming Language». <em>Journal of the ACM</em>, 23(4).</li>
+    <li>K. L. Clark (1978). «Negation as Failure». En <em>Logic and Data Bases</em>, Plenum Press.</li>
+    <li>A. Martelli y U. Montanari (1982). «An Efficient Unification Algorithm». <em>ACM Transactions on Programming Languages and Systems</em>, 4(2).</li>
+    <li>J. W. Lloyd (1987). <em>Foundations of Logic Programming</em>, 2.ª ed. Springer.</li>
+    <li>A. Colmerauer y P. Roussel (1993). «The Birth of Prolog». <em>ACM SIGPLAN Notices</em>, 28(3).</li>
+  </ol>
+</section>

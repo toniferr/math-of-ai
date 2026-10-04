@@ -3,21 +3,23 @@
 An interactive explainer on the mathematics and history of artificial intelligence, published at
 **https://toniferr.github.io/math-of-ai/** in English and Spanish ([/es/](https://toniferr.github.io/math-of-ai/es/)).
 
-Ten chapters follow the chain of ideas that leads from Turing to ChatGPT. Each one tells the history, states the key
+Twelve chapters follow the chain of ideas that leads from Boole and Turing to ChatGPT. Each one tells the history, states the key
 theorems (with foldable proofs) and includes interactive figures:
 
 | # | Chapter | Theorems and results | Interactive figures |
 | --- | --- | --- | --- |
-| 00 | Computation | Universal machine, undecidability of halting | Step-by-step Turing machine |
-| 01 | Probability | Law of large numbers, Bayes, maximum likelihood | Biased coin: frequency and posterior |
-| 02 | Information | Entropy, source coding, Gibbs, cross-entropy | Entropy and Huffman, KL, Shannon's n-grams |
-| 03 | Linear algebra | Cauchy–Schwarz, Johnson–Lindenstrauss, SVD | Embedding analogies, 2×2 matrices |
-| 04 | Calculus | Chain rule, cheap gradient (Baur–Strassen) | Secant → tangent, backpropagation |
-| 05 | Optimization | GD convergence, Nesterov, Robbins–Monro | Loss landscapes, SGD |
-| 06 | Neural networks | Perceptron convergence, XOR, universal approximation | Perceptron vs. hidden layer, sum of sigmoids |
-| 07 | Learning theory | Finite-class bound, VC, PAC, no free lunch | Overfitting, shattering with lines |
-| 08 | Transformers | Attention, variance of q·k, universal approximation | Attention heads |
-| 09 | LLMs | Softmax = maximum entropy, scaling, KL-optimal policy, hallucinations | Temperature/top-k/top-p, scaling laws |
+| 00 | Circuits and automata | Completeness of NAND, ripple-carry adder, Kleene, subset construction, pumping lemma, Chomsky hierarchy | 4-bit adder with its gates, finite automata, toy stored-program CPU |
+| 01 | Computation | Universal machine, undecidability of halting | Step-by-step Turing machine |
+| 02 | Logic | Gödel's completeness, resolution, most general unifier, least Herbrand model, SLD resolution | Unification step by step, SLD trees, a Prolog interpreter in the browser |
+| 03 | Probability | Law of large numbers, Bayes, maximum likelihood | Biased coin: frequency and posterior |
+| 04 | Information | Entropy, source coding, Gibbs, cross-entropy | Entropy and Huffman, KL, Shannon's n-grams |
+| 05 | Linear algebra | Cauchy–Schwarz, Johnson–Lindenstrauss, SVD | Embedding analogies, 2×2 matrices |
+| 06 | Calculus | Chain rule, cheap gradient (Baur–Strassen) | Secant → tangent, backpropagation |
+| 07 | Optimization | GD convergence, Nesterov, Robbins–Monro | Loss landscapes, SGD |
+| 08 | Neural networks | Perceptron convergence, XOR, universal approximation | Perceptron vs. hidden layer, sum of sigmoids |
+| 09 | Learning theory | Finite-class bound, VC, PAC, no free lunch | Overfitting, shattering with lines |
+| 10 | Transformers | Attention, variance of q·k, universal approximation | Attention heads |
+| 11 | LLMs | Softmax = maximum entropy, scaling, KL-optimal policy, hallucinations | Temperature/top-k/top-p, scaling laws |
 
 Plus a home page with a “next-word predictor” and a filterable timeline from 1654 to today.
 
@@ -58,6 +60,7 @@ src/
 └── js/
     ├── theme.js               flicker-free theme (synchronous in <head>)
     ├── core.js                demo registry and helpers (controls, canvas, axes, softmax…)
+    ├── prolog.js              Prolog interpreter (parser, unification, SLD resolution, built-ins) for the logic chapter
     ├── data/corpus-{en,es}.js public-domain training text for the n-grams (Alice; Don Quixote)
     └── demos/<group>.js       interactive figures for each chapter
 texmath.py                     TeX → MathML converter

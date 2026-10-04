@@ -496,6 +496,7 @@ def write_page(site: dict, lang: str, here: str, assets: dict[str, str], *, titl
 # Extra scripts a demo group needs loaded before it (shared data files).
 DEMO_DEPS = {
     "information": ["js/data/corpus-{lang}.js"],
+    "logic": ["js/prolog.js"],
 }
 
 

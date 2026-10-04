@@ -6,7 +6,9 @@
   "langs": ["en", "es"],
   "default_lang": "en",
   "chapters": [
+    "automata",
     "computation",
+    "logic",
     "probability",
     "information",
     "linear-algebra",

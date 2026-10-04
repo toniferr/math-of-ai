@@ -1,0 +1,175 @@
+<!--meta
+{
+  "slug": "automata",
+  "title": "Circuits and automata",
+  "chain": "Switch",
+  "headline": "How does a machine compute, deep down?",
+  "dek": "Underneath every program there are switches. Boolean algebra, a few logic gates and a little memory are enough to build an adder, a finite automaton and finally a processor. Along the way the first limit appears: there are patterns that no machine with finite memory can recognise.",
+  "era": "1854 – 1959",
+  "people": ["George Boole", "Claude Shannon", "Stephen Kleene", "Michael Rabin", "Dana Scott", "Noam Chomsky", "John von Neumann"],
+  "theorems": ["Functional completeness of NAND", "Kleene's theorem", "Subset construction", "Pumping lemma", "Chomsky hierarchy"]
+}
+-->
+
+<p>A language model running on a graphics card performs trillions of operations a second, and each one, deep down, is made of switches that are either on or off. How do you get from a switch to a machine that adds, remembers and follows a program? The answer took a century to assemble, from George Boole's algebra (1854) to the first computers with a stored program (1948), and it is the foundation on which everything else in this site stands.</p>
+
+<p>The key piece came from a master's thesis. In 1937 Claude Shannon, aged twenty-one, showed that the circuits of relays in telephone exchanges obey exactly Boole's algebra: a switch is a variable that is worth $0$ or $1$, two switches in series are an $\wedge$ (<em>and</em>) and two in parallel an $\vee$ (<em>or</em>). Designing a circuit became a matter of manipulating formulas, and reasoning about formulas became something a circuit could do.</p>
+
+<h2>One gate is enough</h2>
+
+<p>A <strong>Boolean function</strong> of $n$ inputs is any rule $f : \{0,1\}^n \to \{0,1\}$. There are many of them: each of the $2^n$ possible inputs can be sent to $0$ or $1$, so there are $2^{2^n}$ functions, already 65,536 for $n = 4$. Yet a handful of building blocks can construct them all, and in fact a single one is enough: the <strong>NAND</strong> gate, “not and”.</p>
+
+$$\mathrm{NAND}(x, y) = \lnot(x \wedge y) = 1 - xy.$$
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(functional completeness)</span></span>
+  <p>Every Boolean function $f : \{0,1\}^n \to \{0,1\}$ can be computed by a circuit of $\wedge$, $\vee$ and $\lnot$ gates. NAND gates alone are also enough.</p>
+</div>
+
+<details class="proof">
+  <summary>Proof</summary>
+  <div>
+    <p>For each input $a \in \{0,1\}^n$ with $f(a) = 1$, form the conjunction $m_a(x) = \ell_1 \wedge \dots \wedge \ell_n$, where $\ell_i = x_i$ if $a_i = 1$ and $\ell_i = \lnot x_i$ if $a_i = 0$. By construction $m_a(x) = 1$ exactly when $x = a$. So</p>
+    $$f(x) = \bigvee_{a \,:\, f(a) = 1} m_a(x),$$
+    <p>which is $1$ exactly at the inputs where $f$ is $1$ (if there are none, $f = x_1 \wedge \lnot x_1$). This is the <em>disjunctive normal form</em>. For NAND it is enough to rebuild the three gates:</p>
+    $$\lnot x = \mathrm{NAND}(x, x), \qquad x \wedge y = \lnot\, \mathrm{NAND}(x, y), \qquad x \vee y = \mathrm{NAND}(\lnot x, \lnot y),$$
+    <p>the last one by De Morgan's law, $\lnot(\lnot x \wedge \lnot y) = x \vee y$.</p>
+  </div>
+</details>
+
+<p>The proof builds circuits that can be huge, and Shannon showed in 1949 that, for most functions, that cannot be avoided: there are $2^{2^n}$ functions but far fewer small circuits, so almost every function of $n$ inputs needs on the order of $2^n / n$ gates. The functions we care about are the rare exceptions with small circuits. Addition is one of them.</p>
+
+<h2>From gates to arithmetic</h2>
+
+<p>To add two numbers in binary you do what you learned at school, column by column, carrying. In column $i$ three bits come in, $x_i$, $y_i$ and the carry $c_i$, and two go out: the result digit $s_i$ and the next carry $c_{i+1}$. With $\oplus$ for the <em>exclusive or</em> (which is $1$ when exactly one of its inputs is), the <strong>full adder</strong> is</p>
+
+$$s_i = x_i \oplus y_i \oplus c_i, \qquad c_{i+1} = (x_i \wedge y_i) \vee \big(c_i \wedge (x_i \oplus y_i)\big).$$
+
+<div class="theorem">
+  <span class="th-title">Proposition <span class="th-name">(ripple-carry adder)</span></span>
+  <p>Chaining $n$ full adders, with $c_0 = 0$, computes the sum of two $n$-bit numbers $x$ and $y$:</p>
+  $$\sum_{i=0}^{n-1} s_i\, 2^i + c_n\, 2^n = x + y.$$
+</div>
+
+<details class="proof">
+  <summary>Proof</summary>
+  <div>
+    <p>Checking the eight possible inputs shows that the full adder writes the sum of its three bits in binary: $x_i + y_i + c_i = s_i + 2c_{i+1}$. Multiplying by $2^i$ and adding over $i$,</p>
+    $$x + y = \sum_i (x_i + y_i)\,2^i = \sum_i \big(s_i + 2c_{i+1} - c_i\big)\,2^i = \sum_i s_i\,2^i + \sum_i \big(c_{i+1}2^{i+1} - c_i 2^i\big),$$
+    <p>and the last sum telescopes to $c_n 2^n - c_0 = c_n 2^n$.</p>
+  </div>
+</details>
+
+<figure class="demo wide" data-demo="automata/adder">
+  <figcaption>A 4-bit adder. Click the bits of $A$ and $B$ to flip them. Each column is a full adder made of five gates; choose a column to see its circuit, with the wires that carry a $1$ lit up. If the result does not fit in four bits, the last carry becomes a fifth bit.</figcaption>
+</figure>
+
+<p>Each full adder costs five gates (or nine NAND gates), so adding 64-bit numbers takes a few hundred gates. Multiplying, comparing or computing a $\mathrm{softmax}$ is just a matter of more circuits of the same kind. What is still missing is memory.</p>
+
+<h2>Memory, and finite automata</h2>
+
+<p>A circuit whose output feeds back into its input can remember. Two NAND gates connected in a loop form a <em>latch</em> that keeps a bit until it is told to change it. With $k$ of those bits and a clock that ticks, a circuit has $2^k$ possible states and, at each tick, moves from one state to another depending on the state and on what comes in. That object, stripped of the electronics, is a <strong>finite automaton</strong>.</p>
+
+<div class="definition">
+  <span class="th-title">Definition <span class="th-name">(deterministic finite automaton)</span></span>
+  <p>A DFA is a tuple $M = (Q, \Sigma, \delta, q_0, F)$ with a finite set of states $Q$, an input alphabet $\Sigma$, a transition function $\delta : Q \times \Sigma \to Q$, an initial state $q_0$ and a set of accepting states $F \subseteq Q$. It reads a word $w = a_1 a_2 \cdots a_m$ one symbol at a time, $q_{j} = \delta(q_{j-1}, a_j)$, and <em>accepts</em> it if it ends in $F$. The set of accepted words is the language $L(M)$.</p>
+</div>
+
+<p>The idea came from an unexpected place: the model of neurons by McCulloch and Pitts (1943), networks of threshold units that Stephen Kleene analysed in 1951 to ask which “events” they could detect. The answer, the languages that finite automata recognise, also has a very concrete description.</p>
+
+<figure class="demo wide" data-demo="automata/dfa">
+  <figcaption>A finite automaton reading a word, one symbol at a time. The first one decides whether a binary number is a multiple of three without ever storing it: it only needs to remember the remainder. The last one accepts $a^nb^n$, but only up to $n = 3$. Try <code>aaaabbbb</code>: there is no state for “four”.</figcaption>
+</figure>
+
+<p>A <strong>regular expression</strong> describes a set of words with three operations: union ($r \mid s$, one or the other), concatenation ($rs$, one after the other) and the Kleene star ($r^*$, any number of repetitions). For example, $(0 \mid 1)^*\,01$ is “any word that ends in $01$”.</p>
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(Kleene 1956)</span></span>
+  <p>A language is described by a regular expression if and only if it is recognised by a finite automaton.</p>
+</div>
+
+<p>To go from expressions to automata it is convenient to let the automaton guess. A <em>nondeterministic</em> automaton (NFA) can have several transitions with the same symbol, or none, and accepts if <em>some</em> choice leads to an accepting state. Each operation of an expression then becomes a small piece of NFA (Thompson's construction, 1968, still at the heart of many regular-expression engines). Guessing seems to give extra power. It does not:</p>
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(subset construction, Rabin and Scott 1959)</span></span>
+  <p>For every NFA with $n$ states there is a DFA that recognises the same language with at most $2^n$ states.</p>
+</div>
+
+<details class="proof">
+  <summary>Proof</summary>
+  <div>
+    <p>The DFA keeps track of <em>all</em> the states the NFA could be in. Its states are the subsets $S \subseteq Q$; it starts at $\{q_0\}$; reading $a$ it moves to $\delta'(S, a) = \bigcup_{q \in S} \delta(q, a)$; and it accepts if $S \cap F \ne \varnothing$. By induction on the length of the word, after reading $w$ the DFA is in exactly the set of states the NFA can reach with $w$, so it accepts if and only if some run of the NFA does. There are $2^n$ subsets.</p>
+  </div>
+</details>
+
+<p>The exponential is real: the language “the $n$-th symbol from the end is a $1$” has an NFA with $n + 1$ states, and every DFA for it needs at least $2^n$. Rabin and Scott received the Turing Award in 1976 for this paper, which also introduced nondeterminism, an idea that a decade later would underlie the $\mathrm{P}$ versus $\mathrm{NP}$ question.</p>
+
+<h2 id="pumping">What finite memory cannot do</h2>
+
+<p>The automaton in the figure cannot be extended to recognise $a^nb^n$ for every $n$, however many states we give it. It is not a lack of ingenuity: it is a theorem.</p>
+
+<div class="theorem">
+  <span class="th-title">Theorem <span class="th-name">(pumping lemma, Bar-Hillel, Perles and Shamir 1961)</span></span>
+  <p>If $L$ is regular, there is a number $p$ such that every word $w \in L$ with $\left|w\right| \ge p$ can be split as $w = xyz$ with $\left|xy\right| \le p$ and $\left|y\right| \ge 1$, so that $xy^iz \in L$ for every $i \ge 0$.</p>
+</div>
+
+<details class="proof">
+  <summary>Proof</summary>
+  <div>
+    <p>Let $p$ be the number of states of a DFA for $L$. Reading the first $p$ symbols of $w$, the automaton goes through $p + 1$ states, so by the pigeonhole principle it repeats one: there are positions $j < k \le p$ with $q_j = q_k$. Let $x$ be the first $j$ symbols, $y$ the following $k - j$ and $z$ the rest. Reading $y$ takes the automaton from $q_j$ back to the same state, so it can do it zero times or a hundred, and it will still end up where it ended with $w$: in an accepting state.</p>
+  </div>
+</details>
+
+<p>Take $L = \{a^nb^n : n \ge 0\}$ and suppose it were regular, with constant $p$. The word $a^pb^p$ is in $L$, and since $\left|xy\right| \le p$, the piece $y$ consists only of $a$'s. Pumping it, $xy^2z$ has more $a$'s than $b$'s, and it is not in $L$. Contradiction. A finite automaton cannot count without limit: to check that there are as many $b$'s as $a$'s it would have to remember a number that can be arbitrarily large.</p>
+
+<h2>Chomsky's hierarchy</h2>
+
+<p>In 1956 the linguist Noam Chomsky asked which kind of grammar could describe a human language, and by 1959 he had ordered the formal languages into four levels. Each kind of grammar corresponds exactly to a kind of machine, which differ only in their memory:</p>
+
+<table class="mini-table">
+  <thead><tr><th>Type</th><th>Grammar</th><th>Machine</th><th>Memory</th><th>Example beyond the previous level</th></tr></thead>
+  <tbody>
+    <tr><td>3</td><td>Regular</td><td>Finite automaton</td><td>Finite</td><td>$(0 \mid 1)^*01$</td></tr>
+    <tr><td>2</td><td>Context-free</td><td>Pushdown automaton</td><td>A stack</td><td>$a^nb^n$</td></tr>
+    <tr><td>1</td><td>Context-sensitive</td><td>Linear-bounded automaton</td><td>A tape as long as the input</td><td>$a^nb^nc^n$</td></tr>
+    <tr><td>0</td><td>Unrestricted</td><td>Turing machine</td><td>An unbounded tape</td><td>The halting problem</td></tr>
+  </tbody>
+</table>
+
+$$\mathrm{REG} \subsetneq \mathrm{CFL} \subsetneq \mathrm{CSL} \subsetneq \mathrm{RE}.$$
+
+<p>A single stack is enough for $a^nb^n$: push a token for each $a$ and pop one for each $b$. Context-free grammars, written in the Backus–Naur notation of ALGOL 60, describe the syntax of almost every programming language, and so every compiler starts with a finite automaton that splits the text into tokens and a pushdown automaton that builds the syntax tree. Human languages turned out to be more slippery: a few constructions, such as the cross-serial dependencies of Swiss German, are beyond context-free grammars. Sixty years later the models that best predict language are not grammars at all, but that is another chapter.</p>
+
+<h2>The machine underneath</h2>
+
+<p>With adders, memory and a finite automaton to coordinate them, a computer can be built. In 1945 John von Neumann described the design of the EDVAC: a memory that holds <em>both</em> the data and the program, a unit that does arithmetic and a control unit that repeats the same cycle forever. On 21 June 1948 the Manchester “Baby” became the first computer to run a program stored in its own memory.</p>
+
+<ol>
+  <li><strong>Fetch:</strong> read from memory the instruction the program counter points to, and advance the counter.</li>
+  <li><strong>Decode:</strong> the control automaton works out which operation it is and which memory cell it refers to.</li>
+  <li><strong>Execute:</strong> the adder or the memory does the work, and the cycle starts again.</li>
+</ol>
+
+<figure class="demo wide" data-demo="automata/cpu">
+  <figcaption>A toy processor with an accumulator and 24 memory cells. Instructions are numbers too: <code>322</code> means “add the contents of cell 22”. Step through the fetch–decode–execute cycle and watch the program counter jump back to repeat a loop.</figcaption>
+</figure>
+
+<p>A real computer is, strictly speaking, a finite automaton: with $k$ bits of memory it has at most $2^k$ states. But with 16 gigabytes, $k$ is about $1.4 \times 10^{11}$, and $2^k$ is a number that nothing in the universe can enumerate. It makes more sense to think of memory as a tape that can always be extended. That idealization, the infinite tape, is exactly <a href="@ch:computation">Turing's machine</a>.</p>
+
+<section class="references">
+  <h2>References</h2>
+  <ol>
+    <li>G. Boole (1854). <em>An Investigation of the Laws of Thought</em>. Walton and Maberly.</li>
+    <li>C. E. Shannon (1938). “A Symbolic Analysis of Relay and Switching Circuits”. <em>Transactions of the AIEE</em>, 57(12).</li>
+    <li>W. S. McCulloch and W. Pitts (1943). “A Logical Calculus of the Ideas Immanent in Nervous Activity”. <em>Bulletin of Mathematical Biophysics</em>, 5.</li>
+    <li>J. von Neumann (1945). <em>First Draft of a Report on the EDVAC</em>.</li>
+    <li>C. E. Shannon (1949). “The Synthesis of Two-Terminal Switching Circuits”. <em>Bell System Technical Journal</em>, 28(1).</li>
+    <li>S. C. Kleene (1956). “Representation of Events in Nerve Nets and Finite Automata”. In <em>Automata Studies</em>, Princeton University Press.</li>
+    <li>N. Chomsky (1956). “Three Models for the Description of Language”. <em>IRE Transactions on Information Theory</em>, 2(3).</li>
+    <li>N. Chomsky (1959). “On Certain Formal Properties of Grammars”. <em>Information and Control</em>, 2(2).</li>
+    <li>M. O. Rabin and D. Scott (1959). “Finite Automata and Their Decision Problems”. <em>IBM Journal of Research and Development</em>, 3(2).</li>
+    <li>Y. Bar-Hillel, M. Perles and E. Shamir (1961). “On Formal Properties of Simple Phrase Structure Grammars”. <em>Zeitschrift für Phonetik, Sprachwissenschaft und Kommunikationsforschung</em>, 14.</li>
+    <li>K. Thompson (1968). “Regular Expression Search Algorithm”. <em>Communications of the ACM</em>, 11(6).</li>
+    <li>J. E. Hopcroft, R. Motwani and J. D. Ullman (2006). <em>Introduction to Automata Theory, Languages, and Computation</em>, 3rd ed. Addison-Wesley.</li>
+  </ol>
+</section>
