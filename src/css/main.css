@@ -1356,8 +1356,7 @@ main::before {
 }
 .splash-sub { display: block; margin-top: 0.14em; font-size: 0.5em; font-weight: 750; letter-spacing: -0.02em; color: var(--accent-strong); }
 .splash-lead { margin: 0; font: 1.14rem/1.6 var(--serif); color: var(--text); max-width: 34rem; }
-.splash .cta-row { margin: 1.4rem 0 0.8rem; }
-.splash-hint { margin: 0; font-size: 0.84rem; color: var(--muted); }
+.splash-hint { margin: 1.1rem 0 0; font-size: 0.84rem; color: var(--muted); }
 
 .splash-hud {
   position: absolute;
