@@ -7,6 +7,7 @@
     "chapters": "Chapters",
     "timeline": "History",
     "theme": "Switch between light and dark theme",
+    "intro": "Introduction",
     "skip": "Skip to content",
     "lang": "Language"
   },
@@ -20,6 +21,9 @@
     "next": "Next",
     "prevnext": "Previous and next chapter"
   },
+  "intro": {
+    "slug": "introduction"
+  },
   "timeline": {
     "slug": "history",
     "kicker": "Timeline",
@@ -32,6 +36,15 @@
     "source": "Source code on GitHub"
   },
   "demos": {
+    "splash": {
+      "label": "A loss landscape drawn as coloured contour lines, slowly changing shape, with glowing balls rolling down it by gradient descent towards its minima.",
+      "optLabel": "Optimiser",
+      "opt": { "sgd": "SGD", "momentum": "Momentum", "adam": "Adam" },
+      "stats": "{n} balls descending with {opt} · lowest loss found: {best}",
+      "shake": "New landscape",
+      "pause": "Pause",
+      "play": "Play"
+    },
     "core": {
       "error": "This figure could not be loaded."
     },

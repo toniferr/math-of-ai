@@ -1,0 +1,45 @@
+<!--meta {"title": "Introduction", "dek": "There is no single theory behind ChatGPT, but a convergence of many: logic, probability, information, linear algebra, calculus, optimization… This site walks through them in order, from Boole and Turing to Transformers, with the theorems that matter, the history of the people who discovered them, and an interactive figure at every step."} -->
+<p class="kicker">Introduction</p>
+<h1 class="hero-title">Why does AI work?</h1>
+<p class="lead">There is no single theory behind ChatGPT, but a convergence of many: logic, probability, information, linear algebra, calculus, optimization… This site walks through them in order, from Boole and Turing to Transformers, with the theorems that matter, the history of the people who discovered them, and an interactive figure at every step.</p>
+
+<p class="cta-row"><a class="cta primary" href="@ch:automata">Start at the beginning →</a><a class="cta" href="@timeline">See the timeline</a></p>
+
+<figure class="demo" data-demo="home/next-token">
+  <figcaption>This is how a language model “writes”: at every step it computes a probability distribution over the next word and picks one. Choose words yourself or let chance do it, and watch three numbers: the <strong>entropy</strong> (how much uncertainty there is before choosing), the <strong>surprise</strong> of what was chosen, and the <strong>probability of the sentence</strong>, which is the product of the probabilities of each step. The rest of the site explains where those numbers come from and why they work.</figcaption>
+</figure>
+
+<h2>The idea in one sentence</h2>
+
+<p>A language model learns to <strong>predict which information is most likely to come next</strong>. It needs no explicit definition of a cat to complete “The cat is sitting on the…”. It is enough to have estimated, from enormous amounts of text, an extraordinarily detailed probability distribution. That something so simple to state gives such astonishing results has precise mathematical explanations (and a few questions that are still open). Here is the journey:</p>
+
+<!--chain-->
+
+<h2>Many theories, one chain</h2>
+
+<p>Each chapter answers one question and raises the next. Several branches of mathematics and computer science appear along the way:</p>
+
+<table class="theory-table">
+  <thead><tr><th>Theory</th><th>What it brings to modern AI</th><th>Where</th></tr></thead>
+  <tbody>
+    <tr><td>Boolean algebra and automata</td><td>Circuits, finite memory and what it cannot recognise</td><td><a href="@ch:automata">00</a></td></tr>
+    <tr><td>Theory of computation</td><td>What a machine can compute, and at what cost</td><td><a href="@ch:computation">01</a></td></tr>
+    <tr><td>Logic</td><td>Deduction, resolution and logic programming</td><td><a href="@ch:logic">02</a></td></tr>
+    <tr><td>Probability and statistics</td><td>Prediction, uncertainty and learning from data</td><td><a href="@ch:probability">03</a></td></tr>
+    <tr><td>Information theory</td><td>Entropy, compression and the loss function of LLMs</td><td><a href="@ch:information">04</a></td></tr>
+    <tr><td>Linear algebra</td><td>Vectors, matrices and embeddings: the space where meaning lives</td><td><a href="@ch:linear-algebra">05</a></td></tr>
+    <tr><td>Calculus</td><td>Derivatives, the chain rule and backpropagation</td><td><a href="@ch:calculus">06</a></td></tr>
+    <tr><td>Graph theory</td><td>Computational graphs along which the gradient flows</td><td><a href="@ch:calculus#backprop">06</a></td></tr>
+    <tr><td>Optimization</td><td>Training by gradient descent</td><td><a href="@ch:optimization">07</a></td></tr>
+    <tr><td>Neural networks</td><td>Functions able to approximate almost anything</td><td><a href="@ch:neural-networks">08</a></td></tr>
+    <tr><td>Learning theory</td><td>Why and when a machine generalizes</td><td><a href="@ch:learning-theory">09</a></td></tr>
+    <tr><td>Information and attention</td><td>The central mechanism of the Transformer</td><td><a href="@ch:transformers">10</a></td></tr>
+    <tr><td>Games and reinforcement learning</td><td>Agents that learn from rewards: RLHF</td><td><a href="@ch:llms#rlhf">11</a></td></tr>
+  </tbody>
+</table>
+
+<h2>How to read this site</h2>
+
+<p>You can read it in order, like a short book, or jump to the chapter you are interested in: each one stands on its own and links back to earlier ones when needed. <strong>Proofs</strong> are folded so they don't interrupt the reading; open them if you want to see why something is true. The figures are interactive and run in your browser, with no servers and no trackers. High-school science is enough to follow the thread, and anyone who wants more detail will find the original references in every chapter.</p>
+
+<p class="cta-row"><a class="cta primary" href="@ch:automata">Chapter 00: How does a machine compute, deep down? →</a></p>

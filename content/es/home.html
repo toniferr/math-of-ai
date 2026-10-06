@@ -1,44 +1,10 @@
-<p class="kicker">Matemáticas e historia de la inteligencia artificial</p>
-<h1 class="hero-title">¿Por qué funciona la IA?</h1>
-<p class="lead">ChatGPT no tiene detrás una única teoría, sino la convergencia de muchas: lógica, probabilidad, información, álgebra lineal, cálculo, optimización… Esta web las recorre en orden, de Boole y Turing a los Transformers, con los teoremas que importan, la historia de quienes los descubrieron y una figura interactiva en cada paso.</p>
-
-<p class="cta-row"><a class="cta primary" href="@ch:automata">Empezar por el principio →</a><a class="cta" href="@timeline">Ver la línea temporal</a></p>
-
-<figure class="demo" data-demo="home/next-token">
-  <figcaption>Así «escribe» un modelo de lenguaje: en cada paso calcula una distribución de probabilidad sobre la palabra siguiente y elige una. Elige palabras o deja que el azar lo haga, y fíjate en tres números: la <strong>entropía</strong> (cuánta incertidumbre hay antes de elegir), la <strong>sorpresa</strong> de lo elegido y la <strong>probabilidad de la frase</strong>, que es el producto de las probabilidades de cada paso. Toda la web explica de dónde salen esos números y por qué funcionan.</figcaption>
-</figure>
-
-<h2>Una idea en una frase</h2>
-
-<p>Un modelo de lenguaje aprende a <strong>predecir qué información es más probable que aparezca después</strong>. No necesita una definición explícita de lo que es un gato para completar «El gato está sentado en el…». Le basta con haber estimado, a partir de cantidades enormes de texto, una distribución de probabilidad extraordinariamente detallada. Que algo tan simple de enunciar dé resultados tan asombrosos tiene explicaciones matemáticas precisas (y algunas preguntas todavía abiertas). Este es el recorrido:</p>
-
-<!--chain-->
-
-<h2>Muchas teorías, una cadena</h2>
-
-<p>Cada capítulo responde a una pregunta y deja planteada la siguiente. Varias ramas de las matemáticas y la informática aparecen por el camino:</p>
-
-<table class="theory-table">
-  <thead><tr><th>Teoría</th><th>Qué aporta a la IA moderna</th><th>Dónde</th></tr></thead>
-  <tbody>
-    <tr><td>Álgebra de Boole y autómatas</td><td>Circuitos, memoria finita y lo que no puede reconocer</td><td><a href="@ch:automata">00</a></td></tr>
-    <tr><td>Teoría de la computación</td><td>Qué puede calcular una máquina y con qué coste</td><td><a href="@ch:computation">01</a></td></tr>
-    <tr><td>Lógica</td><td>Deducción, resolución y programación lógica</td><td><a href="@ch:logic">02</a></td></tr>
-    <tr><td>Probabilidad y estadística</td><td>Predicción, incertidumbre y aprendizaje a partir de datos</td><td><a href="@ch:probability">03</a></td></tr>
-    <tr><td>Teoría de la información</td><td>Entropía, compresión y la función de pérdida de los LLM</td><td><a href="@ch:information">04</a></td></tr>
-    <tr><td>Álgebra lineal</td><td>Vectores, matrices y embeddings: el espacio donde vive el significado</td><td><a href="@ch:linear-algebra">05</a></td></tr>
-    <tr><td>Cálculo</td><td>Derivadas, regla de la cadena y retropropagación</td><td><a href="@ch:calculus">06</a></td></tr>
-    <tr><td>Teoría de grafos</td><td>Grafos computacionales sobre los que fluye el gradiente</td><td><a href="@ch:calculus#backprop">06</a></td></tr>
-    <tr><td>Optimización</td><td>Entrenamiento mediante descenso de gradiente</td><td><a href="@ch:optimization">07</a></td></tr>
-    <tr><td>Redes neuronales</td><td>Funciones capaces de aproximar casi cualquier cosa</td><td><a href="@ch:neural-networks">08</a></td></tr>
-    <tr><td>Teoría del aprendizaje</td><td>Por qué y cuándo una máquina generaliza</td><td><a href="@ch:learning-theory">09</a></td></tr>
-    <tr><td>Información y atención</td><td>El mecanismo central del Transformer</td><td><a href="@ch:transformers">10</a></td></tr>
-    <tr><td>Juegos y aprendizaje por refuerzo</td><td>Agentes que aprenden de recompensas: RLHF</td><td><a href="@ch:llms#rlhf">11</a></td></tr>
-  </tbody>
-</table>
-
-<h2>Cómo leer esta web</h2>
-
-<p>Puedes leerla en orden, como un libro corto, o saltar al capítulo que te interese: cada uno se sostiene por sí mismo y enlaza con los anteriores cuando hace falta. Las <strong>demostraciones</strong> están plegadas para no interrumpir la lectura; ábrelas si quieres ver por qué algo es cierto. Las figuras son interactivas y se ejecutan en tu navegador, sin servidores ni rastreadores. Basta con bachillerato de ciencias para seguir el hilo, y el que quiera más detalle encontrará en cada capítulo las referencias originales.</p>
-
-<p class="cta-row"><a class="cta primary" href="@ch:automata">Capítulo 00: ¿Cómo calcula una máquina, por dentro? →</a></p>
+<section class="splash" data-demo="splash/landscape" aria-labelledby="splash-title">
+  <canvas class="splash-canvas"></canvas>
+  <div class="splash-copy">
+    <p class="splash-kicker">Las matemáticas y la historia de la inteligencia artificial</p>
+    <h1 id="splash-title" class="splash-title"><span class="splash-mark" aria-hidden="true">∑</span>Math of AI <span class="splash-sub">¿Por qué funciona la IA?</span></h1>
+    <p class="splash-lead">De Boole y Turing a los Transformers: los teoremas que importan, las personas que los descubrieron y una figura interactiva en cada paso. Detrás de este texto, un paisaje de pérdida: cada bola luminosa es un optimizador buscando su mínimo, igual que aprende una red.</p>
+    <p class="cta-row"><a class="cta primary" href="@intro">Empezar el viaje →</a><a class="cta" href="@ch:automata">Primer capítulo</a><a class="cta" href="@timeline">Ver la línea temporal</a></p>
+    <p class="splash-hint">Haz clic en el paisaje para soltar más bolas; pasa el ratón para ver el gradiente.</p>
+  </div>
+</section>

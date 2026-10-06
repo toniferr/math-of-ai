@@ -118,8 +118,8 @@ def page_path(site: dict, lang: str, kind: str, chapter: dict | None = None) -> 
     prefix = "" if lang == site["default_lang"] else f"{lang}/"
     if kind == "home":
         return f"{prefix}index.html"
-    if kind == "timeline":
-        return f"{prefix}{site['ui'][lang]['timeline']['slug']}/index.html"
+    if kind in ("timeline", "intro"):
+        return f"{prefix}{site['ui'][lang][kind]['slug']}/index.html"
     return f"{prefix}{chapter['slug']}/index.html"
 
 
@@ -157,15 +157,15 @@ def render_math(text: str, where: str) -> str:
 
 
 def resolve_links(text: str, site: dict, lang: str, here: str, where: str) -> str:
-    """href="@ch:<id>[#frag]", "@home", "@timeline[#frag]" -> relative URLs (validated)."""
+    """href="@ch:<id>[#frag]", "@home", "@intro", "@timeline[#frag]" -> relative URLs (validated)."""
     by_id = {c["id"]: c for c in site["chapter_list"][lang]}
 
     def repl(m: re.Match) -> str:
         target, frag = m.group(1), m.group(2) or ""
         if target == "home":
             path = page_path(site, lang, "home")
-        elif target == "timeline":
-            path = page_path(site, lang, "timeline")
+        elif target in ("timeline", "intro"):
+            path = page_path(site, lang, target)
         elif target.startswith("ch:") and target[3:] in by_id:
             path = page_path(site, lang, "chapter", by_id[target[3:]])
         else:
@@ -254,9 +254,9 @@ def copy_assets() -> dict[str, str]:
 
 
 def same_page(site: dict, lang: str, current: str) -> str:
-    """dist/ path of the page `current` ("home", "timeline" or a chapter id) in another language."""
-    if current == "timeline":
-        return page_path(site, lang, "timeline")
+    """dist/ path of the page `current` ("home", "intro", "timeline" or a chapter id) in another language."""
+    if current in ("timeline", "intro"):
+        return page_path(site, lang, current)
     match = [c for c in site["chapter_list"][lang] if c["id"] == current]
     return page_path(site, lang, "chapter", match[0]) if match else page_path(site, lang, "home")
 
@@ -265,7 +265,9 @@ def render_header(site: dict, lang: str, here: str, current: str) -> str:
     ui = site["ui"][lang]
     home = rel_url(here, page_path(site, lang, "home"))
     timeline = rel_url(here, page_path(site, lang, "timeline"))
-    items = []
+    intro = rel_url(here, page_path(site, lang, "intro"))
+    cur = ' aria-current="page"' if current == "intro" else ""
+    items = [f'<li class="menu-intro"><a href="{intro}"{cur}><span class="num">·</span>{esc(ui["nav"]["intro"])}</a></li>']
     for c in site["chapter_list"][lang]:
         url = rel_url(here, page_path(site, lang, "chapter", c))
         cur = ' aria-current="page"' if current == c["id"] else ""
@@ -379,11 +381,19 @@ def render_chapter(site: dict, lang: str, ch: dict, here: str) -> tuple[str, lis
 
 
 def render_home(site: dict, lang: str, here: str) -> tuple[str, dict, list[str]]:
+    """The home page is only the title screen; the guided tour starts on the introduction page."""
     meta, body = read_fragment(CONTENT / lang / "home.html")
     where = f"{lang}/home.html"
+    body = transform(body, site, lang, here, where)
+    return body, meta, demo_scripts(body, where)
+
+
+def render_intro(site: dict, lang: str, here: str) -> tuple[str, dict, list[str]]:
+    meta, body = read_fragment(CONTENT / lang / "intro.html")
+    where = f"{lang}/intro.html"
     body = body.replace("<!--chain-->", render_chain(site, lang, here))
     body = transform(body, site, lang, here, where)
-    return f'<article class="home">{body}</article>', meta, demo_scripts(body, where)
+    return f'<article class="home intro">{body}</article>', meta, demo_scripts(body, where)
 
 
 def render_timeline(site: dict, lang: str, here: str) -> tuple[str, dict, list[str]]:
@@ -528,6 +538,12 @@ def build() -> None:
         main, meta, demos = render_home(site, lang, here)
         write_page(site, lang, here, assets, title=ui["site_title"], description=ui["site_description"],
                    main=main, demos=demos, body_class="page-home", current="home")
+        count += 1
+
+        here = page_path(site, lang, "intro")
+        main, meta, demos = render_intro(site, lang, here)
+        write_page(site, lang, here, assets, title=f'{meta["title"]} · {ui["site_short"]}', description=meta["dek"],
+                   main=main, demos=demos, body_class="page-intro", current="intro")
         count += 1
 
         here = page_path(site, lang, "timeline")

@@ -7,6 +7,7 @@
     "chapters": "Capítulos",
     "timeline": "Historia",
     "theme": "Cambiar entre tema claro y oscuro",
+    "intro": "Introducción",
     "skip": "Saltar al contenido",
     "lang": "Idioma"
   },
@@ -20,6 +21,9 @@
     "next": "Siguiente",
     "prevnext": "Capítulo anterior y siguiente"
   },
+  "intro": {
+    "slug": "introduccion"
+  },
   "timeline": {
     "slug": "historia",
     "kicker": "Línea temporal",
@@ -32,6 +36,15 @@
     "source": "Código fuente en GitHub"
   },
   "demos": {
+    "splash": {
+      "label": "Un paisaje de pérdida dibujado con curvas de nivel de colores, que cambia de forma despacio, con bolas luminosas que bajan por descenso de gradiente hacia sus mínimos.",
+      "optLabel": "Optimizador",
+      "opt": { "sgd": "SGD", "momentum": "Momentum", "adam": "Adam" },
+      "stats": "{n} bolas bajando con {opt} · menor pérdida encontrada: {best}",
+      "shake": "Otro paisaje",
+      "pause": "Pausa",
+      "play": "Seguir"
+    },
     "core": {
       "error": "Esta figura no ha podido cargarse."
     },

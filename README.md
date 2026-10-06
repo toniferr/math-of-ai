@@ -21,7 +21,8 @@ theorems (with foldable proofs) and includes interactive figures:
 | 10 | Transformers | Attention, variance of q·k, universal approximation | Attention heads |
 | 11 | LLMs | Softmax = maximum entropy, scaling, KL-optimal policy, hallucinations | Temperature/top-k/top-p, scaling laws |
 
-Plus a home page with a “next-word predictor” and a filterable timeline from 1654 to today.
+Plus a title screen (a live loss landscape where balls roll down by SGD, momentum or Adam), an introduction with a
+“next-word predictor”, and a filterable timeline from 1654 to today.
 
 ## Principles
 
@@ -51,7 +52,8 @@ content/
 ├── site.json                  base URL, languages and chapter order
 ├── i18n/{en,es}.json          interface and interactive-figure strings (same keys in both)
 └── {en,es}/
-    ├── home.html              home page (<!--chain--> is replaced by the contents)
+    ├── home.html              title screen (js/demos/splash.js draws its figure)
+    ├── intro.html             introduction (<!--chain--> is replaced by the contents)
     ├── timeline.json          eras and events of the timeline
     └── chapters/<id>.html     one chapter: <!--meta {json} --> block + HTML with $TeX$
 src/
@@ -71,7 +73,7 @@ build.py                       generator → dist/ (English) and dist/es/ (Spani
 
 - Formulas: `$...$` inline and `$$...$$` for display. `\class{k1}{...}` colours a term (k1–k4), just like
   `<span class="k1">` in the text.
-- Internal links: `href="@ch:<id>#anchor"`, `href="@timeline"` and `href="@home"`.
+- Internal links: `href="@ch:<id>#anchor"`, `href="@timeline"`, `href="@intro"` and `href="@home"`.
 - Boxes: `<div class="theorem">`, `definition` or `idea`, with a `<span class="th-title">`; proofs go in
   `<details class="proof"><summary>…</summary><div>…</div></details>`.
 - Margin notes: `<aside class="note">`.
