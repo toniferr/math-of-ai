@@ -283,7 +283,7 @@ def render_header(site: dict, lang: str, here: str, current: str) -> str:
         langs = f'<nav class="langs" aria-label="{esc(ui["nav"]["lang"])}">{"".join(links)}</nav>'
     return f"""<header class="site-header">
   <a class="skip" href="#main">{esc(ui["nav"]["skip"])}</a>
-  <a class="brand" href="{home}"><span class="brand-mark" aria-hidden="true">∑</span>{esc(ui["site_short"])}</a>
+  <a class="brand" href="{home}"><span class="brand-mark" aria-hidden="true">∑</span><span class="brand-name">{esc(ui["site_short"])}</span></a>
   <nav class="site-nav" aria-label="{esc(ui["nav"]["main"])}">
     <details class="chapters-menu">
       <summary>{esc(ui["nav"]["chapters"])}</summary>

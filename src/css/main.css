@@ -209,6 +209,7 @@ span.k1, span.k2, span.k3, span.k4 { font-weight: 600; }
 }
 
 .site-nav { display: flex; align-items: center; gap: 6px; }
+.brand, .site-nav > a, .chapters-menu > summary { white-space: nowrap; }
 .site-nav > a, .chapters-menu > summary {
   color: var(--muted);
   text-decoration: none;
@@ -227,6 +228,8 @@ span.k1, span.k2, span.k3, span.k4 { font-weight: 600; }
   right: 0;
   top: calc(100% + 8px);
   width: min(320px, 86vw);
+  max-height: calc(100svh - 72px);
+  overflow-y: auto;
   margin: 0;
   padding: 6px;
   list-style: none;
@@ -1411,3 +1414,15 @@ main::before {
 .opt-momentum .dot { background: #ffb347; }
 .opt-adam .dot { background: #ff6fa5; }
 .splash-mark { background: linear-gradient(135deg, oklch(0.55 0.15 25), oklch(0.5 0.14 292)); color: #fff; }
+
+/* Phones: the header stays on one line. Below 480px the brand keeps only its mark (the name is still read out by
+   screen readers) and the chapters menu spans the screen instead of hanging off its left edge. */
+@media (max-width: 480px) {
+  .brand-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .site-header { padding: 0 12px; gap: 8px; }
+  .site-nav { gap: 2px; }
+  .site-nav > a, .chapters-menu > summary { padding: 6px 8px; }
+  .langs a { padding: 4px 5px; }
+  .chapters-menu { position: static; }
+  .chapters-menu ol { left: 8px; right: 8px; top: calc(100% + 4px); width: auto; }
+}
